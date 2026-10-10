@@ -56,6 +56,9 @@ h1,#prog,#snd,#skin,#info,#sfmsg,#keys,small{text-shadow:0 1px 4px rgba(0,0,0,.7
 small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 
 #panel{max-width:420px}
+.opts{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.il{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.card .il select{flex:none;width:auto}
 .card[hidden]{display:none}
 .card{width:100%;background:var(--panel);border-radius:12px;padding:10px 14px 12px;font-size:14px;color:var(--mut);display:flex;flex-direction:column;gap:9px}
 .card h3{margin:0;font-size:12px;letter-spacing:.14em;color:var(--acc);font-weight:700}
@@ -120,9 +123,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div class="sl"><span>按键音量</span><input type="range" id="kv" min="0" max="2.5" step="0.1" value="1.3" data-minor="0.1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
 </section>
 <section class="card" id="cSkin"><h3>皮肤</h3>
-  <div class="row"><span class="lb">主题</span><select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="custom">自定义…</option></select></div>
-  <div class="row"><span class="lb">版式</span><select id="skLay"><option value="">主题默认</option><option value="center">居中</option><option value="left">靠左（右侧留大背景）</option></select></div>
-  <div class="chk"><label><input type="checkbox" id="skHud">信息面板</label></div>
+  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label></div>
   <details id="skCustom" hidden><summary>自定义素材（图片只保存在你的浏览器里，不会上传）</summary><div id="skSlots"></div><button id="skClear">清除全部素材</button></details>
 </section>
 <section class="card" id="cDbg"><h3>调试</h3><div class="chk"><label><input type="checkbox" id="dbg">发声诊断</label><label><input type="checkbox" id="tm">测试模式（可拖动进度条）</label></div></section>
@@ -406,11 +407,14 @@ function sfFind(drum,pr,key,vel,bank){
 }
 // ---- SF2 audio ----
 // SF3（Ogg Vorbis 压缩的 SF2）：按需用浏览器解码；开始游玩前会先预解码整首歌用到的采样（见 sfPreload）
+// 用与采样原始采样率相同的离线上下文解码：不做重采样，短小的单周期循环采样（锯齿波等）不会在循环接缝处产生爆音/怪音
+const sfOC={};
+function sfDec(sr){const k=Math.min(96000,Math.max(8000,Math.round(sr)));return sfOC[k]||(sfOC[k]=new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(1,1,k))}
 function sfDecode(si,retry){
   if(sf.pend[si]&&!retry)return sf.pend[si];
   const h=sf.sh[si],sr=Math.max(8000,h.sr||44100),bytes=sf.u8.slice(sf.smplOff+h.st,sf.smplOff+h.en);
   const st=sf.stat||(sf.stat={dec:0,fail:0,badLoop:0,retried:0});
-  return sf.pend[si]=ctx.decodeAudioData(bytes.buffer).then(ab=>{
+  return sf.pend[si]=sfDec(sr).decodeAudioData(bytes.buffer).then(ab=>{
     let ls=h.ls/sr,le=h.le/sr;const dur=ab.duration;
     // 循环点必须落在解码后的采样内，否则关闭循环（避免在错误位置循环造成怪音）
     if(h.le>h.ls&&(le>dur+.02||ls<0||ls>=le)){st.badLoop++;ls=0;le=0}
@@ -518,8 +522,10 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.8.2';
+const VERSION='0.8.3';
 const CHANGELOG=[
+  ['0.8.3','2026-10-10','修复 sf3 音色库中锯齿波（Saw Wave）等短循环合成音色怪异：改为按采样原始采样率解码，不再重采样；皮肤设置合并成紧凑的一行']
+  ,
   ['0.8.2','2026-10-10','SF3：解码失败的采样自动重试，循环点超出采样范围时关闭循环而不是在错误位置循环；音色库图标的提示里显示本曲采样解码统计，便于排查 sf3 音色怪异']
   ,
   ['0.8.1','2026-10-10','曲库支持子文件夹（如 Lv03、Lv04…），选曲列表按文件夹分组显示']
