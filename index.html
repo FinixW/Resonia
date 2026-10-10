@@ -161,6 +161,7 @@ function parseVos(buf){
   if(orig){
     mo=u32(0x18);o=0x40;
     const s=()=>{const n=d[o],r=dec(d.subarray(o+1,o+1+n),'gbk');o+=1+n;return r};
+    if(asc(0x40,4)=='VOS1'){o=0x86;s()} // 带 VOS1 标记块的变体：多一个前导字符串（制作者标签），之后同原格式
     title=s();s();s();s();o-=0; // 4th string (author) consumed
     // layout: title, artist, extType, author
     lenMs=u32(o+2);o+=8+1022;
@@ -539,8 +540,10 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.8.4';
+const VERSION='0.8.5';
 const CHANGELOG=[
+  ['0.8.5','2026-10-10','兼容带 VOS1 标记块的 VOS 变体（如 V - ANOTHER.VOS，之前报“Offset is outside the bounds of the DataView”）']
+  ,
   ['0.8.4','2026-10-10','设置界面更紧凑：卡片间距缩小约 2/3，滑杆行距减半，按键设置收成一行（标题行带“恢复默认”）']
   ,
   ['0.8.3','2026-10-10','修复 sf3 音色库中锯齿波（Saw Wave）等短循环合成音色怪异：改为按采样原始采样率解码，不再重采样；皮肤设置合并成紧凑的一行']
