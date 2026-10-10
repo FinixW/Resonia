@@ -506,8 +506,10 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.8.0';
+const VERSION='0.8.1';
 const CHANGELOG=[
+  ['0.8.1','2026-10-10','曲库支持子文件夹（如 Lv03、Lv04…），选曲列表按文件夹分组显示']
+  ,
   ['0.8.0','2026-10-10','新增在线曲库：与页面同目录的 songs/index.json 里列出的曲目会出现在“曲库”卡片中，选一下就能开始；没有清单时该卡片不显示，原来的“选择谱面”照常可用']
   ,
   ['0.7.6','2026-10-10','修复首次游玩时大采样（如吉他）第一次发声卡顿、失真：开始前除了解码，还会预热每个采样（浏览器首次使用大采样时会在主线程复制数据）']
@@ -659,12 +661,16 @@ $('file').onchange=async e=>{const f=e.target.files[0];if(f)loadSong(await f.arr
 (async()=>{
   let L;try{const r=await fetch('songs/index.json',{cache:'no-cache'});if(!r.ok)return;L=await r.json()}catch(x){return}
   if(!Array.isArray(L)||!L.length)return;
-  const sel=$('lib');sel.innerHTML='<option value="">— 选择曲目 —</option>';
-  L.forEach((m,i)=>{const o=document.createElement('option');o.value=i;o.textContent=m.title||m.file;sel.appendChild(o)});
+  const sel=$('lib');sel.innerHTML='<option value="">— 选择曲目（共 '+L.length+' 首）—</option>';
+  const gs={};
+  L.forEach((m,i)=>{const o=document.createElement('option');o.value=i;o.textContent=m.title||m.file;const g=m.group||'';
+    if(!g){sel.appendChild(o);return}
+    if(!gs[g]){gs[g]=document.createElement('optgroup');gs[g].label=g;sel.appendChild(gs[g])}
+    gs[g].appendChild(o)});
   $('cLib').hidden=false;
   sel.onchange=async()=>{
     const m=L[sel.value];if(!m)return;$('info').textContent='正在下载曲目…';
-    try{const r=await fetch('songs/'+encodeURIComponent(m.file));if(!r.ok)throw new Error('HTTP '+r.status);await loadSong(await r.arrayBuffer(),m.title||m.file)}
+    try{const r=await fetch('songs/'+m.file.split('/').map(encodeURIComponent).join('/'));if(!r.ok)throw new Error('HTTP '+r.status);await loadSong(await r.arrayBuffer(),m.title||m.file)}
     catch(err){$('info').textContent='曲目下载失败：'+err.message}
   };
 })();
