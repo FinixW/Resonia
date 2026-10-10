@@ -94,6 +94,23 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 #midiBtn,#midiMsg{display:none}
 #skCustom{background:none;padding:0;max-width:none}
 #keys{justify-content:flex-start}
+
+/* v0.8.4 紧凑布局 */
+#panel{gap:3px}
+.card{padding:6px 12px 8px;gap:4px}
+.card h3{display:flex;align-items:center;gap:8px;line-height:1.2}
+.card h3 .hint{font-weight:400;letter-spacing:0;color:var(--mut);font-size:11px;text-shadow:none;max-width:none;text-align:left;margin-right:auto}
+.card h3 #kreset{padding:2px 8px;font-size:11px;min-width:0;margin-left:auto}
+#keys{justify-content:flex-start}
+#kb{display:flex;gap:4px;flex-wrap:nowrap}
+#kb button{min-width:0;flex:1 1 0;padding:5px 0;font-size:13px}
+#keys{width:100%}#kb{width:100%}
+.sl{grid-template-columns:62px 1fr 44px;gap:6px}
+.rg{height:20px}
+.rg i{bottom:0}
+.card .row{gap:6px}
+.card select{padding:3px 6px}
+.chk{gap:2px 16px}
 </style>
 </head>
 <body>
@@ -110,7 +127,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div class="chk"><label><input type="checkbox" id="skip" checked>跳过前奏</label><label><input type="checkbox" id="fs">开局隐藏设置</label></div>
 </section>
 <section class="card" id="cLib" hidden><h3>曲库</h3><div class="row"><span class="lb">曲目</span><select id="lib"></select></div></section>
-<section class="card" id="cKeys"><h3>按键</h3><div id="keys"><span>点击后按新键</span><span id="kb"></span><button id="kreset">恢复默认</button></div></section>
+<section class="card" id="cKeys"><h3>按键<small class="hint">点击后按新键</small><button id="kreset">恢复默认</button></h3><div id="keys"><span id="kb"></span></div></section>
 <section class="card" id="cSnd"><h3>声音</h3>
   <div class="row"><span class="lb">输出</span><select id="omode"><option value="int">内部合成器</option><option value="ext">外部合成器</option></select></div>
   <div id="ext" hidden>
@@ -522,8 +539,10 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.8.3';
+const VERSION='0.8.4';
 const CHANGELOG=[
+  ['0.8.4','2026-10-10','设置界面更紧凑：卡片间距缩小约 2/3，滑杆行距减半，按键设置收成一行（标题行带“恢复默认”）']
+  ,
   ['0.8.3','2026-10-10','修复 sf3 音色库中锯齿波（Saw Wave）等短循环合成音色怪异：改为按采样原始采样率解码，不再重采样；皮肤设置合并成紧凑的一行']
   ,
   ['0.8.2','2026-10-10','SF3：解码失败的采样自动重试，循环点超出采样范围时关闭循环而不是在错误位置循环；音色库图标的提示里显示本曲采样解码统计，便于排查 sf3 音色怪异']
