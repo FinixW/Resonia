@@ -16,7 +16,7 @@ button{background:var(--acc);border:0;border-radius:8px;padding:7px 16px;cursor:
 button:disabled{opacity:.4;cursor:default}
 input[type=range]{width:90px}
 #info{font-size:13px;color:var(--mut);text-align:center;max-width:420px;min-height:18px}
-canvas{width:min(100%,420px);height:auto;border-radius:12px;background:#080a16;touch-action:none;display:block;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+canvas{will-change:transform;width:min(100%,420px);height:auto;border-radius:12px;background:#080a16;touch-action:none;display:block;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 body.playing{position:fixed;inset:0;gap:8px;justify-content:flex-start;overflow:hidden;overscroll-behavior:none}
 body.playing>#vlog,body.playing>#panel,body.playing>small{display:none!important}
 body.playing canvas{flex:1 1 0;min-height:0;width:min(100%,420px)}
@@ -540,8 +540,10 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.8.6';
+const VERSION='0.8.7';
 const CHANGELOG=[
+  ['0.8.7','2026-10-10','针对长条下落时的黑色横条/撕裂：长条只绘制可见部分（不再提交超大矩形）、音符位置对齐到物理像素、画布单独成合成层、渐变对象缓存减少垃圾回收']
+  ,
   ['0.8.6','2026-10-10','画面更顺滑：音符位置改用平滑时钟（音频时钟每次跳 3~10ms，直接用来画会让音符抖动、像掉帧；实测每帧抖动从 4.7ms 降到 0.3ms）；勾选“发声诊断”会显示 FPS']
   ,
   ['0.8.5','2026-10-10','兼容带 VOS1 标记块的 VOS 变体（如 V - ANOTHER.VOS，之前报“Offset is outside the bounds of the DataView”）']
@@ -784,16 +786,20 @@ function skNote(x,y,w,l){
   if(imOK(im)){c2.drawImage(im,x,y-8,w,16);return}
   const c=S.pal[k];
   if(S.style=='neon'){rr(x,y-8,w,15,3);c2.fillStyle=c[1]+'66';c2.fill();c2.strokeStyle=c[0];c2.lineWidth=2;c2.stroke();return}
-  const g=c2.createLinearGradient(0,y-8,0,y+7);g.addColorStop(0,c[0]);g.addColorStop(1,c[1]);
-  rr(x,y-8,w,15,4);c2.fillStyle=g;c2.fill();c2.strokeStyle='rgba(0,0,0,.5)';c2.lineWidth=1;c2.stroke();
-  c2.fillStyle='rgba(255,255,255,.55)';c2.fillRect(x+4,y-6,w-8,2);
+  // 渐变对象缓存（每帧每个音符都新建渐变会产生大量垃圾回收，造成偶发卡顿）；用平移把渐变放到音符位置
+  let g=skG['n'+k];if(!g){g=skG['n'+k]=c2.createLinearGradient(0,-8,0,7);g.addColorStop(0,c[0]);g.addColorStop(1,c[1])}
+  c2.save();c2.translate(0,y);
+  rr(x,-8,w,15,4);c2.fillStyle=g;c2.fill();c2.strokeStyle='rgba(0,0,0,.5)';c2.lineWidth=1;c2.stroke();
+  c2.fillStyle='rgba(255,255,255,.55)';c2.fillRect(x+4,-6,w-8,2);
+  c2.restore();
 }
-function skHold(x,yt,w,h,l){
+let skG={};
+function skHold(x,yt,w,h,l,y0,h0){
   const k=KIND[l],im=SI.hold||SI['note'+k];
-  if(imOK(SI.hold)){c2.drawImage(SI.hold,x,yt,w,h);return}
+  if(imOK(SI.hold)){const I=SI.hold,ih=I.naturalHeight;const sy=(yt-y0)/h0*ih,sh=h/h0*ih;c2.drawImage(I,0,sy,I.naturalWidth,Math.max(1,sh),x,yt,w,h);return}
   const c=S.pal[k];
   if(S.style=='neon'){c2.fillStyle=c[1]+'55';c2.fillRect(x,yt,w,h);c2.fillStyle=c[0];c2.fillRect(x,yt,2,h);c2.fillRect(x+w-2,yt,2,h);return}
-  const g=c2.createLinearGradient(x,0,x+w,0);g.addColorStop(0,c[1]);g.addColorStop(.5,c[0]);g.addColorStop(1,c[1]);
+  let g=skG['h'+l];if(!g){g=skG['h'+l]=c2.createLinearGradient(x,0,x+w,0);g.addColorStop(0,c[1]);g.addColorStop(.5,c[0]);g.addColorStop(1,c[1])}
   c2.fillStyle=g;c2.globalAlpha*=.9;c2.fillRect(x,yt,w,h);c2.globalAlpha/=.9;
   c2.fillStyle='rgba(0,0,0,.25)';c2.fillRect(x,yt,1,h);c2.fillRect(x+w-1,yt,1,h);
 }
@@ -834,7 +840,7 @@ function skHud(now){
     it.forEach((q,i)=>{c2.fillStyle=q[2];c2.font='bold 9px system-ui';c2.fillText(q[0],x+cw*i+cw/2,y+h-14);c2.fillStyle='#fff';c2.font='bold 12px system-ui';c2.fillText(String(q[1]),x+cw*i+cw/2,y+h-3)});
   }
 }
-function applySkin(){
+function applySkin(){skG={};
   const id=$('skinSel').value;S={...(SK[id]||SK.classic)};SI=id=='custom'?CI:{};
   const lay=$('skLay').value||S.layout;
   document.body.classList.toggle('lay-left',lay=='left');
@@ -1034,12 +1040,17 @@ function draw(now){
       if(n.end-jn<-200)continue;
       if(n.done&&!n.hold)continue;
       if(n.done&&n.hold&&!n.holding)continue;
-      const x=n.lane*LW+3,y=JY-(n.t-jn)*pps;
+      const x=n.lane*LW+3,y=Math.round((JY-(n.t-jn)*pps)*dpr)/dpr;
       c2.globalAlpha=n.done&&!n.holding?.3:1;
       if(n.hold){
-        const yt=JY-(n.end-jn)*pps,yb=(n.holding?JY:y)+6,h=Math.max(3,yb-yt);
-        if(S.pal)skHold(x,yt,LW-6,h,n.lane);else{c2.fillStyle=LCOL[n.lane];c2.fillRect(x,yt,LW-6,h);
-        c2.fillStyle='rgba(0,0,0,.2)';c2.fillRect(x,yt,1,h);c2.fillRect(x+LW-7,yt,1,h);c2.fillRect(x,yt,LW-6,2)}
+        const yt=Math.round((JY-(n.end-jn)*pps)*dpr)/dpr,yb=(n.holding?JY:y)+6,h=Math.max(3,yb-yt);
+        // 只绘制可见部分：超长的长条不再提交几万像素高的巨大矩形（可能触发 GPU 栅格化异常，表现为黑色横条）
+        const ya=Math.max(yt,-12),hb=Math.min(yt+h,H+12)-ya;
+        if(hb>0){
+          if(S.pal)skHold(x,ya,LW-6,hb,n.lane,yt,h);
+          else{c2.fillStyle=LCOL[n.lane];c2.fillRect(x,ya,LW-6,hb);
+            c2.fillStyle='rgba(0,0,0,.2)';c2.fillRect(x,ya,1,hb);c2.fillRect(x+LW-7,ya,1,hb);if(yt>=-12)c2.fillRect(x,yt,LW-6,2)}
+        }
       }
       if(n.holding){c2.fillStyle='rgba(255,255,255,'+(.35+.2*Math.sin(performance.now()/60))+')';c2.fillRect(n.lane*LW+2,JY-11,LW-4,20)}
       if(!n.holding||!n.hold){if(S.pal)skNote(x,y,LW-6,n.lane);else{c2.fillStyle=LCOL[n.lane];c2.fillRect(x,y-8,LW-6,14);c2.fillStyle='rgba(0,0,0,.25)';c2.fillRect(x,y+3,LW-6,3)}}
