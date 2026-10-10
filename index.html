@@ -551,8 +551,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.3';
+const VERSION='0.9.4';
 const CHANGELOG=[
+  ['0.9.4','2026-10-10','BGA 修正：叠加层（07 / 0A 通道）按 BMS 约定把纯黑当作透明，不再用黑底图片盖住底层动画；叠加层视频改用加亮混合'],
   ['0.9.3','2026-10-10','BGA 改为显示在整个页面背景（取代主题背景图，随浏览器窗口大小铺满），Delete 键或勾选 BGA 可开关；新增“游戏音量”总音量滑杆（始终显示）；声音设置按歌曲类型切换：MIDI 类歌曲（VOS 等）显示 MIDI 输出与音色库，音频类歌曲（BMS 等）显示声卡输出选择'],
   ['0.9.2','2026-10-10','BMS 支持 BGA：读取 #BMP 图片/视频素材与 04/07/0A 通道事件，在轨道背后显示（图片 png/jpg/bmp/gif，视频 mp4/webm；mpg/avi 浏览器无法播放，暂时跳过）；皮肤栏新增 BGA 开关'],
   ['0.9.1','2026-10-10','新歌曲体系第一步：引擎支持采样音频（音频文件）播放与 BGM 轨；新增 BMS / BME / BML 导入（BPM 变速、STOP、小节缩放、长条 LN / LNOBJ、#RANDOM）；支持多文件、文件夹、ZIP 压缩包导入，一个包含多张谱面时可下拉选择；VOS 仍然兼容'],
@@ -1250,6 +1251,12 @@ function progress(now){
 }
 const bgaCur=[null,null,null],bgac=$('bgac'),bgx=bgac.getContext('2d');let bgaShown=false;
 function bgaVis(on){if(on===bgaShown)return;bgaShown=on;bgac.style.display=on?'block':'none';document.body.classList.toggle('bga-on',on);if(!on)for(const e of bgaCur)if(e&&song&&song.bmps&&song.bmps[e.id]&&song.bmps[e.id].v)try{song.bmps[e.id].v.pause()}catch(x){}}
+function keyBlack(im){ // BMS 叠加层约定：纯黑 = 透明
+  const w=im.width,h=im.height,c=document.createElement('canvas');c.width=w;c.height=h;
+  const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);
+  try{const d=x.getImageData(0,0,w,h),p=d.data;for(let i=0;i<p.length;i+=4)if(p[i]<=12&&p[i+1]<=12&&p[i+2]<=12)p[i+3]=0;x.putImageData(d,0,0)}catch(e){}
+  return c;
+}
 function drawBga(now){
   const dp=Math.min(devicePixelRatio||1,1.5),cw=Math.round(innerWidth*dp),chh=Math.round(innerHeight*dp);
   if(bgac.width!==cw||bgac.height!==chh){bgac.width=cw;bgac.height=chh}
@@ -1266,7 +1273,9 @@ function drawBga(now){
     if(!e)continue;const m=song.bmps[e.id],im=m.i||m.v;if(!im)continue;
     if(m.v){if(m.v.readyState<2)continue;if(!running&&!m.v.paused)m.v.pause();if(running&&m.v.paused&&!m.v.ended)m.v.play().catch(()=>{})}
     const iw=im.width||im.videoWidth,ih=im.height||im.videoHeight;if(!iw||!ih)continue;
-    const sc=Math.max(cw/iw,chh/ih);bgx.drawImage(im,(cw-iw*sc)/2,(chh-ih*sc)/2,iw*sc,ih*sc);
+    let src=im;bgx.globalCompositeOperation='source-over';
+    if(l>0){if(m.i)src=m.k||(m.k=keyBlack(m.i));else bgx.globalCompositeOperation='lighter'}
+    const sc=Math.max(cw/iw,chh/ih);bgx.drawImage(src,(cw-iw*sc)/2,(chh-ih*sc)/2,iw*sc,ih*sc);bgx.globalCompositeOperation='source-over';
   }
   return true;
 }
