@@ -8,6 +8,7 @@
 :root{--bg:#0d1020;--panel:#171b33;--fg:#e8ebff;--mut:#8b92c4;--acc:#6c8cff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+body.bga-on{background:transparent!important}
 body{display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px}
 #bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:center;background:var(--panel);padding:10px 14px;border-radius:12px;max-width:420px;width:100%;font-size:14px}
 #bar label{display:flex;align-items:center;gap:6px;color:var(--mut)}
@@ -118,6 +119,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 </style>
 </head>
 <body>
+<canvas id="bgac" style="position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:-1;display:none"></canvas>
 <h1 style="margin:4px 0 0;font-size:26px;letter-spacing:.08em">鸣域 <span style="color:var(--acc);font-weight:500">Resonia</span><button id="vbtn" title="更新日志"></button></h1>
 <ul id="vlog" hidden></ul>
 <div id="prog"><div id="pr1"><span id="pt">未载入歌曲</span><span id="pn">0:00 / 0:00</span></div><div id="pb"><i id="pf"></i></div></div>
@@ -133,13 +135,17 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 <section class="card" id="cLib" hidden><h3>曲库</h3><div class="row"><span class="lb">曲目</span><select id="lib"></select></div></section>
 <section class="card" id="cKeys"><h3>按键<small class="hint">点击后按新键</small><button id="kreset">恢复默认</button></h3><div id="keys"><span id="kb"></span></div></section>
 <section class="card" id="cSnd"><h3>声音</h3>
-  <div class="row"><span class="lb">输出</span><select id="omode"><option value="int">内部合成器</option><option value="ext">外部合成器</option></select></div>
+  <div class="sl"><span>游戏音量</span><input type="range" id="mv" min="0" max="1.5" step="0.1" value="1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
+  <div id="sinkBox" class="row" hidden><span class="lb">声卡输出</span><select id="sink"></select></div>
+  <div id="midiBox">
+  <div class="row"><span class="lb">MIDI 输出</span><select id="omode"><option value="int">内部合成器</option><option value="ext">外部合成器</option></select></div>
   <div id="ext" hidden>
     <div class="row"><span class="lb">音色库</span><select id="out"></select><span id="sfst" class="st" hidden></span><label class="fbtn sm">载入…<input type="file" id="sfile" accept=".sf2,.sf3,.dls"></label></div>
     <div class="sl"><span>增益</span><input type="range" id="sgain" min="0.2" max="4" step="0.2" value="1" data-major="1" data-fmt="x"><b class="rv"></b></div>
   </div>
   <div id="sfhint" hidden></div>
   <button id="midiBtn">启用 MIDI 输出</button><span id="midiMsg"></span>
+  </div>
   <div class="sl"><span>伴奏音量</span><input type="range" id="bv" min="0" max="1.5" step="0.1" value="0.5" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
   <div class="sl"><span>按键音量</span><input type="range" id="kv" min="0" max="2.5" step="0.1" value="1.3" data-minor="0.1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
 </section>
@@ -267,7 +273,7 @@ let ctx,master,rvIn,noiseBuf,voices=0,drops=0,dbgLast='';
 function initAudio(){
   if(ctx)return;
   ctx=new (window.AudioContext||window.webkitAudioContext)();
-  const comp=ctx.createDynamicsCompressor();master=ctx.createGain();master.gain.value=.6;
+  const comp=ctx.createDynamicsCompressor();master=ctx.createGain();master.gain.value=.6*(+document.getElementById('mv').value);try{const sk=localStorage.getItem('resonia-sink');if(sk&&ctx.setSinkId)ctx.setSinkId(sk).catch(()=>{})}catch(x){}
   master.connect(comp);comp.connect(ctx.destination);
   noiseBuf=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);
   const a=noiseBuf.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1;
@@ -545,8 +551,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.2';
+const VERSION='0.9.3';
 const CHANGELOG=[
+  ['0.9.3','2026-10-10','BGA 改为显示在整个页面背景（取代主题背景图，随浏览器窗口大小铺满），Delete 键或勾选 BGA 可开关；新增“游戏音量”总音量滑杆（始终显示）；声音设置按歌曲类型切换：MIDI 类歌曲（VOS 等）显示 MIDI 输出与音色库，音频类歌曲（BMS 等）显示声卡输出选择'],
   ['0.9.2','2026-10-10','BMS 支持 BGA：读取 #BMP 图片/视频素材与 04/07/0A 通道事件，在轨道背后显示（图片 png/jpg/bmp/gif，视频 mp4/webm；mpg/avi 浏览器无法播放，暂时跳过）；皮肤栏新增 BGA 开关'],
   ['0.9.1','2026-10-10','新歌曲体系第一步：引擎支持采样音频（音频文件）播放与 BGM 轨；新增 BMS / BME / BML 导入（BPM 变速、STOP、小节缩放、长条 LN / LNOBJ、#RANDOM）；支持多文件、文件夹、ZIP 压缩包导入，一个包含多张谱面时可下拉选择；VOS 仍然兼容'],
   ['0.9.0','2026-10-10','进入 0.9 测试阶段（版本号 0.9.0 ～ 0.9.99，用于联网版本和更多歌曲数据的测试）；确认开启浏览器硬件加速后 240 帧满帧流畅']
@@ -866,9 +873,22 @@ async function buildBms(ch,find,say){
 }
 function setSong(s,name,extra){
   stopAll();stopSamples();
+  $('midiBox').hidden=!!s.kind;$('sinkBox').hidden=!s.kind;if(s.kind)fillSink();
   song=s;songInfo=`${s.title||name} · 可玩音符 ${s.notes.length} · 伴奏事件 ${s.back.length}`+(s.kind?' · '+s.kind:' · MIDI 轨道 '+s.tracks)+(s.note||'');
   $('info').textContent='';$('fname').textContent=name;$('go').disabled=false;$('pt').textContent=s.title||name;pKey='';draw(0);
 }
+async function fillSink(){
+  const sel=$('sink');
+  if(!(window.AudioContext&&'setSinkId' in AudioContext.prototype)){sel.innerHTML='<option>浏览器不支持切换（使用系统默认）</option>';sel.disabled=true;return}
+  let ds=[];try{ds=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind=='audiooutput')}catch(x){}
+  let sv='';try{sv=localStorage.getItem('resonia-sink')||''}catch(x){}
+  sel.innerHTML='<option value="">系统默认</option>';
+  ds.forEach((d,i)=>{if(d.deviceId=='default')return;const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('输出设备 '+(i+1));sel.appendChild(o)});
+  sel.value=[...sel.options].some(o=>o.value==sv)?sv:'';
+}
+$('sink').onchange=()=>{const v=$('sink').value;try{localStorage.setItem('resonia-sink',v)}catch(x){}initAudio();if(ctx.setSinkId)ctx.setSinkId(v).catch(()=>{})};
+try{const m=localStorage.getItem('resonia-mv');if(m)$('mv').value=m}catch(x){}
+$('mv').oninput=()=>{if(master)master.gain.value=.6*(+$('mv').value);try{localStorage.setItem('resonia-mv',$('mv').value)}catch(x){}};
 async function loadSong(ab,name){
   try{setSong(parseVos(ab),name)}
   catch(err){song=null;songInfo='';$('go').disabled=true;$('info').textContent='解析失败：'+err.message}
@@ -1115,6 +1135,7 @@ addEventListener('keydown',e=>{
     if(!e.repeat||e.code=='Escape'){rebind=null;renderKeys()}
     return;
   }
+  if(e.code=='Delete'&&!(e.target.tagName=='SELECT'||e.target.tagName=='TEXTAREA'||(e.target.tagName=='INPUT'&&e.target.type!='checkbox'&&e.target.type!='range'))){$('bga').checked=!$('bga').checked;return}
   if(e.code=='Escape'){exitGame();return}
   const l=bind.indexOf(e.code);
   if(l<0){const dv={Digit2:1,Numpad2:1,ArrowUp:1,Digit1:-1,Numpad1:-1,ArrowDown:-1}[e.code];if(dv){e.preventDefault();chgSpd(dv)}return}
@@ -1227,28 +1248,32 @@ function progress(now){
   if(k!==pKey){pKey=k;$('pn').textContent=fmtT(Math.min(now,song.total))+' / '+fmtT(song.total);$('pf').style.width=(r*100)+'%'}
   return r;
 }
-const bgaCur=[null,null,null];
+const bgaCur=[null,null,null],bgac=$('bgac'),bgx=bgac.getContext('2d');let bgaShown=false;
+function bgaVis(on){if(on===bgaShown)return;bgaShown=on;bgac.style.display=on?'block':'none';document.body.classList.toggle('bga-on',on);if(!on)for(const e of bgaCur)if(e&&song&&song.bmps&&song.bmps[e.id]&&song.bmps[e.id].v)try{song.bmps[e.id].v.pause()}catch(x){}}
 function drawBga(now){
+  const dp=Math.min(devicePixelRatio||1,1.5),cw=Math.round(innerWidth*dp),chh=Math.round(innerHeight*dp);
+  if(bgac.width!==cw||bgac.height!==chh){bgac.width=cw;bgac.height=chh}
   const L=song.bga,cur=[null,null,null];
   let lo=0,hi=L.length-1,k=-1;while(lo<=hi){const m=(lo+hi)>>1;if(L[m].t<=now){k=m;lo=m+1}else hi=m-1}
-  for(let i=k;i>=0&&(cur[0]&&cur[1]&&cur[2]||i>=0);i--){const e=L[i];if(!cur[e.l])cur[e.l]=e;if(cur[0]&&cur[1]&&cur[2])break;if(k-i>400)break}
+  for(let i=k;i>=0&&k-i<600;i--){const e=L[i];if(!cur[e.l])cur[e.l]=e;if(cur[0]&&cur[1]&&cur[2])break}
+  if(!cur[0]&&!cur[1]&&!cur[2]){for(let l=0;l<3;l++){const o=bgaCur[l];if(o&&song.bmps[o.id].v)try{song.bmps[o.id].v.pause()}catch(x){}bgaCur[l]=null}return false}
+  bgx.fillStyle='#000';bgx.fillRect(0,0,cw,chh);
   for(let l=0;l<3;l++){
     const e=cur[l],o=bgaCur[l];
-    if(o&&(!e||e!==o)&&song.bmps[o.id].v)try{song.bmps[o.id].v.pause()}catch(x){}
+    if(o&&e!==o&&song.bmps[o.id].v)try{song.bmps[o.id].v.pause()}catch(x){}
     if(e&&e!==o&&song.bmps[e.id].v&&running){const v=song.bmps[e.id].v;try{v.currentTime=Math.max(0,(now-e.t)/1000);v.play().catch(()=>{})}catch(x){}}
     bgaCur[l]=e;
     if(!e)continue;const m=song.bmps[e.id],im=m.i||m.v;if(!im)continue;
     if(m.v){if(m.v.readyState<2)continue;if(!running&&!m.v.paused)m.v.pause();if(running&&m.v.paused&&!m.v.ended)m.v.play().catch(()=>{})}
     const iw=im.width||im.videoWidth,ih=im.height||im.videoHeight;if(!iw||!ih)continue;
-    if(l==0){const s=Math.max(W/iw,H/ih);c2.globalAlpha=.35;c2.drawImage(im,(W-iw*s)/2,(H-ih*s)/2,iw*s,ih*s)}
-    c2.globalAlpha=1;const s=Math.min(W/iw,H*.62/ih);c2.drawImage(im,(W-iw*s)/2,H*.06,iw*s,ih*s);
+    const sc=Math.max(cw/iw,chh/ih);bgx.drawImage(im,(cw-iw*sc)/2,(chh-ih*sc)/2,iw*sc,ih*sc);
   }
-  c2.globalAlpha=1;
+  return true;
 }
 function draw(now){
   c2.clearRect(0,0,W,H);
-  const bgaOn=!!(song&&song.bga&&song.bga.length&&$('bga').checked);
-  if(bgaOn){drawBga(now);c2.fillStyle='rgba(6,8,22,.5)';c2.fillRect(0,0,W,H)}
+  const bgaOn=false,bgaWant=!!(song&&song.bga&&song.bga.length&&$('bga').checked);
+  bgaVis(bgaWant?drawBga(now):false);
   const pr=progress(now);
   const gl=S.glow||'108,140,255';
   if(imOK(SI.field))c2.drawImage(SI.field,0,0,W,H);
