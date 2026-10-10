@@ -123,7 +123,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 <div id="prog"><div id="pr1"><span id="pt">未载入歌曲</span><span id="pn">0:00 / 0:00</span></div><div id="pb"><i id="pf"></i></div></div>
 <div id="panel">
 <section class="card" id="cPlay"><h3>演奏</h3>
-  <div class="row top"><label class="fbtn">选择谱面<input type="file" id="file" accept=".vos,.vow"></label><span id="fname" class="fname">未选择文件</span><button id="go" disabled>开始</button></div>
+  <div class="row top"><label class="fbtn">选择谱面<input type="file" id="file" multiple accept=".vos,.vow,.bms,.bme,.bml,.zip,.wav,.ogg,.mp3,.flac"></label><label class="fbtn sm" title="选择包含 BMS 与音频的文件夹">文件夹<input type="file" id="dirf" webkitdirectory multiple></label><span id="fname" class="fname">未选择文件</span><select id="cpick" hidden style="max-width:220px"></select><button id="go" disabled>开始</button></div>
   <div id="info">选择 .vos / .vow 谱面文件</div>
   <div class="sl"><span>速度</span><input type="range" id="spd" min="0.25" max="1.2" step="0.05" value="0.55" data-major="0.25" data-fmt="x"><b class="rv"></b></div>
   <div class="sl"><span>延迟</span><input type="range" id="off" min="-200" max="200" step="5" value="0" data-minor="20" data-major="100" data-fmt="ms"><b class="rv" id="offv"></b></div>
@@ -282,6 +282,7 @@ const cl=x=>Math.max(-1,Math.min(1,x));
 const PRG=[['triangle',.004,1,5000],['sine',.003,1,6000],['square',.01,0,2500],['sawtooth',.004,1,2400],['sawtooth',.004,1,1100],['sawtooth',.08,0,2200],['sawtooth',.08,0,2200],['sawtooth',.04,0,1800],['sawtooth',.03,0,2200],['triangle',.04,0,4000],['square',.01,0,3000],['sawtooth',.1,0,1500],['triangle',.05,0,3000],['triangle',.004,1,4000],['triangle',.004,1,4000],['triangle',.004,1,4000]];
 function voice(e,when){
   if(voices>(e.key?420:280)){drops++;return} // 密集段落不再过早丢音（按键音优先）
+  if(e.s!==undefined){samplePlay(e,when);return}
   const now=ctx.currentTime;if(when<now)when=now;
   const C=(song&&song.ctl[e.ch])||{},T=e.t||0,vel=Math.min(1,e.vel/127);
   const lv=ms=>{const v=at(C.vol,ms,100)/127,x=at(C.exp,ms,127)/127;return v*v*x*x};
@@ -544,8 +545,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.0';
+const VERSION='0.9.1';
 const CHANGELOG=[
+  ['0.9.1','2026-10-10','新歌曲体系第一步：引擎支持采样音频（音频文件）播放与 BGM 轨；新增 BMS / BME / BML 导入（BPM 变速、STOP、小节缩放、长条 LN / LNOBJ、#RANDOM）；支持多文件、文件夹、ZIP 压缩包导入，一个包含多张谱面时可下拉选择；VOS 仍然兼容'],
   ['0.9.0','2026-10-10','进入 0.9 测试阶段（版本号 0.9.0 ～ 0.9.99，用于联网版本和更多歌曲数据的测试）；确认开启浏览器硬件加速后 240 帧满帧流畅']
   ,
   ['0.8.8','2026-10-10','“调试”标题右侧显示渲染方式（硬件加速 / 软件渲染）；检测到软件渲染时显示橙色提示，鼠标悬停可看到原因和开启硬件加速的办法']
@@ -642,7 +644,7 @@ let midiAccess=null,midiOut=null,mi=0;
 const chOf=k=>(song&&song.chan&&song.chan[k]!==undefined)?song.chan[k]:(k==9||k==10?9:k&15);
 const PT=w=>performance.now()+(w-ctx.currentTime)*1000;
 function panic(){if(!midiOut)return;for(let c=0;c<16;c++){midiOut.send([0xB0|c,123,0]);midiOut.send([0xB0|c,120,0]);midiOut.send([0xB0|c,121,0])}}
-function stopAll(){clearInterval(schedTimer);panic()}
+function stopAll(){clearInterval(schedTimer);panic();if(typeof stopSamples=='function')stopSamples()}
 function buildMout(){
   const a=song.mev.map(x=>({ms:x.ms,r:0,b:x.b}));
   for(const b of song.back){const c=chOf(b.ch);a.push({ms:b.t,r:2,b:[0x90|c,b.p,Math.max(1,b.vel)]},{ms:b.t+Math.max(b.dur*1000,30),r:1,b:[0x80|c,b.p,0]})}
@@ -655,6 +657,7 @@ function dbgInfo(e){
   return 'ch'+e.ch+' 音色'+pr+(nm?' '+nm:'')+' 音高'+e.p+(drum?'(鼓)':'');
 }
 function hitSound(n,pre){
+  if(n.snd.s!==undefined){voice({...n.snd,t:n.t,key:true},ctx.currentTime);return}
   if($('dbg').checked)dbgLast=dbgInfo(n.snd);
   const dur=pre?Math.min(n.snd.dur,1):n.snd.dur;
   if(midiOut){const c=chOf(n.snd.ch);midiOut.send([0x90|c,n.snd.p,Math.max(1,n.snd.vel)]);midiOut.send([0x80|c,n.snd.p,0],performance.now()+Math.max(dur*1000,60))}
@@ -711,14 +714,181 @@ $('sfile').onchange=async e=>{
   const ks=['sf2','dls'].filter(k=>banks[k]);
   if(m=='ext'&&ks.length)selectOut(banks[o]?o:ks[0]);else if(m=='ext'){$('omode').value='ext';applyOut()}else showSt();
 })();
-async function loadSong(ab,name){
-  try{
-    song=parseVos(ab);
-    songInfo=`${song.title||name} · 可玩音符 ${song.notes.length} · 伴奏事件 ${song.back.length} · MIDI 轨道 ${song.tracks}`;$('info').textContent='';$('fname').textContent=name;
-    $('go').disabled=false;$('pt').textContent=song.title||name;pKey='';draw(0);
-  }catch(err){song=null;songInfo='';$('go').disabled=true;$('info').textContent='解析失败：'+err.message}
+// ---------- 采样播放（BMS 等基于音频文件的歌曲）----------
+const actSrc=new Set();
+function samplePlay(e,when){
+  const buf=song&&song.samples&&song.samples[e.s];if(!buf)return;
+  const now=ctx.currentTime;if(when<now)when=now;
+  const src=ctx.createBufferSource();src.buffer=buf;
+  const g=ctx.createGain();g.gain.value=Math.min(1,(e.vel||127)/127);
+  const mg=ctx.createGain();mg.gain.value=+document.getElementById(e.key?'kv':'bv').value;
+  src.connect(g);g.connect(mg);mg.connect(master);
+  voices++;actSrc.add(src);
+  src.onended=()=>{voices--;actSrc.delete(src);try{g.disconnect();mg.disconnect()}catch(x){}};
+  src.start(when);
 }
-$('file').onchange=async e=>{const f=e.target.files[0];if(f)loadSong(await f.arrayBuffer(),f.name)};
+function stopSamples(){for(const s of [...actSrc]){try{s.stop()}catch(x){}}}
+// ---------- 压缩包（ZIP）读取：只用浏览器自带的 DecompressionStream ----------
+async function readZip(ab){
+  const dv=new DataView(ab),u8=new Uint8Array(ab);let p=ab.byteLength-22;
+  while(p>=0&&dv.getUint32(p,true)!==0x06054b50)p--;
+  if(p<0)throw new Error('不是有效的 ZIP 文件');
+  const n=dv.getUint16(p+10,true);let q=dv.getUint32(p+16,true);const out=[];
+  const dec=(b,utf)=>{if(utf)return new TextDecoder().decode(b);try{return new TextDecoder('utf-8',{fatal:true}).decode(b)}catch(x){return new TextDecoder('shift_jis').decode(b)}};
+  for(let i=0;i<n;i++){
+    if(dv.getUint32(q,true)!==0x02014b50)break;
+    const fl=dv.getUint16(q+8,true),cm=dv.getUint16(q+10,true),cs=dv.getUint32(q+20,true),nl=dv.getUint16(q+28,true),el=dv.getUint16(q+30,true),cl=dv.getUint16(q+32,true),lo=dv.getUint32(q+42,true);
+    const name=dec(u8.subarray(q+46,q+46+nl),fl&0x800);q+=46+nl+el+cl;
+    if(name.endsWith('/'))continue;
+    out.push({path:name,ab:async()=>{
+      const ds=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true),raw=u8.subarray(ds,ds+cs);
+      if(cm===0)return raw.slice().buffer;
+      if(cm!==8)throw new Error('不支持的压缩方式 '+cm);
+      return await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+    }});
+  }
+  return out;
+}
+// ---------- BMS / BME / BML 解析 ----------
+function bmsText(ab){const u=new Uint8Array(ab);try{return new TextDecoder('utf-8',{fatal:true}).decode(u)}catch(x){}try{return new TextDecoder('shift_jis').decode(u)}catch(x){return new TextDecoder().decode(u)}}
+function parseBms(txt){
+  const H={},wav={},bpmT={},stopT={},len={},ch=[],st=[];let rnd=1;
+  const act=()=>st.every(s=>s.v);
+  for(let L of txt.replace(/\r/g,'').split('\n')){
+    L=L.trim();if(L[0]!='#')continue;let m;
+    if((m=/^#(RANDOM|SETRANDOM)\s+(\d+)/i.exec(L))){if(act())rnd=/^R/i.test(m[1])?1+Math.floor(Math.random()*(+m[2]||1)):+m[2];continue}
+    if((m=/^#IF\s+(\d+)/i.exec(L))){const v=rnd==+m[1];st.push({v,d:v});continue}
+    if((m=/^#ELSEIF\s+(\d+)/i.exec(L))){const s=st[st.length-1];if(s){s.v=!s.d&&rnd==+m[1];s.d=s.d||s.v}continue}
+    if(/^#ELSE\b/i.test(L)){const s=st[st.length-1];if(s){s.v=!s.d;s.d=true}continue}
+    if(/^#END\s*IF\b/i.test(L)){st.pop();continue}
+    if(/^#ENDRANDOM/i.test(L))continue;
+    if(!act())continue;
+    if((m=/^#(\d{3})([0-9A-Za-z]{2}):\s*(.*)$/.exec(L))){
+      const me=+m[1],c=m[2].toUpperCase(),s=m[3].trim();
+      if(c=='02')len[me]=parseFloat(s)||1;else ch.push({m:me,c,s:s.toUpperCase()});continue}
+    if(!(m=/^#([A-Za-z0-9_]+)\s*[: ]?\s*(.*)$/.exec(L)))continue;
+    const k=m[1].toUpperCase(),v=m[2].trim();
+    if(/^WAV[0-9A-Z]{2}$/.test(k))wav[k.slice(3)]=v;
+    else if(/^(EX)?BPM[0-9A-Z]{2}$/.test(k))bpmT[k.slice(-2)]=parseFloat(v);
+    else if(/^STOP[0-9A-Z]{2}$/.test(k))stopT[k.slice(4)]=parseFloat(v);
+    else H[k]=v;
+  }
+  const nm=Math.max(0,...ch.map(x=>x.m))+1,bs=[0];
+  for(let i=0;i<nm;i++)bs.push(bs[i]+4*(len[i]||1));
+  const bpm0=parseFloat(H.BPM)||120,tev=[],bgm=[],keys=[],lns=[];
+  const LANE={'1':0,'2':1,'3':2,'4':3,'5':4,'8':5,'9':6};
+  let has67=false;
+  for(const x of ch){
+    const n=x.s.length>>1;if(!n)continue;
+    for(let i=0;i<n;i++){
+      const pr=x.s.substr(i*2,2);if(pr=='00')continue;
+      const b=bs[x.m]+i/n*4*(len[x.m]||1),c=x.c;
+      if(c=='03'){const v=parseInt(pr,16);if(v>0)tev.push({b,t:0,bpm:v})}
+      else if(c=='08'){const v=bpmT[pr];if(v>0)tev.push({b,t:0,bpm:v})}
+      else if(c=='09'){const v=stopT[pr];if(v>0)tev.push({b,t:1,sb:v/48})}
+      else if(c=='01')bgm.push({b,id:pr});
+      else if(/^[12][1-9]$/.test(c)){
+        const side=c[0],k=c[1];
+        if(side=='1'&&LANE[k]!==undefined){keys.push({b,id:pr,l:LANE[k]});if(k=='8'||k=='9')has67=true}
+        else bgm.push({b,id:pr});
+      }else if(/^[56][1-9]$/.test(c)){
+        const side=c[0],k=c[1];
+        if(side=='5'&&LANE[k]!==undefined){lns.push({b,id:pr,l:LANE[k]});if(k=='8'||k=='9')has67=true}
+      }
+    }
+  }
+  tev.sort((a,b)=>a.b-b.b||a.t-b.t);
+  const T=[{b:0,ms:0,bpm:bpm0}];
+  for(const e of tev){
+    const p=T[T.length-1],ms=p.ms+(e.b-p.b)*60000/p.bpm;
+    T.push(e.t?{b:e.b,ms:ms+e.sb*60000/p.bpm,bpm:p.bpm}:{b:e.b,ms,bpm:e.bpm});
+  }
+  const toMs=b=>{let lo=0,hi=T.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(T[m].b<b)lo=m;else hi=m-1}const e=T[lo];return e.ms+(b-e.b)*60000/e.bpm};
+  const sh=has67?0:1,lnobj=(H.LNOBJ||'').toUpperCase();
+  const notes=[],back=bgm.map(x=>({t:toMs(x.b),id:x.id}));
+  const byL=Array.from({length:7},()=>[]);
+  for(const k of keys)byL[k.l].push(k);
+  const mk=(l,t,e,id)=>notes.push({t,lane:l+sh,hold:e>t,end:Math.max(t,e),snd:{s:id,ch:0,ins:0,p:60,vel:127,dur:0},done:false});
+  byL.forEach((a,l)=>{
+    a.sort((x,y)=>x.b-y.b);let last=null;
+    for(const k of a){
+      if(lnobj&&k.id==lnobj&&last){last.end=toMs(k.b);last.hold=true;last=null;continue}
+      const t=toMs(k.b);last={t,lane:l+sh,hold:false,end:t,snd:{s:k.id,ch:0,ins:0,p:60,vel:127,dur:0},done:false};notes.push(last);
+    }
+  });
+  const byLn=Array.from({length:7},()=>[]);for(const k of lns)byLn[k.l].push(k);
+  byLn.forEach((a,l)=>{a.sort((x,y)=>x.b-y.b);for(let i=0;i+1<a.length;i+=2)mk(l,toMs(a[i].b),toMs(a[i+1].b),a[i].id)});
+  notes.sort((a,b)=>a.t-b.t);back.sort((a,b)=>a.t-b.t);
+  const used=new Set([...notes.map(n=>n.snd.s),...back.map(b=>b.id)]);
+  return{H,title:[H.TITLE,H.SUBTITLE].filter(Boolean).join(' '),artist:H.ARTIST||'',level:H.PLAYLEVEL||'',keys:has67?7:5,wav,notes,back,used,bpm:bpm0,
+    nlane:new Set(notes.map(n=>n.lane)).size};
+}
+// ---------- 资源包导入（多文件 / 文件夹 / ZIP）----------
+const AUD=/\.(wav|ogg|mp3|flac|m4a|opus|aac)$/i;
+let pack=null;
+function mkRes(entries){
+  const full=new Map(),base=new Map(),noext=new Map();
+  for(const e of entries){const p=e.path.replace(/\\/g,'/').toLowerCase(),b=p.split('/').pop();full.set(p,e);if(!base.has(b))base.set(b,e);if(AUD.test(b)){const n=b.replace(/\.[^.]+$/,'');if(!noext.has(n))noext.set(n,e)}}
+  return name=>{const p=name.replace(/\\/g,'/').toLowerCase().replace(/^\.\//,''),b=p.split('/').pop();return full.get(p)||base.get(b)||noext.get(b.replace(/\.[^.]+$/,''))||null};
+}
+async function decodeAudio(ab){
+  const oc=new OfflineAudioContext(2,1,44100);
+  return await oc.decodeAudioData(ab.slice(0));
+}
+async function buildBms(ch,find,say){
+  const P=parseBms(bmsText(await ch.ab())),ids=[...P.used].filter(i=>P.wav[i]),samples={};let done=0,bad=0,miss=0;
+  const q=ids.slice();
+  const work=async()=>{for(;;){const id=q.shift();if(id===undefined)return;
+    const e=find(P.wav[id]);
+    if(!e)miss++;else try{samples[id]=await decodeAudio(await e.ab())}catch(x){bad++}
+    done++;if(done%4==0||done==ids.length)say('解码音频 '+done+' / '+ids.length)}};
+  await Promise.all([work(),work(),work(),work()]);
+  let end=0;for(const n of P.notes)end=Math.max(end,n.end);
+  for(const b of P.back){const s=samples[b.id];b.s=b.id;b.vel=127;b.ch=0;b.ins=0;b.p=60;b.dur=0;end=Math.max(end,b.t+(s?s.duration*1000:0))}
+  return{title:P.title||ch.path.split('/').pop(),lenMs:end+1500,notes:P.notes,back:P.back,ctl:{},mev:[],chan:{},tracks:0,bpm:P.bpm,samples,
+    kind:'BMS',note:(miss||bad)?`（缺少 ${miss} 个、无法解码 ${bad} 个音频）`:''};
+}
+function setSong(s,name,extra){
+  stopAll();stopSamples();
+  song=s;songInfo=`${s.title||name} · 可玩音符 ${s.notes.length} · 伴奏事件 ${s.back.length}`+(s.kind?' · '+s.kind:' · MIDI 轨道 '+s.tracks)+(s.note||'');
+  $('info').textContent='';$('fname').textContent=name;$('go').disabled=false;$('pt').textContent=s.title||name;pKey='';draw(0);
+}
+async function loadSong(ab,name){
+  try{setSong(parseVos(ab),name)}
+  catch(err){song=null;songInfo='';$('go').disabled=true;$('info').textContent='解析失败：'+err.message}
+}
+async function openChart(i){
+  const c=pack.charts[i];$('info').textContent='正在读取谱面…';
+  try{setSong(await buildBms(c,pack.find,t=>$('info').textContent=t),c.path.split('/').pop());$('info').textContent=''}
+  catch(err){song=null;songInfo='';$('go').disabled=true;$('info').textContent='BMS 解析失败：'+err.message}
+}
+async function importFiles(list){
+  list=[...list];if(!list.length)return;
+  const sel=$('cpick');sel.hidden=true;pack=null;
+  try{
+    let ents=[];
+    for(const f of list){
+      if(/\.zip$/i.test(f.name)){$('info').textContent='正在读取压缩包…';ents.push(...await readZip(await f.arrayBuffer()))}
+      else ents.push({path:f.webkitRelativePath||f.name,ab:()=>f.arrayBuffer()});
+    }
+    const charts=ents.filter(e=>/\.(bms|bme|bml)$/i.test(e.path)),vos=ents.filter(e=>/\.(vos|vow)$/i.test(e.path));
+    if(!charts.length){
+      if(vos.length)return loadSong(await vos[0].ab(),vos[0].path.split('/').pop());
+      throw new Error('没有找到可用的谱面（支持 .vos .vow .bms .bme .bml，或包含它们的 .zip / 文件夹）');
+    }
+    pack={charts,find:mkRes(ents)};
+    if(charts.length>1){
+      sel.innerHTML='';
+      for(let i=0;i<charts.length;i++){let t='';try{const P=parseBms(bmsText(await charts[i].ab()));t=' · '+(P.title||'')+(P.level?' Lv'+P.level:'')+' · '+P.nlane+'K'}catch(x){}
+        const o=document.createElement('option');o.value=i;o.textContent=charts[i].path.split('/').pop()+t;sel.appendChild(o)}
+      sel.hidden=false;sel.onchange=()=>openChart(+sel.value);
+    }
+    await openChart(0);
+  }catch(err){song=null;songInfo='';$('go').disabled=true;$('info').textContent='导入失败：'+err.message}
+}
+$('file').onchange=async e=>{await importFiles(e.target.files);e.target.value=''};
+$('dirf').onchange=async e=>{await importFiles(e.target.files);e.target.value=''};
+
 // ---- 在线曲库：与页面同目录的 songs/index.json 列出可选曲目（没有就不显示）----
 (async()=>{
   let L;try{const r=await fetch('songs/index.json',{cache:'no-cache'});if(!r.ok)return;L=await r.json()}catch(x){return}
@@ -746,7 +916,7 @@ $('go').onclick=start;
 async function start(){
   if(!song)return;const wasRunning=running;
   initAudio();ctx.resume();
-  if(useSf()){const go=$('go');go.disabled=true;try{await sfPreload()}catch(x){}go.disabled=false;go.textContent=wasRunning?'重新开始':'开始'}clearInterval(schedTimer);rebind=null;renderKeys();$('go').blur();
+  if(useSf()&&!song.samples){const go=$('go');go.disabled=true;try{await sfPreload()}catch(x){}go.disabled=false;go.textContent=wasRunning?'重新开始':'开始'}clearInterval(schedTimer);rebind=null;renderKeys();$('go').blur();
   for(const n of song.notes){n.done=false;n.hit=false;n.holding=false;n.rel=null}
   lanesQ=[0,1,2,3,4,5,6].map(l=>song.notes.filter(n=>n.lane==l));lp=Array(7).fill(0);holdN=Array(7).fill(null);
   keys.fill(false);resetPtr();drops=0;dbgLast='';
@@ -758,15 +928,16 @@ async function start(){
   for(const n of song.notes)n.done=n.t<startOff;
   t0=ctx.currentTime+.1;ck.ok=false;running=true;
   while(bi<song.back.length&&song.back[bi].t+song.back[bi].dur*1000<startOff)bi++;
-  mi=0;panic();
-  if(midiOut){if(!song.mout)buildMout();const M=song.mout;while(mi<M.length&&M[mi].ms<startOff){if(M[mi].r==0)midiOut.send(M[mi].b);mi++}}
+  mi=0;panic();stopSamples();
+  const mo=midiOut&&!song.samples;
+  if(mo){if(!song.mout)buildMout();const M=song.mout;while(mi<M.length&&M[mi].ms<startOff){if(M[mi].r==0)midiOut.send(M[mi].b);mi++}}
   schedTimer=setInterval(sched,25);
   $('go').textContent='重新开始';
   if(!wasRunning)requestAnimationFrame(frame);
 }
 function sched(){
   if(!running)return;const now=songMs();
-  if(midiOut){const M=song.mout;while(mi<M.length&&M[mi].ms<now+300){const x=M[mi++];midiOut.send(x.b,PT(t0+(x.ms-startOff)/1000))}return}
+  if(midiOut&&!song.samples){const M=song.mout;while(mi<M.length&&M[mi].ms<now+300){const x=M[mi++];midiOut.send(x.b,PT(t0+(x.ms-startOff)/1000))}return}
   while(bi<song.back.length&&song.back[bi].t<now+300){const b=song.back[bi++];voice(b,t0+(b.t-startOff)/1000)}
 }
 const fx=[],FXC={PERFECT:'255,210,77',GREAT:'108,255,176',GOOD:'108,140,255'};
