@@ -552,8 +552,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.8';
+const VERSION='0.9.9';
 const CHANGELOG=[
+  ['0.9.9','2026-10-10','BGA 修正（樱华月）：底层（04）遇到未定义的素材编号（如 #BMP7C）时保持上一帧，不再当成“清空”造成每秒十几次的黑屏闪烁；叠加层（07/0A）遇到未定义编号（如 #BMPFF）仍按清空处理，用来结束白闪'],
   ['0.9.8','2026-10-10','BGA 修正：第一个 BGA 事件出现后背景不再在“BGA / 主题背景”之间来回切换（某一刻所有层都为空时按黑底显示），修复闪屏；发声诊断里增加当前三层 BGA 编号，便于排查'],
   ['0.9.7','2026-10-10','BGA 修正：无法加载的素材（如 mpg/avi 或缺失文件）不再丢弃事件，而是按“清空该层”处理，避免上一张图（如白色闪光）一直停留造成白屏；该时刻没有任何可显示画面时恢复显示主题背景'],
   ['0.9.6','2026-10-10','声卡输出：新增“显示设备名”按钮（浏览器需一次授权才提供设备名称，仅读取名称不录音），并过滤掉系统重复的“默认/通信”条目'],
@@ -1272,7 +1273,7 @@ function drawBga(now){
   if(bgac.width!==cw||bgac.height!==chh){bgac.width=cw;bgac.height=chh}
   const L=song.bga,cur=[null,null,null];
   let lo=0,hi=L.length-1,k=-1;while(lo<=hi){const m=(lo+hi)>>1;if(L[m].t<=now){k=m;lo=m+1}else hi=m-1}
-  for(let i=k;i>=0&&k-i<600;i--){const e=L[i];if(!cur[e.l])cur[e.l]=e;if(cur[0]&&cur[1]&&cur[2])break}
+  for(let i=k;i>=0&&k-i<2000;i--){const e=L[i];if(cur[e.l])continue;if(e.l==0&&!song.bmps[e.id])continue;cur[e.l]=e;if(cur[0]&&cur[1]&&cur[2])break} // 底层遇到未定义素材=保持上一帧；叠加层遇到未定义素材=清空
   if(k<0)return false;
   if(!cur[0]&&!cur[1]&&!cur[2]){for(let l=0;l<3;l++){const o=bgaCur[l];if(o&&(song.bmps[o.id]||{}).v)try{(song.bmps[o.id]||{}).v.pause()}catch(x){}bgaCur[l]=null}return false}
   bgx.fillStyle='#000';bgx.fillRect(0,0,cw,chh);let drawn=0;
