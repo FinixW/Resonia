@@ -552,8 +552,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.6';
+const VERSION='0.9.7';
 const CHANGELOG=[
+  ['0.9.7','2026-10-10','BGA 修正：无法加载的素材（如 mpg/avi 或缺失文件）不再丢弃事件，而是按“清空该层”处理，避免上一张图（如白色闪光）一直停留造成白屏；该时刻没有任何可显示画面时恢复显示主题背景'],
   ['0.9.6','2026-10-10','声卡输出：新增“显示设备名”按钮（浏览器需一次授权才提供设备名称，仅读取名称不录音），并过滤掉系统重复的“默认/通信”条目'],
   ['0.9.5','2026-10-10','修复：切换歌曲后 BGA 状态残留导致 BMS 解析失败（Cannot read properties of undefined (reading \'v\')）；声卡输出与 MIDI 输出不再同时显示（hidden 被样式覆盖的问题），声卡输出下拉框默认带“系统默认”'],
   ['0.9.4','2026-10-10','BGA 修正：叠加层（07 / 0A 通道）按 BMS 约定把纯黑当作透明，不再用黑底图片盖住底层动画；叠加层视频改用加亮混合'],
@@ -872,7 +873,7 @@ async function buildBms(ch,find,say){
   await Promise.all([work(),work(),work(),work(),bwork(),bwork()]);
   let end=0;for(const n of P.notes)end=Math.max(end,n.end);
   for(const b of P.back){const s=samples[b.id];b.s=b.id;b.vel=127;b.ch=0;b.ins=0;b.p=60;b.dur=0;end=Math.max(end,b.t+(s?s.duration*1000:0))}
-  return{title:P.title||ch.path.split('/').pop(),lenMs:end+1500,notes:P.notes,back:P.back,ctl:{},mev:[],chan:{},tracks:0,bpm:P.bpm,samples,bga:P.bga.filter(x=>bmps[x.id]),bmps,
+  return{title:P.title||ch.path.split('/').pop(),lenMs:end+1500,notes:P.notes,back:P.back,ctl:{},mev:[],chan:{},tracks:0,bpm:P.bpm,samples,bga:P.bga,bmps,
     kind:'BMS',note:((miss||bad)?`（缺少 ${miss} 个、无法解码 ${bad} 个音频）`:'')+(P.bga.length?` · BGA ${Object.keys(bmps).length} 个素材${bmiss?`（${bmiss} 个无法显示，如 mpg/avi）`:''}`:'')};
 }
 function setSong(s,name,extra){
@@ -1272,7 +1273,7 @@ function drawBga(now){
   let lo=0,hi=L.length-1,k=-1;while(lo<=hi){const m=(lo+hi)>>1;if(L[m].t<=now){k=m;lo=m+1}else hi=m-1}
   for(let i=k;i>=0&&k-i<600;i--){const e=L[i];if(!cur[e.l])cur[e.l]=e;if(cur[0]&&cur[1]&&cur[2])break}
   if(!cur[0]&&!cur[1]&&!cur[2]){for(let l=0;l<3;l++){const o=bgaCur[l];if(o&&(song.bmps[o.id]||{}).v)try{(song.bmps[o.id]||{}).v.pause()}catch(x){}bgaCur[l]=null}return false}
-  bgx.fillStyle='#000';bgx.fillRect(0,0,cw,chh);
+  bgx.fillStyle='#000';bgx.fillRect(0,0,cw,chh);let drawn=0;
   for(let l=0;l<3;l++){
     const e=cur[l],o=bgaCur[l];
     if(o&&e!==o&&(song.bmps[o.id]||{}).v)try{(song.bmps[o.id]||{}).v.pause()}catch(x){}
@@ -1283,9 +1284,9 @@ function drawBga(now){
     const iw=im.width||im.videoWidth,ih=im.height||im.videoHeight;if(!iw||!ih)continue;
     let src=im;bgx.globalCompositeOperation='source-over';
     if(l>0){if(m.i)src=m.k||(m.k=keyBlack(m.i));else bgx.globalCompositeOperation='lighter'}
-    const sc=Math.max(cw/iw,chh/ih);bgx.drawImage(src,(cw-iw*sc)/2,(chh-ih*sc)/2,iw*sc,ih*sc);bgx.globalCompositeOperation='source-over';
+    const sc=Math.max(cw/iw,chh/ih);bgx.drawImage(src,(cw-iw*sc)/2,(chh-ih*sc)/2,iw*sc,ih*sc);bgx.globalCompositeOperation='source-over';drawn++;
   }
-  return true;
+  return drawn>0;
 }
 function draw(now){
   c2.clearRect(0,0,W,H);
