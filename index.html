@@ -406,10 +406,16 @@ function sfFind(drum,pr,key,vel,bank){
 }
 // ---- SF2 audio ----
 // SF3（Ogg Vorbis 压缩的 SF2）：按需用浏览器解码；开始游玩前会先预解码整首歌用到的采样（见 sfPreload）
-function sfDecode(si){
-  if(sf.pend[si])return sf.pend[si];
+function sfDecode(si,retry){
+  if(sf.pend[si]&&!retry)return sf.pend[si];
   const h=sf.sh[si],sr=Math.max(8000,h.sr||44100),bytes=sf.u8.slice(sf.smplOff+h.st,sf.smplOff+h.en);
-  return sf.pend[si]=ctx.decodeAudioData(bytes.buffer).then(ab=>{sf.bufs[si]={buf:ab,sr,ls:h.ls/sr,le:h.le/sr,rk:h.rk,pc:h.pc}},()=>{sf.bufs[si]=null});
+  const st=sf.stat||(sf.stat={dec:0,fail:0,badLoop:0,retried:0});
+  return sf.pend[si]=ctx.decodeAudioData(bytes.buffer).then(ab=>{
+    let ls=h.ls/sr,le=h.le/sr;const dur=ab.duration;
+    // 循环点必须落在解码后的采样内，否则关闭循环（避免在错误位置循环造成怪音）
+    if(h.le>h.ls&&(le>dur+.02||ls<0||ls>=le)){st.badLoop++;ls=0;le=0}
+    st.dec++;sf.bufs[si]={buf:ab,sr,ls,le,rk:h.rk,pc:h.pc}
+  },()=>{sf.bufs[si]=null;st.fail++});
 }
 function sfBuf(si){
   if(sf.bufs[si]!==undefined)return sf.bufs[si]||null;
@@ -443,6 +449,12 @@ async function sfPreload(){
     while(i<list.length){const si=list[i++];sfBuf(si);if(i%6==0){tick();await new Promise(r=>setTimeout(r,0))}}
   }
   if(sf.comp)for(const si of list)if(sf.pend[si])await sf.pend[si];
+  if(sf.comp){ // 解码失败的采样再试一次（并发解码偶尔会失败）
+    const bad=list.filter(si=>sf.bufs[si]===null);
+    for(const si of bad){sf.stat.fail--;sf.stat.retried++;sf.bufs[si]=false;await sfDecode(si,true)}
+    const t=sf.stat;if(t&&typeof setSt=='function'){const k=$('out').value,m='本曲采样 '+list.length+' 个，解码成功 '+t.dec+'，失败 '+t.fail+'，循环点异常 '+t.badLoop;
+      const r=bankSt[k];if(r){r.t=r.t.split('\n')[0]+'\n'+m;if(t.fail||t.badLoop){r.s='warn'}showSt()}}
+  }
   // 预热：浏览器在采样第一次被 AudioBufferSourceNode 使用时会在主线程复制整段数据（大采样会卡几十毫秒，造成卡顿/爆音），这里提前触发一次
   let w=0;
   for(const si of list){const b=sf.bufs[si];if(b&&b.buf){try{const sn=ctx.createBufferSource();sn.buffer=b.buf}catch(x){}}if(++w%6==0){if($('go'))$('go').textContent='预热音色 '+w+'/'+list.length;await new Promise(r=>setTimeout(r,0))}}
@@ -506,8 +518,10 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.8.1';
+const VERSION='0.8.2';
 const CHANGELOG=[
+  ['0.8.2','2026-10-10','SF3：解码失败的采样自动重试，循环点超出采样范围时关闭循环而不是在错误位置循环；音色库图标的提示里显示本曲采样解码统计，便于排查 sf3 音色怪异']
+  ,
   ['0.8.1','2026-10-10','曲库支持子文件夹（如 Lv03、Lv04…），选曲列表按文件夹分组显示']
   ,
   ['0.8.0','2026-10-10','新增在线曲库：与页面同目录的 songs/index.json 里列出的曲目会出现在“曲库”卡片中，选一下就能开始；没有清单时该卡片不显示，原来的“选择谱面”照常可用']
