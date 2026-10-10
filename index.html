@@ -95,6 +95,10 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 #skCustom{background:none;padding:0;max-width:none}
 #keys{justify-content:flex-start}
 
+.gpu{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:400;letter-spacing:0;color:var(--mut);cursor:help}
+.gpu[hidden]{display:none}
+.gpu .st{width:14px;height:14px;font-size:10px}
+.gpu.sw{color:#ffb347}
 /* v0.8.4 紧凑布局 */
 #panel{gap:3px}
 .card{padding:6px 12px 8px;gap:4px}
@@ -143,7 +147,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label></div>
   <details id="skCustom" hidden><summary>自定义素材（图片只保存在你的浏览器里，不会上传）</summary><div id="skSlots"></div><button id="skClear">清除全部素材</button></details>
 </section>
-<section class="card" id="cDbg"><h3>调试</h3><div class="chk"><label><input type="checkbox" id="dbg">发声诊断</label><label><input type="checkbox" id="tm">测试模式（可拖动进度条）</label></div></section>
+<section class="card" id="cDbg"><h3>调试<span id="gpu" class="gpu" hidden></span></h3><div class="chk"><label><input type="checkbox" id="dbg">发声诊断</label><label><input type="checkbox" id="tm">测试模式（可拖动进度条）</label></div></section>
 </div>
 <canvas id="cv" width="420" height="640"></canvas>
 <small>默认按键 S D F 空格 J K L，可在上方自定义（手机可直接点按轨道，可滑动扫音符；手指较粗时调大“触控范围”，一指可同时按多条轨道）。按 1/↓ 减速，2/↑ 加速。Esc 结束（手机上开局后会隐藏设置，点右上角 ✕ 退出）。伴奏为内置简易合成音色，音质不代表最终效果。</small>
@@ -540,8 +544,10 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.8.7';
+const VERSION='0.8.8';
 const CHANGELOG=[
+  ['0.8.8','2026-10-10','“调试”标题右侧显示渲染方式（硬件加速 / 软件渲染）；检测到软件渲染时显示橙色提示，鼠标悬停可看到原因和开启硬件加速的办法']
+  ,
   ['0.8.7','2026-10-10','针对长条下落时的黑色横条/撕裂：长条只绘制可见部分（不再提交超大矩形）、音符位置对齐到物理像素、画布单独成合成层、渐变对象缓存减少垃圾回收']
   ,
   ['0.8.6','2026-10-10','画面更顺滑：音符位置改用平滑时钟（音频时钟每次跳 3~10ms，直接用来画会让音符抖动、像掉帧；实测每帧抖动从 4.7ms 降到 0.3ms）；勾选“发声诊断”会显示 FPS']
@@ -998,6 +1004,17 @@ const fmtT=ms=>{const t=Math.max(0,ms/1000|0);return (t/60|0)+':'+String(t%60).p
     el.addEventListener('input',u);ups.push(u);u();
   });
   setInterval(()=>ups.forEach(u=>u()),400);
+})();
+// ---- 渲染方式检测：浏览器没开硬件加速（软件渲染）时，在“调试”标题右侧提示 ----
+(function(){
+  const el=$('gpu');let name='',hw=null;
+  try{const c=document.createElement('canvas'),g=c.getContext('webgl')||c.getContext('experimental-webgl');
+    if(g){const e=g.getExtension('WEBGL_debug_renderer_info');name=String(e?g.getParameter(e.UNMASKED_RENDERER_WEBGL):g.getParameter(g.RENDERER));hw=!/swiftshader|llvmpipe|softpipe|software|basic render|warp/i.test(name)}
+    else hw=false}catch(x){}
+  if(hw===null)return;
+  el.hidden=false;el.classList.toggle('sw',!hw);
+  el.innerHTML='<span class="st '+(hw?'ok':'warn')+'"></span>'+(hw?'硬件加速':'软件渲染');
+  el.title=hw?'浏览器正在使用显卡渲染：'+name:'浏览器没有使用显卡渲染（'+(name||'WebGL 不可用')+'），画面可能卡顿、撕裂。请在浏览器设置里开启“使用图形加速功能”后重启浏览器；Chrome 可打开 chrome://gpu 查看状态。';
 })();
 let pKey='',seekDrag=null,seekMs=null;
 let prevOut=null;
