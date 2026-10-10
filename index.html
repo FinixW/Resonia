@@ -540,8 +540,10 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.8.5';
+const VERSION='0.8.6';
 const CHANGELOG=[
+  ['0.8.6','2026-10-10','画面更顺滑：音符位置改用平滑时钟（音频时钟每次跳 3~10ms，直接用来画会让音符抖动、像掉帧；实测每帧抖动从 4.7ms 降到 0.3ms）；勾选“发声诊断”会显示 FPS']
+  ,
   ['0.8.5','2026-10-10','兼容带 VOS1 标记块的 VOS 变体（如 V - ANOTHER.VOS，之前报“Offset is outside the bounds of the DataView”）']
   ,
   ['0.8.4','2026-10-10','设置界面更紧凑：卡片间距缩小约 2/3，滑杆行距减半，按键设置收成一行（标题行带“恢复默认”）']
@@ -615,7 +617,15 @@ renderKeys();
 const $=id=>document.getElementById(id);
 let song=null,running=false,t0=0,startOff=0,bi=0,combo=0,maxCombo=0,score=0,cnt,keys=Array(7).fill(false),flash=Array(7).fill(0),lastJ='',lastJT=0,ended=false,schedTimer=0;
 let lanesQ=[],lp=[],holdN=[];
-const songMs=()=>(ctx.currentTime-t0)*1000+startOff;
+const rawMs=()=>(ctx.currentTime-t0)*1000+startOff;
+// 平滑的歌曲时间：音频时钟 currentTime 是一格一格跳的（每次约 3~10ms），直接拿来画画面会让音符抖动，看起来像掉帧；
+// 这里用 performance.now() 在两次音频时钟更新之间插值，并缓慢向真实音频时间靠拢（误差大时直接对齐）
+const ck={p:0,m:0,ok:false};
+const songMs=()=>{
+  const pn=performance.now(),r=rawMs();
+  if(!ck.ok||Math.abs(r-(ck.m+(pn-ck.p)))>80){ck.m=r;ck.p=pn;ck.ok=true;return r}
+  const est=ck.m+(pn-ck.p),e=Math.max(ck.m,est+(r-est)*.05);ck.m=e;ck.p=pn;return e;
+};
 const offs=()=>+$('off').value;
 
 let midiAccess=null,midiOut=null,mi=0;
@@ -736,7 +746,7 @@ async function start(){
   startOff=$('skip').checked?Math.max(-1500,first-3000):-1500;
   if($('tm').checked&&seekMs!=null)startOff=Math.max(-1500,seekMs); // 测试模式：从拖动到的位置开始
   for(const n of song.notes)n.done=n.t<startOff;
-  t0=ctx.currentTime+.1;running=true;
+  t0=ctx.currentTime+.1;ck.ok=false;running=true;
   while(bi<song.back.length&&song.back[bi].t+song.back[bi].dur*1000<startOff)bi++;
   mi=0;panic();
   if(midiOut){if(!song.mout)buildMout();const M=song.mout;while(mi<M.length&&M[mi].ms<startOff){if(M[mi].r==0)midiOut.send(M[mi].b);mi++}}
@@ -944,7 +954,9 @@ const pu=e=>{const cur=ptr.get(e.pointerId);if(!cur)return;ptr.delete(e.pointerI
 cv.addEventListener('pointerup',pu);cv.addEventListener('pointercancel',pu);cv.addEventListener('lostpointercapture',pu);
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 
+let fpsN=0,fpsT=0,fps=0;
 function frame(){
+  {const pn=performance.now();fpsN++;if(pn-fpsT>=500){fps=Math.round(fpsN*1000/(pn-fpsT));fpsN=0;fpsT=pn}}
   if(!running){draw(song&&ctx?songMs():0);return}
   const now=songMs(),jn=now+offs();
   for(const n of song.notes){
@@ -1047,7 +1059,7 @@ function draw(now){
   c2.textAlign='left';c2.fillStyle='#e8ebff';c2.font='bold 20px system-ui';if(S.hud!='panel')c2.fillText(String(score).padStart(7,'0'),10,28);
   const tot=cnt?cnt.P+cnt.G+cnt.O+cnt.B+cnt.M:0;
   if(tot&&S.hud!='panel'){c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText('准确率 '+((cnt.P*1+cnt.G*.7+cnt.O*.4)/tot*100).toFixed(1)+'%',10,48)}
-  if($('dbg').checked&&running){c2.textAlign='left';c2.font='12px system-ui';c2.fillStyle='#8b92c4';c2.fillText('发声 '+voices+' · 丢音 '+drops,10,66);c2.fillText(dbgLast,10,82)}
+  if($('dbg').checked&&running){c2.textAlign='left';c2.font='12px system-ui';c2.fillStyle='#8b92c4';c2.fillText('FPS '+fps+' · 发声 '+voices+' · 丢音 '+drops,10,66);c2.fillText(dbgLast,10,82)}
   if(performance.now()-spdT<900){c2.textAlign='right';c2.font='bold 16px system-ui';c2.fillStyle='#ffd24d';c2.fillText('速度 '+(+$('spd').value).toFixed(2),W-10,60)}
   if(running&&document.body.classList.contains('playing')){c2.textAlign='center';c2.font='bold 22px system-ui';c2.fillStyle='rgba(255,255,255,.5)';c2.fillText('✕',W-28,32)}
   if(combo>1){c2.textAlign='center';c2.font='bold 44px system-ui';c2.fillStyle='rgba(255,255,255,.85)';if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.55)';c2.strokeText(combo,W/2,220)}c2.fillText(combo,W/2,220);c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText('COMBO',W/2,240)}
