@@ -552,8 +552,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.7';
+const VERSION='0.9.8';
 const CHANGELOG=[
+  ['0.9.8','2026-10-10','BGA 修正：第一个 BGA 事件出现后背景不再在“BGA / 主题背景”之间来回切换（某一刻所有层都为空时按黑底显示），修复闪屏；发声诊断里增加当前三层 BGA 编号，便于排查'],
   ['0.9.7','2026-10-10','BGA 修正：无法加载的素材（如 mpg/avi 或缺失文件）不再丢弃事件，而是按“清空该层”处理，避免上一张图（如白色闪光）一直停留造成白屏；该时刻没有任何可显示画面时恢复显示主题背景'],
   ['0.9.6','2026-10-10','声卡输出：新增“显示设备名”按钮（浏览器需一次授权才提供设备名称，仅读取名称不录音），并过滤掉系统重复的“默认/通信”条目'],
   ['0.9.5','2026-10-10','修复：切换歌曲后 BGA 状态残留导致 BMS 解析失败（Cannot read properties of undefined (reading \'v\')）；声卡输出与 MIDI 输出不再同时显示（hidden 被样式覆盖的问题），声卡输出下拉框默认带“系统默认”'],
@@ -1272,6 +1273,7 @@ function drawBga(now){
   const L=song.bga,cur=[null,null,null];
   let lo=0,hi=L.length-1,k=-1;while(lo<=hi){const m=(lo+hi)>>1;if(L[m].t<=now){k=m;lo=m+1}else hi=m-1}
   for(let i=k;i>=0&&k-i<600;i--){const e=L[i];if(!cur[e.l])cur[e.l]=e;if(cur[0]&&cur[1]&&cur[2])break}
+  if(k<0)return false;
   if(!cur[0]&&!cur[1]&&!cur[2]){for(let l=0;l<3;l++){const o=bgaCur[l];if(o&&(song.bmps[o.id]||{}).v)try{(song.bmps[o.id]||{}).v.pause()}catch(x){}bgaCur[l]=null}return false}
   bgx.fillStyle='#000';bgx.fillRect(0,0,cw,chh);let drawn=0;
   for(let l=0;l<3;l++){
@@ -1286,7 +1288,7 @@ function drawBga(now){
     if(l>0){if(m.i)src=m.k||(m.k=keyBlack(m.i));else bgx.globalCompositeOperation='lighter'}
     const sc=Math.max(cw/iw,chh/ih);bgx.drawImage(src,(cw-iw*sc)/2,(chh-ih*sc)/2,iw*sc,ih*sc);bgx.globalCompositeOperation='source-over';drawn++;
   }
-  return drawn>0;
+  return true;
 }
 function draw(now){
   c2.clearRect(0,0,W,H);
@@ -1339,7 +1341,7 @@ function draw(now){
   c2.textAlign='left';c2.fillStyle='#e8ebff';c2.font='bold 20px system-ui';if(S.hud!='panel')c2.fillText(String(score).padStart(7,'0'),10,28);
   const tot=cnt?cnt.P+cnt.G+cnt.O+cnt.B+cnt.M:0;
   if(tot&&S.hud!='panel'){c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText('准确率 '+((cnt.P*1+cnt.G*.7+cnt.O*.4)/tot*100).toFixed(1)+'%',10,48)}
-  if($('dbg').checked&&running){c2.textAlign='left';c2.font='12px system-ui';c2.fillStyle='#8b92c4';c2.fillText('FPS '+fps+' · 发声 '+voices+' · 丢音 '+drops,10,66);c2.fillText(dbgLast,10,82)}
+  if($('dbg').checked&&running){c2.textAlign='left';c2.font='12px system-ui';c2.fillStyle='#8b92c4';c2.fillText('FPS '+fps+' · 发声 '+voices+' · 丢音 '+drops+(song&&song.bga&&song.bga.length?' · BGA '+bgaCur.map(e=>e?e.id:'-').join('/'):''),10,66);c2.fillText(dbgLast,10,82)}
   if(performance.now()-spdT<900){c2.textAlign='right';c2.font='bold 16px system-ui';c2.fillStyle='#ffd24d';c2.fillText('速度 '+(+$('spd').value).toFixed(2),W-10,60)}
   if(running&&document.body.classList.contains('playing')){c2.textAlign='center';c2.font='bold 22px system-ui';c2.fillStyle='rgba(255,255,255,.5)';c2.fillText('✕',W-28,32)}
   if(combo>1){c2.textAlign='center';c2.font='bold 44px system-ui';c2.fillStyle='rgba(255,255,255,.85)';if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.55)';c2.strokeText(combo,W/2,220)}c2.fillText(combo,W/2,220);c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText('COMBO',W/2,240)}
