@@ -137,7 +137,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 <section class="card" id="cKeys"><h3>按键<small class="hint">点击后按新键</small><button id="kreset">恢复默认</button></h3><div id="keys"><span id="kb"></span></div></section>
 <section class="card" id="cSnd"><h3>声音</h3>
   <div class="sl"><span>游戏音量</span><input type="range" id="mv" min="0" max="1.5" step="0.1" value="1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
-  <div id="sinkBox" class="row" hidden><span class="lb">声卡输出</span><select id="sink"><option value="">系统默认</option></select></div>
+  <div id="sinkBox" class="row" hidden><span class="lb">声卡输出</span><select id="sink"><option value="">系统默认</option></select><button id="sinkNm" class="fbtn sm" style="border:0;cursor:pointer" title="浏览器要先获得一次麦克风授权才会提供设备名称（只用于读取名称，不会录音）">显示设备名</button></div>
   <div id="midiBox">
   <div class="row"><span class="lb">MIDI 输出</span><select id="omode"><option value="int">内部合成器</option><option value="ext">外部合成器</option></select></div>
   <div id="ext" hidden>
@@ -552,8 +552,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.5';
+const VERSION='0.9.6';
 const CHANGELOG=[
+  ['0.9.6','2026-10-10','声卡输出：新增“显示设备名”按钮（浏览器需一次授权才提供设备名称，仅读取名称不录音），并过滤掉系统重复的“默认/通信”条目'],
   ['0.9.5','2026-10-10','修复：切换歌曲后 BGA 状态残留导致 BMS 解析失败（Cannot read properties of undefined (reading \'v\')）；声卡输出与 MIDI 输出不再同时显示（hidden 被样式覆盖的问题），声卡输出下拉框默认带“系统默认”'],
   ['0.9.4','2026-10-10','BGA 修正：叠加层（07 / 0A 通道）按 BMS 约定把纯黑当作透明，不再用黑底图片盖住底层动画；叠加层视频改用加亮混合'],
   ['0.9.3','2026-10-10','BGA 改为显示在整个页面背景（取代主题背景图，随浏览器窗口大小铺满），Delete 键或勾选 BGA 可开关；新增“游戏音量”总音量滑杆（始终显示）；声音设置按歌曲类型切换：MIDI 类歌曲（VOS 等）显示 MIDI 输出与音色库，音频类歌曲（BMS 等）显示声卡输出选择'],
@@ -887,9 +888,12 @@ async function fillSink(){
   let ds=[];try{ds=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind=='audiooutput')}catch(x){}
   let sv='';try{sv=localStorage.getItem('resonia-sink')||''}catch(x){}
   sel.innerHTML='<option value="">系统默认</option>';
-  ds.forEach((d,i)=>{if(d.deviceId=='default')return;const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('输出设备 '+(i+1));sel.appendChild(o)});
+  const hasName=ds.some(d=>d.label);$('sinkNm').hidden=hasName;
+  ds=ds.filter(d=>d.deviceId!='default'&&d.deviceId!='communications');
+  ds.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('输出设备 '+(i+1)+'（名称未授权）');sel.appendChild(o)});
   sel.value=[...sel.options].some(o=>o.value==sv)?sv:'';
 }
+$('sinkNm').onclick=async()=>{try{const st=await navigator.mediaDevices.getUserMedia({audio:true});st.getTracks().forEach(t=>t.stop())}catch(x){$('info').textContent='未获得授权，无法显示设备名称';return}await fillSink()};
 $('sink').onchange=()=>{const v=$('sink').value;try{localStorage.setItem('resonia-sink',v)}catch(x){}initAudio();if(ctx.setSinkId)ctx.setSinkId(v).catch(()=>{})};
 try{const m=localStorage.getItem('resonia-mv');if(m)$('mv').value=m}catch(x){}
 $('mv').oninput=()=>{if(master)master.gain.value=.6*(+$('mv').value);try{localStorage.setItem('resonia-mv',$('mv').value)}catch(x){}};
