@@ -137,9 +137,8 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div id="info"></div>
   <div id="need" class="row" hidden style="font-size:13px"><span id="needt" style="color:var(--mu)"></span><label class="fbtn sm"><span id="needb">选择</span><input type="file" id="needf" multiple></label><button id="needd" class="fbtn sm" style="border:0;cursor:pointer" hidden title="选一次歌曲所在的文件夹，之后选 OJM 就会自动找同名 OJN（仅 Chrome / Edge）">在文件夹中自动查找</button></div>
   <div class="sl"><span>速度</span><input type="range" id="spd" min="0.25" max="1.2" step="0.05" value="0.55" data-major="0.25" data-fmt="x"><b class="rv"></b></div>
-  <div class="sl"><span>延迟</span><input type="range" id="off" min="-400" max="400" step="5" value="0" data-minor="20" data-major="100" data-fmt="ms"><b class="rv" id="offv"></b><button id="calb" class="fbtn sm" style="border:0;margin:2px 0 0 auto" title="跟着节拍点按，自动测出你的设备延迟并设置“延迟”">校准</button></div>
-  <div class="sl"><span>触控范围</span><input type="range" id="tw" min="0.5" max="3" step="0.5" value="1.5" data-major="1" data-fmt="x"><b class="rv"></b></div>
-  <div class="chk"><label><input type="checkbox" id="skip" checked>跳过前奏</label><label><input type="checkbox" id="fs">开局隐藏设置</label></div>
+  <div class="sl"><span>延迟</span><input type="range" id="off" min="-400" max="400" step="5" value="0" data-minor="20" data-major="100" data-fmt="ms"><b class="rv" id="offv"></b></div>
+  <div class="chk"><label><input type="checkbox" id="skip" checked>跳过前奏</label><label><input type="checkbox" id="fs">开局隐藏设置</label><button id="calb" class="fbtn sm" style="border:0;margin-left:auto" title="跟着节拍点按，自动测出你的设备延迟并设置“延迟”">延迟校准</button></div>
 </section>
 <section class="card" id="cLib" hidden><h3>曲库</h3><div class="row"><span class="lb">曲目</span><select id="lib"></select></div></section>
 <section class="card" id="cKeys"><h3>按键<small class="hint">点击后按新键</small><button id="kreset">恢复默认</button></h3><div id="keys"><span id="kb"></span></div></section>
@@ -159,14 +158,14 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div class="sl"><span>按键音量</span><input type="range" id="kv" min="0" max="2.5" step="0.1" value="1.3" data-minor="0.1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
 </section>
 <section class="card" id="cSkin"><h3>皮肤</h3>
-  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
+  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="iidx">IIDX 1P</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
   <details id="skCustom" hidden><summary>自定义素材（图片只保存在你的浏览器里，不会上传）</summary><div id="skSlots"></div><button id="skClear">清除全部素材</button></details>
 </section>
 <section class="card" id="cPlug"><h3>第三方<span class="gpu" style="color:var(--mu)">格式插件</span></h3><div class="row"><label class="fbtn sm">载入插件…<input type="file" id="plf" accept=".js" multiple></label><span id="plmsg" class="fname" style="color:var(--mu)">未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器</span></div><div id="pll"></div></section>
 <section class="card" id="cDbg"><h3>调试<span id="gpu" class="gpu" hidden></span></h3><div class="chk"><label><input type="checkbox" id="dbg">发声诊断</label><label><input type="checkbox" id="tm">测试模式（可拖动进度条）</label></div></section>
 </div>
 <canvas id="cv" width="420" height="640"></canvas>
-<small><a href="studio/" target="_blank" style="color:#8ea6ff">谱面工具 Studio</a>（转换 / 导出 .rsm，之后还有谱面编辑）· 默认按键 S D F 空格 J K L，可在上方自定义（手机可直接点按轨道，可滑动扫音符；手指较粗时调大“触控范围”，一指可同时按多条轨道）。按 1/↓ 减速，2/↑ 加速。Esc 结束（手机上开局后会隐藏设置，点右上角 ✕ 退出）。伴奏为内置简易合成音色，音质不代表最终效果。</small>
+<small><a href="studio/" target="_blank" style="color:#8ea6ff">谱面工具 Studio</a>（转换 / 导出 .rsm，之后还有谱面编辑）· 默认按键 S D F 空格 J K L，可在上方自定义（手机可直接点按轨道，可滑动扫音符；一指可同时按多条轨道）。按 1/↓ 减速，2/↑ 加速。Esc 结束（手机上开局后会隐藏设置，点右上角 ✕ 退出）。伴奏为内置简易合成音色，音质不代表最终效果。</small>
 <div id="cal" hidden><div class="calbox"><h3>延迟校准</h3><p id="calt">戴上平时玩游戏用的耳机/音箱。听到“嘀”声（或看到圆点闪烁）就按任意键、点击或触摸；先 4 拍预备，再测 16 拍。</p><div id="caldot"></div><div id="calp">准备中…</div><div style="display:flex;justify-content:center;gap:12px"><button id="calgo" class="fbtn sm" style="border:0">开始</button><button id="calx" class="fbtn sm" style="border:0;background:#3a3f66">关闭</button></div></div></div>
 <script>
 // ---------- VOS parser (7 lanes; 768 ticks/beat; BPM from embedded MIDI) ----------
@@ -562,8 +561,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.20';
+const VERSION='0.9.21';
 const CHANGELOG=[
+  ['0.9.21','2026-10-12','新增“IIDX 1P”皮肤（转盘轨道在左、加宽并与键区拉开间隔，其余轨道收窄）；轨道几何改为每条轨道可单独设置；去掉从未生效的“触控范围”；“延迟校准”按钮并入“跳过前奏”一行'],
   ['0.9.20','2026-10-11','新增“延迟校准”：节拍器 + 点按，自动测出设备/个人延迟并设置“延迟”；“延迟”范围扩大到 ±400ms，并记住上次的值'],
   ['0.9.19','2026-10-11','插件可提供“场景式 BGA”（bgaScene.render）：每帧由插件把动画画到背景画布上；用于 DJMAX 的 VCQ/VCE 多层动画 BGA'],
   ['0.9.18','2026-10-11','小节线改为固定显示且更亮（去掉开关）；曲目可带“下落缩放”（DJMAX 的 MeasureScale，音符间距按倍数拉开）；歌曲时间扣除声卡输出延迟（outputLatency），画面与听到的声音对齐'],
@@ -633,7 +633,7 @@ const CHANGELOG=[
   g('vbtn').onclick=()=>{g('vlog').hidden=!g('vlog').hidden}})();
 
 // ---------- Game ----------
-const cv=document.getElementById('cv'),c2=cv.getContext('2d'),W=420,LW=W/7;let H=640,JY=H-110;
+const cv=document.getElementById('cv'),c2=cv.getContext('2d'),W=420,LW=W/7,LX=[0,1,2,3,4,5,6].map(l=>l*LW),LD=Array(7).fill(LW);let H=640,JY=H-110;
 const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;c2.scale(dpr,dpr);
 // 游玩时画布高度随浏览器高度伸缩（宽度不变）：逻辑高度 H 按实际显示比例换算，落点区随之拉长
 const JYo=()=>S.hud=='panel'?152:110; // 信息面板模式下底部留出更高的区域
@@ -1188,8 +1188,6 @@ $('dirf').onchange=async e=>{await importFiles(e.target.files);e.target.value=''
 })();
 const touchish=()=>{let m=false;try{m=matchMedia('(pointer:coarse), (max-width:700px)').matches}catch(x){}return m||navigator.maxTouchPoints>0||'ontouchstart' in window||innerWidth<=700};
 {let sv=null;try{sv=localStorage.getItem('resonia-fs')}catch(x){}$('fs').checked=sv===null?touchish():sv==='1'}
-try{const tv=localStorage.getItem('resonia-tw');if(tv)$('tw').value=tv}catch(x){}
-$('tw').onchange=()=>{try{localStorage.setItem('resonia-tw',$('tw').value)}catch(x){}};
 $('fs').onchange=()=>{try{localStorage.setItem('resonia-fs',$('fs').checked?'1':'0')}catch(x){}};
 $('go').onclick=start;
 
@@ -1227,7 +1225,7 @@ function addFx(l,j){
   fx.push({l,s:performance.now(),c:FXC[j],p});
 }
 // ---------- Skin（皮肤）：主题 + 自定义图片素材 ----------
-const K3=[['#f4f6ff','#aeb8f0'],['#62b8ff','#2c72d6'],['#ffd24d','#e0961a']],KIND=[0,1,0,2,0,1,0];
+const K3=[['#f4f6ff','#aeb8f0'],['#62b8ff','#2c72d6'],['#ffd24d','#e0961a']],KIND0=[0,1,0,2,0,1,0];let KIND=KIND0;
 const SKSLOTS=[['bg','页面背景'],['field','轨道背景'],['note0','白键音符'],['note1','蓝键音符'],['note2','黄键音符'],['hold','长条'],['line','判定线'],['key0','按键（松开）'],['key1','按键（按下）'],['fx','打击特效']];
 const svgUrl=x=>'url("data:image/svg+xml,'+encodeURIComponent(x)+'")';
 const MEADOW=svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 750" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#241a4d"/><stop offset=".45" stop-color="#6d54b0"/><stop offset=".72" stop-color="#d9c8ee"/></linearGradient><radialGradient id="m" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6d8"/><stop offset="1" stop-color="#fff6d8" stop-opacity="0"/></radialGradient></defs><rect width="1000" height="750" fill="url(#s)"/><circle cx="820" cy="150" r="130" fill="url(#m)"/><g fill="#fff" opacity=".8"><circle cx="120" cy="80" r="2"/><circle cx="260" cy="150" r="1.5"/><circle cx="420" cy="60" r="2"/><circle cx="560" cy="130" r="1.5"/><circle cx="700" cy="50" r="2"/><circle cx="930" cy="260" r="1.5"/></g><ellipse cx="300" cy="760" rx="700" ry="250" fill="#7fd05c"/><ellipse cx="880" cy="780" rx="520" ry="230" fill="#5db854"/><ellipse cx="620" cy="560" rx="150" ry="70" fill="#a6e07f"/><g><circle cx="700" cy="470" r="95" fill="#f6c9dc"/><rect x="655" y="470" width="90" height="70" fill="#f6c9dc"/><circle cx="700" cy="455" r="22" fill="#fff3a8" stroke="#e59ab8" stroke-width="5"/><path d="M590 480a110 70 0 0 1 220 0z" fill="#e9577f"/></g><g><circle cx="900" cy="560" r="70" fill="#fff"/><ellipse cx="880" cy="500" rx="14" ry="48" fill="#fff"/><ellipse cx="925" cy="500" rx="14" ry="48" fill="#fff"/><circle cx="880" cy="560" r="7" fill="#7a3d3d"/><circle cx="920" cy="560" r="7" fill="#7a3d3d"/></g><g fill="#fff"><circle cx="560" cy="690" r="9"/><circle cx="590" cy="680" r="7"/><circle cx="780" cy="710" r="9"/><circle cx="440" cy="705" r="7"/></g><g fill="#ffd24d"><circle cx="560" cy="690" r="3"/><circle cx="780" cy="710" r="3"/></g></svg>`);
@@ -1236,6 +1234,7 @@ const SK={
   meadow:{name:'糖果星球',layout:'left',hud:'panel',field:'glass',pal:K3,style:'pill',page:MEADOW+' center/cover fixed #2b1d4f',glow:'255,226,160',line:'rgba(255,255,255,.95)'},
   neon:{name:'霓虹',layout:'center',hud:'panel',field:'glass',pal:[['#eafcff','#7fd9ff'],['#25d9ff','#0a8ab0'],['#ff4fd8','#a01788']],style:'neon',
     page:'radial-gradient(ellipse at 50% 20%,#1b1650 0,transparent 60%),linear-gradient(rgba(37,217,255,.07) 1px,transparent 1px) 0 0/42px 42px,linear-gradient(90deg,rgba(37,217,255,.07) 1px,transparent 1px) 0 0/42px 42px,#05060f',glow:'37,217,255',line:'#25d9ff'},
+  iidx:{name:'IIDX 1P',layout:'center',hud:'panel',field:'glass',pal:[['#f4f6ff','#b9c2f2'],['#5fb4ff','#2a6fd0'],['#ff5a6a','#b3162a']],style:'pill',kind:[2,0,1,0,1,0,1],geo:{tt:104,gap:18},tt:true,page:'radial-gradient(ellipse at 50% 0,#2a1630 0,transparent 65%),linear-gradient(#0a0b14,#10101c)',glow:'255,90,106',line:'#ff4d5e'},
   custom:{name:'自定义',layout:'center',hud:'classic',pal:K3,style:'pill',field:''}
 };
 let S=SK.classic,SI={};const CI={},CIfile={};
@@ -1269,10 +1268,18 @@ function skLine(){
   g.addColorStop(0,'rgba('+gl+',0)');g.addColorStop(.5,'rgba('+gl+',.35)');g.addColorStop(1,'rgba('+gl+',0)');
   c2.fillStyle=g;c2.fillRect(0,JY-16,W,32);c2.fillStyle=S.line||'rgba(150,160,215,.7)';c2.fillRect(0,JY-1,W,2);
 }
+function skTT(x,y,w,h,on){ // IIDX 转盘：圆盘 + 红色刻线，按下时亮起
+  const c=S.pal[2],cx=x+w/2,cy=y+h/2,r=Math.min(h/2+2,w/2-4);
+  rr(x,y,w,h,8);c2.fillStyle='rgba(18,14,24,.95)';c2.fill();c2.strokeStyle=on?c[0]:'rgba(255,90,106,.45)';c2.lineWidth=on?2:1;c2.stroke();
+  c2.beginPath();c2.arc(cx,cy,r,0,Math.PI*2);const g=c2.createRadialGradient(cx,cy,2,cx,cy,r);g.addColorStop(0,on?'#ff9aa4':'#4a4a58');g.addColorStop(1,on?c[1]:'#1c1c26');c2.fillStyle=g;c2.fill();c2.strokeStyle=on?'#fff':'rgba(255,255,255,.35)';c2.lineWidth=1;c2.stroke();
+  const a=(performance.now()/180)%(Math.PI*2),a2=on?a:0;c2.strokeStyle=c[0];c2.lineWidth=2;c2.beginPath();c2.moveTo(cx+Math.cos(a2)*r*.25,cy+Math.sin(a2)*r*.25);c2.lineTo(cx+Math.cos(a2)*r*.92,cy+Math.sin(a2)*r*.92);c2.stroke();
+  c2.fillStyle='rgba(255,255,255,.85)';c2.font='bold 11px system-ui';c2.fillText(label(bind[0]),cx,cy+4);c2.font='bold 15px system-ui';
+}
 function skKeys(){
   c2.font='bold 15px system-ui';c2.textAlign='center';
   for(let l=0;l<7;l++){
-    const x=l*LW+3,y=JY+12,w=LW-6,h=38,k=KIND[l],on=keys[l],im=on?SI.key1:SI.key0;
+    const x=LX[l]+3,y=JY+12,w=LD[l]-6,h=38,k=KIND[l],on=keys[l],im=on?SI.key1:SI.key0;
+    if(S.tt&&l==0&&!imOK(im)){skTT(x,y,w,h,on);continue}
     if(imOK(im))c2.drawImage(im,x,y,w,h);
     else{
       const c=S.pal[k];rr(x,y,w,h,7);
@@ -1280,7 +1287,7 @@ function skKeys(){
       else{const g=c2.createLinearGradient(0,y,0,y+h);if(on){g.addColorStop(0,'#fff');g.addColorStop(1,c[0])}else{g.addColorStop(0,c[0]);g.addColorStop(1,c[1])}
         c2.fillStyle=g;c2.fill();c2.strokeStyle='rgba(0,0,0,.45)';c2.lineWidth=1;c2.stroke();c2.fillStyle='rgba(255,255,255,.5)';c2.fillRect(x+5,y+3,w-10,2)}
     }
-    c2.fillStyle=S.style=='neon'?'#eafcff':'rgba(20,24,60,.85)';c2.fillText(label(bind[l]),l*LW+LW/2,y+h/2+5);
+    c2.fillStyle=S.style=='neon'?'#eafcff':'rgba(20,24,60,.85)';c2.fillText(label(bind[l]),LX[l]+LD[l]/2,y+h/2+5);
   }
 }
 let songInfo='';
@@ -1300,6 +1307,10 @@ function skHud(now){
     it.forEach((q,i)=>{c2.fillStyle=q[2];c2.font='bold 9px system-ui';c2.fillText(q[0],x+cw*i+cw/2,y+h-14);c2.fillStyle='#fff';c2.font='bold 12px system-ui';c2.fillText(String(q[1]),x+cw*i+cw/2,y+h-3)});
   }
 }
+function setGeo(g){ // 每条轨道的横向位置与宽度；默认等宽，IIDX：第 0 条（转盘）加宽，并与键区拉开间隔，其余变窄
+  if(!g){for(let l=0;l<7;l++){LX[l]=l*LW;LD[l]=LW}return}
+  const n=7,kw=(W-g.tt-g.gap)/(n-1);LX[0]=0;LD[0]=g.tt;for(let l=1;l<n;l++){LX[l]=g.tt+g.gap+(l-1)*kw;LD[l]=kw}
+}
 function applySkin(){skG={};
   const id=$('skinSel').value;S={...(SK[id]||SK.classic)};SI=id=='custom'?CI:{};
   const lay=$('skLay').value||S.layout;
@@ -1308,6 +1319,7 @@ function applySkin(){skG={};
   document.body.style.background=pg;
   S.hud=$('skHud').checked?'panel':'classic';
   $('skCustom').hidden=id!='custom';
+  KIND=S.kind||KIND0;setGeo(S.geo);
   JY=H-JYo();
   try{localStorage.setItem('resonia-skin',JSON.stringify({id,lay:$('skLay').value,hud:$('skHud').checked}))}catch(x){}
   if(typeof draw=='function'&&!running)draw(song&&ctx?songMs():0);
@@ -1316,13 +1328,13 @@ function drawFx(){
   const now=performance.now();
   for(let i=fx.length-1;i>=0;i--){
     const e=fx[i],age=now-e.s;if(age>400){fx.splice(i,1);continue}
-    const k=age/400,cx=e.l*LW+LW/2,cy=JY-1;
-    if(imOK(SI.fx)){const z=LW*(1.1+k*1.3);c2.globalAlpha=1-k;c2.drawImage(SI.fx,cx-z/2,cy-z/2,z,z);c2.globalAlpha=1;continue}
-    c2.fillStyle=`rgba(${e.c},${.6*(1-k)})`;c2.fillRect(e.l*LW+2,JY-11,LW-4,20);
+    const k=age/400,lw=LD[e.l],cx=LX[e.l]+lw/2,cy=JY-1;
+    if(imOK(SI.fx)){const z=lw*(1.1+k*1.3);c2.globalAlpha=1-k;c2.drawImage(SI.fx,cx-z/2,cy-z/2,z,z);c2.globalAlpha=1;continue}
+    c2.fillStyle=`rgba(${e.c},${.6*(1-k)})`;c2.fillRect(LX[e.l]+2,JY-11,lw-4,20);
     const g=c2.createLinearGradient(0,JY-120,0,JY);g.addColorStop(0,`rgba(${e.c},0)`);g.addColorStop(1,`rgba(${e.c},${.35*(1-k)})`);
-    c2.fillStyle=g;c2.fillRect(e.l*LW,JY-120,LW,120);
+    c2.fillStyle=g;c2.fillRect(LX[e.l],JY-120,lw,120);
     c2.strokeStyle=`rgba(${e.c},${1-k})`;c2.lineWidth=1+3*(1-k);
-    c2.beginPath();c2.ellipse(cx,cy,LW*.3+k*LW*.55,6+k*24,0,0,Math.PI*2);c2.stroke();
+    c2.beginPath();c2.ellipse(cx,cy,lw*.3+k*lw*.55,6+k*24,0,0,Math.PI*2);c2.stroke();
     c2.fillStyle=`rgba(${e.c},${1-k})`;
     for(const p of e.p){const d=p.v*age;c2.fillRect(cx+Math.cos(p.a)*d*1.3-2,cy+Math.sin(p.a)*d+.0005*age*age-2,4,4)}
   }
@@ -1393,9 +1405,9 @@ function exitGame(){running=false;stopAll();ended=false;keys.fill(false);resetPt
 // Lanes covered by a touch: centre lane always; neighbours when the contact patch overlaps them enough (hysteresis keeps a held lane).
 function calcLanes(e,cur){
   const r=cv.getBoundingClientRect(),k=W/r.width,cx=(e.clientX-r.left)*k;
-  const hw=e.pointerType=='mouse'?0:Math.max(2,(e.width||0)*k*(+$('tw').value))/2;
-  const c=Math.max(0,Math.min(6,Math.floor(cx/LW))),out=new Set([c]);
-  if(hw>0)for(let l=0;l<7;l++){const ov=Math.min((l+1)*LW,cx+hw)-Math.max(l*LW,cx-hw);if(ov>=(cur&&cur.has(l)?.2:.4)*LW)out.add(l)}
+  const hw=e.pointerType=='mouse'?0:Math.max(2,(e.width||0)*k*1.5)/2;
+  let c=6;for(let l=0;l<7;l++){if(cx<LX[l]+LD[l]+(l<6?(LX[l+1]-LX[l]-LD[l])/2:0)){c=l;break}}const out=new Set([c]);
+  if(hw>0)for(let l=0;l<7;l++){const ov=Math.min(LX[l]+LD[l],cx+hw)-Math.max(LX[l],cx-hw);if(ov>=(cur&&cur.has(l)?.2:.4)*LD[l])out.add(l)}
   return{set:out,primary:c};
 }
 cv.addEventListener('pointerdown',e=>{
@@ -1535,11 +1547,11 @@ function draw(now){
   if(imOK(SI.field))c2.drawImage(SI.field,0,0,W,H);
   else if(S.field=='glass'){c2.fillStyle='rgba(6,8,22,.84)';c2.fillRect(0,0,W,H)}
   for(let l=0;l<7;l++){
-    if(!imOK(SI.field)&&!bgaOn){if(S.field=='glass'){if(l%2){c2.fillStyle='rgba(255,255,255,.035)';c2.fillRect(l*LW,0,LW,H)}}else{c2.fillStyle=l%2?'#10142a':'#0b0e20';c2.fillRect(l*LW,0,LW,H)}}
-    if(flash[l]>0||keys[l]){const g=c2.createLinearGradient(0,JY-160,0,JY);g.addColorStop(0,'rgba('+gl+',0)');g.addColorStop(1,'rgba('+gl+','+(keys[l]?.45:flash[l]*.3)+')');c2.fillStyle=g;c2.fillRect(l*LW,JY-160,LW,160);flash[l]=Math.max(0,flash[l]-.08)}
+    if(!imOK(SI.field)&&!bgaOn){if(S.field=='glass'){if(l%2){c2.fillStyle='rgba(255,255,255,.035)';c2.fillRect(LX[l],0,LD[l],H)}}else{c2.fillStyle=l%2?'#10142a':'#0b0e20';c2.fillRect(LX[l],0,LD[l],H)}}
+    if(flash[l]>0||keys[l]){const g=c2.createLinearGradient(0,JY-160,0,JY);g.addColorStop(0,'rgba('+gl+',0)');g.addColorStop(1,'rgba('+gl+','+(keys[l]?.45:flash[l]*.3)+')');c2.fillStyle=g;c2.fillRect(LX[l],JY-160,LD[l],160);flash[l]=Math.max(0,flash[l]-.08)}
   }
   c2.strokeStyle=S.field=='glass'||imOK(SI.field)?'rgba(255,255,255,.1)':'#232a52';c2.lineWidth=1;
-  for(let l=1;l<7;l++){c2.beginPath();c2.moveTo(l*LW,0);c2.lineTo(l*LW,H);c2.stroke()}
+  for(let l=1;l<7;l++){const gx=LX[l]-(LX[l]-LX[l-1]-LD[l-1])/2;c2.beginPath();c2.moveTo(gx,0);c2.lineTo(gx,H);c2.stroke()}
   if(song){
     const pps=+$('spd').value*(song.scroll||1),jn=now+offs(),vis=JY/pps+200;
     if(song.bars){
@@ -1551,20 +1563,20 @@ function draw(now){
       if(n.end-jn<-200)continue;
       if(n.done&&!n.hold)continue;
       if(n.done&&n.hold&&!n.holding&&!n.dead)continue; // 打断/漏掉的长条继续滚动（变暗），不再凭空消失
-      const x=n.lane*LW+3,y=Math.round((JY-(n.t-jn)*pps)*dpr)/dpr;
+      const x=LX[n.lane]+3,lwn=LD[n.lane]-6,y=Math.round((JY-(n.t-jn)*pps)*dpr)/dpr;
       c2.globalAlpha=n.done&&!n.holding?.3:1; // dead 长条：整条变暗
       if(n.hold){
         const yt=Math.round((JY-(n.end-jn)*pps)*dpr)/dpr,yb=(n.holding?JY:y)+6,h=Math.max(3,yb-yt);
         // 只绘制可见部分：超长的长条不再提交几万像素高的巨大矩形（可能触发 GPU 栅格化异常，表现为黑色横条）
         const ya=Math.max(yt,-12),hb=Math.min(yt+h,H+12)-ya;
         if(hb>0){
-          if(S.pal)skHold(x,ya,LW-6,hb,n.lane,yt,h);
-          else{c2.fillStyle=LCOL[n.lane];c2.fillRect(x,ya,LW-6,hb);
-            c2.fillStyle='rgba(0,0,0,.2)';c2.fillRect(x,ya,1,hb);c2.fillRect(x+LW-7,ya,1,hb);if(yt>=-12)c2.fillRect(x,yt,LW-6,2)}
+          if(S.pal)skHold(x,ya,lwn,hb,n.lane,yt,h);
+          else{c2.fillStyle=LCOL[n.lane];c2.fillRect(x,ya,lwn,hb);
+            c2.fillStyle='rgba(0,0,0,.2)';c2.fillRect(x,ya,1,hb);c2.fillRect(x+lwn-1,ya,1,hb);if(yt>=-12)c2.fillRect(x,yt,lwn,2)}
         }
       }
-      if(n.holding){c2.fillStyle='rgba(255,255,255,'+(.35+.2*Math.sin(performance.now()/60))+')';c2.fillRect(n.lane*LW+2,JY-11,LW-4,20)}
-      if(!n.holding||!n.hold){if(S.pal)skNote(x,y,LW-6,n.lane);else{c2.fillStyle=LCOL[n.lane];c2.fillRect(x,y-8,LW-6,14);c2.fillStyle='rgba(0,0,0,.25)';c2.fillRect(x,y+3,LW-6,3)}}
+      if(n.holding){c2.fillStyle='rgba(255,255,255,'+(.35+.2*Math.sin(performance.now()/60))+')';c2.fillRect(LX[n.lane]+2,JY-11,LD[n.lane]-4,20)}
+      if(!n.holding||!n.hold){if(S.pal)skNote(x,y,lwn,n.lane);else{c2.fillStyle=LCOL[n.lane];c2.fillRect(x,y-8,lwn,14);c2.fillStyle='rgba(0,0,0,.25)';c2.fillRect(x,y+3,LW-6,3)}}
       c2.globalAlpha=1;
     }
   }
@@ -1574,7 +1586,7 @@ function draw(now){
   c2.fillStyle='rgba(150,160,215,.45)';c2.fillRect(0,JY-9,W,1);c2.fillRect(0,JY+6,W,1);
   drawFx();
   c2.font='bold 16px system-ui';c2.textAlign='center';
-  for(let l=0;l<7;l++){c2.fillStyle=keys[l]?'#fff':'#6a73b0';c2.fillText(label(bind[l]),l*LW+LW/2,JY+34)}
+  for(let l=0;l<7;l++){c2.fillStyle=keys[l]?'#fff':'#6a73b0';c2.fillText(label(bind[l]),LX[l]+LD[l]/2,JY+34)}
   }
   // HUD
   if(S.hud=='panel')skHud(now);
