@@ -128,7 +128,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 <section class="card" id="cPlay"><h3>演奏</h3>
   <div class="row top"><label class="fbtn">打开歌曲<input type="file" id="file" multiple accept=".vos,.vow,.bms,.bme,.bml,.rsc,.rsm,.zip,.wav,.ogg,.mp3,.flac"></label><label class="fbtn sm" title="打开整个歌曲文件夹（BMS 等带有音频和 BGA 的歌曲，或一次载入多首）">打开文件夹<input type="file" id="dirf" webkitdirectory multiple></label><span id="fname" class="fname">未打开歌曲</span><select id="cpick" hidden style="max-width:220px"></select><button id="go" disabled>开始</button></div>
   <div id="info"></div>
-  <div id="need" class="row" hidden style="font-size:13px"><span id="needt" style="color:var(--mu)"></span><label class="fbtn sm"><span id="needb">选择</span><input type="file" id="needf" multiple></label></div>
+  <div id="need" class="row" hidden style="font-size:13px"><span id="needt" style="color:var(--mu)"></span><label class="fbtn sm"><span id="needb">选择</span><input type="file" id="needf" multiple></label><button id="needd" class="fbtn sm" style="border:0;cursor:pointer" hidden title="选一次歌曲所在的文件夹，之后选 OJM 就会自动找同名 OJN（仅 Chrome / Edge）">在文件夹中自动查找</button></div>
   <div class="sl"><span>速度</span><input type="range" id="spd" min="0.25" max="1.2" step="0.05" value="0.55" data-major="0.25" data-fmt="x"><b class="rv"></b></div>
   <div class="sl"><span>延迟</span><input type="range" id="off" min="-200" max="200" step="5" value="0" data-minor="20" data-major="100" data-fmt="ms"><b class="rv" id="offv"></b></div>
   <div class="sl"><span>触控范围</span><input type="range" id="tw" min="0.5" max="3" step="0.5" value="1.5" data-major="1" data-fmt="x"><b class="rv"></b></div>
@@ -554,8 +554,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.14';
+const VERSION='0.9.15';
 const CHANGELOG=[
+  ['0.9.15','2026-10-11','修复长条：漏掉/中途松开后不再凭空消失，而是变暗继续滚动到结束；第三方配对（如 .ojm → .ojn）支持“在文件夹中自动查找”：授权一次歌曲文件夹后，只选 .ojm 就会自动找到同名 .ojn（需 Chrome / Edge）'],
   ['0.9.14','2026-10-11','界面更直观：“选择谱面”改为“打开歌曲”，“文件夹”改为“打开文件夹”，去掉 .vos/.vow 的提示文字；插件可声明配对格式（如 .ojn + .ojm），只选其中一个时会提示并一键补选另一个，同一文件夹里的会自动配对，读取列表里显示歌名和难度而不是文件名'],
   ['0.9.13','2026-10-11','导入失败不再清掉当前歌曲（游玩中导入失败不会再报错）；插件读取失败时显示插件给出的具体原因'],
   ['0.9.12','2026-10-11','载入 .rsm / .rsc 时，多谱面下拉框优先显示谱面名（如 [7key Another]）；配套 Studio 0.1.1：谱面表格显示 BMS 的谱面名（#SUBTITLE）并另列文件名'],
@@ -975,7 +976,32 @@ $('plf').onchange=async e=>{
   await plugSave();plugRefresh();
 };
 (async()=>{const r=await idbGet('plugins');if(Array.isArray(r))for(const x of r){try{await plugRun(x.src);plugSrc[x.name]=x.src}catch(e){}}plugRefresh()})();
-let pendingList=null;
+let pendingList=null,pendingNeed=null;
+// 自动配对：在用户授权过的文件夹里按文件名找同名文件（File System Access API，仅 Chromium 系浏览器）
+async function dirHandles(){const r=await idbGet('dirs');return Array.isArray(r)?r:[]}
+async function dirFind(h,name,depth){
+  const low=name.toLowerCase();
+  try{for await(const [n,x] of h.entries()){if(x.kind==='file'&&n.toLowerCase()===low)return await x.getFile()}
+    if(depth>0)for await(const [n,x] of h.entries())if(x.kind==='directory'){const r=await dirFind(x,name,depth-1);if(r)return r}}catch(e){}
+  return null;
+}
+async function autoFind(name,ask){
+  for(const h of await dirHandles()){
+    try{let p=await h.queryPermission({mode:'read'});if(p!=='granted'&&ask)p=await h.requestPermission({mode:'read'});if(p!=='granted')continue;
+      const f=await dirFind(h,name,3);if(f)return f}catch(e){}
+  }
+  return null;
+}
+$('needd').onclick=async()=>{
+  if(!window.showDirectoryPicker||!pendingNeed)return;
+  try{
+    const h=await showDirectoryPicker({id:'resonia-songs',mode:'read'});
+    const hs=await dirHandles();let dup=false;for(const x of hs)try{if(await x.isSameEntry(h))dup=true}catch(e){}
+    if(!dup){hs.push(h);await idbPut('dirs',hs)}
+    const f=await dirFind(h,pendingNeed.name,3);
+    if(f&&pendingList)await importFiles([...pendingList,f]);else $('needt').textContent='这个文件夹里没找到 '+pendingNeed.name+'，换一个文件夹或手动选择';
+  }catch(e){}
+};
 $('needf').onchange=async e=>{const add=[...e.target.files];e.target.value='';if(add.length&&pendingList)await importFiles([...pendingList,...add])};
 async function importFiles(list){
   list=[...list];if(!list.length)return;
@@ -1006,8 +1032,12 @@ async function importFiles(list){
       const a=pr[0].toLowerCase(),b=pr[1].toLowerCase(),ha=ents.find(e=>fext(e)==a),hb=ents.find(e=>fext(e)==b);
       if(!!ha===!!hb)continue;
       const have=ha||hb,ne=ha?b:a,base=have.path.split('/').pop().replace(/\.[^.]+$/,'');
-      pendingList=list;$('needt').textContent='已选 '+have.path.split('/').pop()+'，还需要对应的 '+base+'.'+ne;
-      $('needb').textContent='选择 .'+ne;$('needf').accept='.'+ne;$('need').hidden=false;$('info').textContent='';
+      const want=base+'.'+ne;
+      $('info').textContent='正在查找 '+want+'…';
+      const got=await autoFind(want,true);
+      if(got){await importFiles([...list,got]);return}
+      pendingList=list;pendingNeed={name:want};$('needt').textContent='已选 '+have.path.split('/').pop()+'，还需要对应的 '+want;
+      $('needb').textContent='选择 .'+ne;$('needf').accept='.'+ne;$('needd').hidden=!window.showDirectoryPicker;$('need').hidden=false;$('info').textContent='';
       return;
     }
     const perr=[];
@@ -1085,7 +1115,7 @@ async function start(){
   if(!song)return;const wasRunning=running;
   initAudio();ctx.resume();
   if(useSf()&&!song.samples){const go=$('go');go.disabled=true;try{await sfPreload()}catch(x){}go.disabled=false;go.textContent=wasRunning?'重新开始':'开始'}clearInterval(schedTimer);rebind=null;renderKeys();$('go').blur();
-  for(const n of song.notes){n.done=false;n.hit=false;n.holding=false;n.rel=null}
+  for(const n of song.notes){n.done=false;n.hit=false;n.holding=false;n.rel=null;n.dead=false}
   lanesQ=[0,1,2,3,4,5,6].map(l=>song.notes.filter(n=>n.lane==l));lp=Array(7).fill(0);holdN=Array(7).fill(null);
   keys.fill(false);resetPtr();drops=0;dbgLast='';
   if($('fs').checked){document.body.classList.add('playing');window.scrollTo(0,0);fit()}
@@ -1315,12 +1345,12 @@ function frame(){
   const now=songMs(),jn=now+offs();
   for(const n of song.notes){
     if(n.t-jn>200)break;
-    if(!n.done&&jn-n.t>120){n.done=true;miss()}
+    if(!n.done&&jn-n.t>120){n.done=true;if(n.hold)n.dead=true;miss()}
     if(n.holding){
       const k=keys[n.lane];
       if(k)n.rel=null;else if(n.rel==null)n.rel=jn;
       if(jn>=n.end){n.holding=false;holdN[n.lane]=null;if(k||n.end-n.rel<=100){const j=k?'PERFECT':'GREAT';score+=300;combo++;maxCombo=Math.max(maxCombo,combo);if(k)cnt.P++;else cnt.G++;lastJ=j;lastJT=performance.now();addFx(n.lane,j)}}
-      else if(n.rel!=null&&jn-n.rel>150&&n.end-n.rel>100){n.holding=false;holdN[n.lane]=null;miss()}
+      else if(n.rel!=null&&jn-n.rel>150&&n.end-n.rel>100){n.holding=false;holdN[n.lane]=null;n.dead=true;miss()}
     }
   }
   const lastN=song.notes[song.notes.length-1];
@@ -1432,9 +1462,9 @@ function draw(now){
       if(n.t-jn>vis)break;
       if(n.end-jn<-200)continue;
       if(n.done&&!n.hold)continue;
-      if(n.done&&n.hold&&!n.holding)continue;
+      if(n.done&&n.hold&&!n.holding&&!n.dead)continue; // 打断/漏掉的长条继续滚动（变暗），不再凭空消失
       const x=n.lane*LW+3,y=Math.round((JY-(n.t-jn)*pps)*dpr)/dpr;
-      c2.globalAlpha=n.done&&!n.holding?.3:1;
+      c2.globalAlpha=n.done&&!n.holding?.3:1; // dead 长条：整条变暗
       if(n.hold){
         const yt=Math.round((JY-(n.end-jn)*pps)*dpr)/dpr,yb=(n.holding?JY:y)+6,h=Math.max(3,yb-yt);
         // 只绘制可见部分：超长的长条不再提交几万像素高的巨大矩形（可能触发 GPU 栅格化异常，表现为黑色横条）
