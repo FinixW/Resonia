@@ -554,8 +554,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.15';
+const VERSION='0.9.16';
 const CHANGELOG=[
+  ['0.9.16','2026-10-11','插件接口：配对支持“一对多”（选 PAK 自动找同名前缀的全部 PT/INI，选 PT 自动找 PAK）、辅助扩展名 hide、插件本地存储 api.kv；补选提示改为通用；提示类消息不再显示“导入失败”'],
   ['0.9.15','2026-10-11','修复长条：漏掉/中途松开后不再凭空消失，而是变暗继续滚动到结束；第三方配对（如 .ojm → .ojn）支持“在文件夹中自动查找”：授权一次歌曲文件夹后，只选 .ojm 就会自动找到同名 .ojn（需 Chrome / Edge）'],
   ['0.9.14','2026-10-11','界面更直观：“选择谱面”改为“打开歌曲”，“文件夹”改为“打开文件夹”，去掉 .vos/.vow 的提示文字；插件可声明配对格式（如 .ojn + .ojm），只选其中一个时会提示并一键补选另一个，同一文件夹里的会自动配对，读取列表里显示歌名和难度而不是文件名'],
   ['0.9.13','2026-10-11','导入失败不再清掉当前歌曲（游玩中导入失败不会再报错）；插件读取失败时显示插件给出的具体原因'],
@@ -708,6 +709,7 @@ $('out').onchange=applyOut;$('omode').onchange=applyOut;
 // 音色库本地记忆：载入过的 .sf2 / .dls 存进浏览器 IndexedDB，下次打开自动恢复（文件只在本机，不会上传）
 const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open('resonia',1);r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 const idbPut=async(k,v)=>{try{const d=await idb();d.transaction('f','readwrite').objectStore('f').put(v,k)}catch(x){}};
+const idbSet=async(k,v)=>{const d=await idb();return new Promise((ok,no)=>{const t=d.transaction('f','readwrite'),o=t.objectStore('f');v===undefined?o.delete(k):o.put(v,k);t.oncomplete=()=>ok();t.onerror=()=>no(t.error)})};
 const idbGet=k=>idb().then(d=>new Promise(res=>{const q=d.transaction('f').objectStore('f').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(null)})).catch(()=>null);
 const bankFile={};
 function setBank(k,parsed,name){
@@ -942,6 +944,8 @@ const Resonia=window.Resonia={
   // 给插件用的工具
   api:{
     decodeAudio:ab=>decodeAudio(ab),readZip:ab=>readZip(ab),
+    // 插件私有的小型本地存储（IndexedDB，仅本机）；可存 Uint8Array / 对象
+    kv:{get:k=>idbGet('kv:'+k),set:(k,v)=>idbSet('kv:'+k,v),del:k=>idbSet('kv:'+k,undefined)},
     textDecode:(ab,enc)=>new TextDecoder(enc||'utf-8').decode(ab),
     buildRsc:(R,ci,man,find,say)=>buildRsc(R,ci,man,find,say||(()=>{})),
     loadBgaAssets:items=>loadBgaAssets(items),
@@ -979,18 +983,20 @@ $('plf').onchange=async e=>{
 let pendingList=null,pendingNeed=null;
 // 自动配对：在用户授权过的文件夹里按文件名找同名文件（File System Access API，仅 Chromium 系浏览器）
 async function dirHandles(){const r=await idbGet('dirs');return Array.isArray(r)?r:[]}
-async function dirFind(h,name,depth){
-  const low=name.toLowerCase();
-  try{for await(const [n,x] of h.entries()){if(x.kind==='file'&&n.toLowerCase()===low)return await x.getFile()}
-    if(depth>0)for await(const [n,x] of h.entries())if(x.kind==='directory'){const r=await dirFind(x,name,depth-1);if(r)return r}}catch(e){}
-  return null;
+// 在目录里按条件找文件。all=false 返回第一个；all=true 返回当前层的全部匹配（找到就不再往下层找）
+async function dirScan(h,test,depth,out,all){
+  try{const subs=[];
+    for await(const [n,x] of h.entries()){if(x.kind==='file'){if(test(n)){out.push(await x.getFile());if(!all)return}}else subs.push(x)}
+    if(out.length||depth<=0)return;
+    for(const x of subs){await dirScan(x,test,depth-1,out,all);if(out.length)return}
+  }catch(e){}
 }
-async function autoFind(name,ask){
+async function autoFindBy(test,all,ask){
   for(const h of await dirHandles()){
     try{let p=await h.queryPermission({mode:'read'});if(p!=='granted'&&ask)p=await h.requestPermission({mode:'read'});if(p!=='granted')continue;
-      const f=await dirFind(h,name,3);if(f)return f}catch(e){}
+      const out=[];await dirScan(h,test,3,out,all);if(out.length)return out}catch(e){}
   }
-  return null;
+  return [];
 }
 $('needd').onclick=async()=>{
   if(!window.showDirectoryPicker||!pendingNeed)return;
@@ -998,8 +1004,8 @@ $('needd').onclick=async()=>{
     const h=await showDirectoryPicker({id:'resonia-songs',mode:'read'});
     const hs=await dirHandles();let dup=false;for(const x of hs)try{if(await x.isSameEntry(h))dup=true}catch(e){}
     if(!dup){hs.push(h);await idbPut('dirs',hs)}
-    const f=await dirFind(h,pendingNeed.name,3);
-    if(f&&pendingList)await importFiles([...pendingList,f]);else $('needt').textContent='这个文件夹里没找到 '+pendingNeed.name+'，换一个文件夹或手动选择';
+    const out=[];await dirScan(h,pendingNeed.test,3,out,pendingNeed.all);
+    if(out.length&&pendingList)await importFiles([...pendingList,...out]);else $('needt').textContent='这个文件夹里没找到 '+pendingNeed.want+'，换一个文件夹或手动选择';
   }catch(e){}
 };
 $('needf').onchange=async e=>{const add=[...e.target.files];e.target.value='';if(add.length&&pendingList)await importFiles([...pendingList,...add])};
@@ -1026,31 +1032,41 @@ async function importFiles(list){
         label:'[rsc] '+((R.meta&&R.meta.title)||e.path.split('/').pop())+(c.name?' · '+c.name:'')+(c.level?' Lv'+c.level:'')+' · '+(c.keys||7)+'K',
         load:say=>buildRsc(R,ci,man,find,say)}));
     }
-    // 插件声明的配对格式（如 ojn+ojm）：只选了其中一种时，提示补选另一种
+    // 插件声明的配对格式：只选了其中一部分时，先在已授权的文件夹里自动找，找不到再提示补选
+    //   旧写法 ['ojn','ojm']：互相配对，同名不同扩展名
+    //   新写法 {a:'pak', b:['pt','ini'], ab:(base,文件名)=>是否属于, ba:文件名=>要找的a文件名, hint:base=>提示}：a 对应多个 b
     const fext=e=>(e.path.split('.').pop()||'').toLowerCase();
+    const nameOf=e=>e.path.split('/').pop(),stemOf=e=>nameOf(e).replace(/\.[^.]+$/,'');
     for(const p of plugins)for(const pr of p.pairs||[]){
-      const a=pr[0].toLowerCase(),b=pr[1].toLowerCase(),ha=ents.find(e=>fext(e)==a),hb=ents.find(e=>fext(e)==b);
-      if(!!ha===!!hb)continue;
-      const have=ha||hb,ne=ha?b:a,base=have.path.split('/').pop().replace(/\.[^.]+$/,'');
-      const want=base+'.'+ne;
-      $('info').textContent='正在查找 '+want+'…';
-      const got=await autoFind(want,true);
-      if(got){await importFiles([...list,got]);return}
-      pendingList=list;pendingNeed={name:want};$('needt').textContent='已选 '+have.path.split('/').pop()+'，还需要对应的 '+want;
-      $('needb').textContent='选择 .'+ne;$('needf').accept='.'+ne;$('needd').hidden=!window.showDirectoryPicker;$('need').hidden=false;$('info').textContent='';
-      return;
+      const rules=[];
+      if(Array.isArray(pr)){const x=pr[0].toLowerCase(),y=pr[1].toLowerCase();
+        rules.push({have:x,miss:y,mk:h=>{const w=stemOf(h)+'.'+y;return{want:w,test:n=>n.toLowerCase()===w.toLowerCase(),all:false,acc:'.'+y}}});
+        rules.push({have:y,miss:x,mk:h=>{const w=stemOf(h)+'.'+x;return{want:w,test:n=>n.toLowerCase()===w.toLowerCase(),all:false,acc:'.'+x}}});
+      }else if(pr&&pr.a&&pr.b){const a=pr.a.toLowerCase(),bs=[].concat(pr.b).map(x=>x.toLowerCase());
+        rules.push({have:a,miss:bs[0],mk:h=>{const base=stemOf(h);return{want:pr.hint?pr.hint(base):base+'*.'+bs[0],test:n=>bs.includes((n.split('.').pop()||'').toLowerCase())&&pr.ab(base,n),all:true,acc:bs.map(x=>'.'+x).join(',')}}});
+        rules.push({have:bs[0],miss:a,mk:h=>{const w=pr.ba(nameOf(h));return{want:w,test:n=>n.toLowerCase()===w.toLowerCase(),all:false,acc:'.'+a}}});
+      }
+      for(const r of rules){
+        const have=ents.find(e=>fext(e)===r.have);if(!have||ents.some(e=>fext(e)===r.miss))continue;
+        const nd=r.mk(have);$('info').textContent='正在查找 '+nd.want+'…';
+        const got=await autoFindBy(nd.test,nd.all,true);
+        if(got.length){await importFiles([...list,...got]);return}
+        pendingList=list;pendingNeed=nd;$('needt').textContent='已选 '+nameOf(have)+'，还需要对应的 '+nd.want;
+        $('needb').textContent='选择 '+nd.acc.split(',')[0];$('needf').accept=nd.acc;$('needd').hidden=!window.showDirectoryPicker;$('need').hidden=false;$('info').textContent='';
+        return;
+      }
     }
     const perr=[];
     for(const p of plugins){
-      const ex=p.exts.map(e=>e.replace(/^\./,'').toLowerCase()),mine=ents.filter(e=>ex.includes((e.path.split('.').pop()||'').toLowerCase()));
-      if(!mine.length&&!(p.match&&p.match(ents)))continue;
+      const ex=p.exts.map(e=>e.replace(/^\./,'').toLowerCase()),hid=(p.hide||[]).map(e=>e.replace(/^\./,'').toLowerCase()),mine=ents.filter(e=>ex.includes(fext(e)));
+      if(!mine.some(e=>!hid.includes(fext(e)))&&!(p.match&&p.match(ents)))continue;
       try{const r=await p.open(mine.length?mine:ents,{ents,find,api:Resonia.api});for(const it of r||[])items.push({name:it.name||it.label,label:'['+(p.name||p.id)+'] '+(it.label||it.name),load:say=>it.build(say)})}
-      catch(err){perr.push('插件 '+(p.name||p.id)+'：'+err.message)}
+      catch(err){perr.push(err.notice?err.message:'插件 '+(p.name||p.id)+'：'+err.message)}
     }
     if(!items.length){
       const vos=ents.filter(e=>/\.(vos|vow)$/i.test(e.path));
       if(vos.length)return loadSong(await vos[0].ab(),vos[0].path.split('/').pop());
-      if(perr.length)throw new Error(perr.join('；'));
+      if(perr.length){const e=new Error(perr.join('；'));e.notice=perr.length==1&&!/^插件 /.test(perr[0]);throw e}
       throw new Error('没有找到可用的谱面（支持 .vos .vow .bms .bme .bml .rsc / .rsm，或包含它们的 .zip / 文件夹）');
     }
     pack={items};
@@ -1059,7 +1075,7 @@ async function importFiles(list){
       sel.hidden=false;sel.onchange=()=>openChart(+sel.value);
     }
     await openChart(0);
-  }catch(err){$('info').textContent='导入失败：'+err.message}
+  }catch(err){$('info').textContent=(err.notice?'':'导入失败：')+err.message}
 }
 // ---------- .rsc 谱面 / .rsm 曲包：读写 ----------
 async function buildRsc(R,ci,man,find,say){
