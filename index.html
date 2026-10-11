@@ -152,7 +152,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div class="sl"><span>按键音量</span><input type="range" id="kv" min="0" max="2.5" step="0.1" value="1.3" data-minor="0.1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
 </section>
 <section class="card" id="cSkin"><h3>皮肤</h3>
-  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
+  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label><label class="il"><input type="checkbox" id="bars" checked>小节线</label></div>
   <details id="skCustom" hidden><summary>自定义素材（图片只保存在你的浏览器里，不会上传）</summary><div id="skSlots"></div><button id="skClear">清除全部素材</button></details>
 </section>
 <section class="card" id="cPlug"><h3>第三方<span class="gpu" style="color:var(--mu)">格式插件</span></h3><div class="row"><label class="fbtn sm">载入插件…<input type="file" id="plf" accept=".js" multiple></label><span id="plmsg" class="fname" style="color:var(--mu)">未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器</span></div><div id="pll"></div></section>
@@ -554,8 +554,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.16';
+const VERSION='0.9.17';
 const CHANGELOG=[
+  ['0.9.17','2026-10-11','新增小节线（设置里可开关，默认开）：BMS 与插件曲目显示小节线，便于检查声音与 Note 是否同步；修复“跳过前奏”后 BGM/伴奏被丢掉或从头播放造成的声音与 Note 不同步（采样现在会按已过去的时间从中途接着播放）；插件可提供 bars / 每小节拍数'],
   ['0.9.16','2026-10-11','插件接口：配对支持“一对多”（选 PAK 自动找同名前缀的全部 PT/INI，选 PT 自动找 PAK）、辅助扩展名 hide、插件本地存储 api.kv；补选提示改为通用；提示类消息不再显示“导入失败”'],
   ['0.9.15','2026-10-11','修复长条：漏掉/中途松开后不再凭空消失，而是变暗继续滚动到结束；第三方配对（如 .ojm → .ojn）支持“在文件夹中自动查找”：授权一次歌曲文件夹后，只选 .ojm 就会自动找到同名 .ojn（需 Chrome / Edge）'],
   ['0.9.14','2026-10-11','界面更直观：“选择谱面”改为“打开歌曲”，“文件夹”改为“打开文件夹”，去掉 .vos/.vow 的提示文字；插件可声明配对格式（如 .ojn + .ojm），只选其中一个时会提示并一键补选另一个，同一文件夹里的会自动配对，读取列表里显示歌名和难度而不是文件名'],
@@ -743,14 +744,15 @@ $('sfile').onchange=async e=>{
 const actSrc=new Set();
 function samplePlay(e,when){
   const buf=song&&song.samples&&song.samples[e.s];if(!buf)return;
-  const now=ctx.currentTime;if(when<now)when=now;
+  const now=ctx.currentTime;
   const src=ctx.createBufferSource();src.buffer=buf;
   const g=ctx.createGain();g.gain.value=Math.min(1,(e.vel||127)/127);
   const mg=ctx.createGain();mg.gain.value=+document.getElementById(e.key?'kv':'bv').value;
   src.connect(g);g.connect(mg);mg.connect(master);
   voices++;actSrc.add(src);
   src.onended=()=>{voices--;actSrc.delete(src);try{g.disconnect();mg.disconnect()}catch(x){}};
-  src.start(when);
+  const off=Math.max(0,now-when);if(off>=buf.duration){voices--;actSrc.delete(src);return}
+  if(off>0)src.start(now,off);else src.start(when);
 }
 function stopSamples(){for(const s of [...actSrc]){try{s.stop()}catch(x){}}}
 // ---------- 压缩包（ZIP）读取：只用浏览器自带的 DecompressionStream ----------
@@ -848,7 +850,8 @@ function parseBms(txt){
   notes.sort((a,b)=>a.t-b.t);back.sort((a,b)=>a.t-b.t);
   const used=new Set([...notes.map(n=>n.snd.s),...back.map(b=>b.id)]);
   const bga=bgaE.map(x=>({t:toMs(x.b),id:x.id,l:x.l})).sort((a,b)=>a.t-b.t);
-  return{H,bmp,bga,title:[H.TITLE,H.SUBTITLE].filter(Boolean).join(' '),artist:H.ARTIST||'',level:H.PLAYLEVEL||'',keys:has67?7:5,wav,notes,back,used,bpm:bpm0,
+  const bars=bs.map(toMs);
+  return{H,bmp,bga,bars,title:[H.TITLE,H.SUBTITLE].filter(Boolean).join(' '),artist:H.ARTIST||'',level:H.PLAYLEVEL||'',keys:has67?7:5,wav,notes,back,used,bpm:bpm0,
     nlane:new Set(notes.map(n=>n.lane)).size};
 }
 // ---------- 资源包导入（多文件 / 文件夹 / ZIP）----------
@@ -897,7 +900,7 @@ async function buildBms(ch,find,say){
   let end=0;for(const n of P.notes)end=Math.max(end,n.end);
   for(const b of P.back){const s=samples[b.id];b.s=b.id;b.vel=127;b.ch=0;b.ins=0;b.p=60;b.dur=0;end=Math.max(end,b.t+(s?s.duration*1000:0))}
   const res={samples:{},media:{}};for(const it of sItems)if(it.e&&samples[it.id])res.samples[it.id]=it.e;for(const it of bItems)if(it.e&&bmps[it.id])res.media[it.id]=it.e;
-  return{title:P.title||ch.path.split('/').pop(),artist:P.artist,level:+P.level||0,chartName:ch.path.split('/').pop(),lenMs:end+1500,notes:P.notes,back:P.back,ctl:{},mev:[],chan:{},tracks:0,bpm:P.bpm,samples,bga:P.bga,bmps,res,
+  return{title:P.title||ch.path.split('/').pop(),artist:P.artist,level:+P.level||0,chartName:ch.path.split('/').pop(),lenMs:end+1500,bars:P.bars,notes:P.notes,back:P.back,ctl:{},mev:[],chan:{},tracks:0,bpm:P.bpm,samples,bga:P.bga,bmps,res,
     kind:'BMS',note:((miss||bad)?`（缺少 ${miss} 个、无法解码 ${bad} 个音频）`:'')+(P.bga.length?` · BGA ${Object.keys(bmps).length} 个素材${bmiss?`（${bmiss} 个无法显示，如 mpg/avi）`:''}`:'')};
 }
 function setSong(s,name,extra){
@@ -955,7 +958,7 @@ const Resonia=window.Resonia={
       const back=(o.back||[]).slice().sort((a,b)=>a.t-b.t);
       let end=o.lenMs||0;for(const n of notes)end=Math.max(end,n.end+500);
       return{title:o.title||'',artist:o.artist||'',level:o.level||0,chartName:o.chartName||'',lenMs:end+1000,notes,back,ctl:o.ctl||{},mev:o.mev||[],chan:o.chan||{},tracks:o.tracks||0,
-        bpm:o.bpm||120,samples:o.samples,bga:o.bga,bmps:o.bmps||{},res:o.res,kind:o.samples?(o.kind||'PLUGIN'):undefined,note:o.note||''};
+        bpm:o.bpm||120,bars:o.bars,samples:o.samples,bga:o.bga,bmps:o.bmps||{},res:o.res,kind:o.samples?(o.kind||'PLUGIN'):undefined,note:o.note||''};
     }
   }
 };
@@ -1141,7 +1144,8 @@ async function start(){
   if($('tm').checked&&seekMs!=null)startOff=Math.max(-1500,seekMs); // 测试模式：从拖动到的位置开始
   for(const n of song.notes)n.done=n.t<startOff;
   t0=ctx.currentTime+.1;ck.ok=false;running=true;
-  while(bi<song.back.length&&song.back[bi].t+song.back[bi].dur*1000<startOff)bi++;
+  const bdur=b=>b.s!==undefined&&song.samples&&song.samples[b.s]?song.samples[b.s].duration:b.dur||0;
+  while(bi<song.back.length&&song.back[bi].t+bdur(song.back[bi])*1000<startOff)bi++;
   mi=0;panic();stopSamples();
   const mo=midiOut&&!song.samples;
   if(mo){if(!song.mout)buildMout();const M=song.mout;while(mi<M.length&&M[mi].ms<startOff){if(M[mi].r==0)midiOut.send(M[mi].b);mi++}}
@@ -1474,6 +1478,10 @@ function draw(now){
   for(let l=1;l<7;l++){c2.beginPath();c2.moveTo(l*LW,0);c2.lineTo(l*LW,H);c2.stroke()}
   if(song){
     const pps=+$('spd').value,jn=now+offs(),vis=JY/pps+200;
+    if(song.bars&&$('bars').checked){
+      c2.fillStyle='rgba(255,255,255,.22)';
+      for(const bt of song.bars){const d=bt-jn;if(d>vis)break;if(d<-100)continue;c2.fillRect(0,Math.round(JY-d*pps)-1,W,1)}
+    }
     for(const n of song.notes){
       if(n.t-jn>vis)break;
       if(n.end-jn<-200)continue;
