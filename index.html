@@ -126,7 +126,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 <div id="prog"><div id="pr1"><span id="pt">未载入歌曲</span><span id="pn">0:00 / 0:00</span></div><div id="pb"><i id="pf"></i></div></div>
 <div id="panel">
 <section class="card" id="cPlay"><h3>演奏</h3>
-  <div class="row top"><label class="fbtn">选择谱面<input type="file" id="file" multiple accept=".vos,.vow,.bms,.bme,.bml,.zip,.wav,.ogg,.mp3,.flac"></label><label class="fbtn sm" title="选择包含 BMS 与音频的文件夹">文件夹<input type="file" id="dirf" webkitdirectory multiple></label><span id="fname" class="fname">未选择文件</span><select id="cpick" hidden style="max-width:220px"></select><button id="go" disabled>开始</button></div>
+  <div class="row top"><label class="fbtn">选择谱面<input type="file" id="file" multiple accept=".vos,.vow,.bms,.bme,.bml,.rsc,.rsm,.zip,.wav,.ogg,.mp3,.flac"></label><label class="fbtn sm" title="选择包含 BMS 与音频的文件夹">文件夹<input type="file" id="dirf" webkitdirectory multiple></label><span id="fname" class="fname">未选择文件</span><select id="cpick" hidden style="max-width:220px"></select><button id="go" disabled>开始</button></div>
   <div id="info">选择 .vos / .vow 谱面文件</div>
   <div class="sl"><span>速度</span><input type="range" id="spd" min="0.25" max="1.2" step="0.05" value="0.55" data-major="0.25" data-fmt="x"><b class="rv"></b></div>
   <div class="sl"><span>延迟</span><input type="range" id="off" min="-200" max="200" step="5" value="0" data-minor="20" data-major="100" data-fmt="ms"><b class="rv" id="offv"></b></div>
@@ -154,6 +154,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
   <details id="skCustom" hidden><summary>自定义素材（图片只保存在你的浏览器里，不会上传）</summary><div id="skSlots"></div><button id="skClear">清除全部素材</button></details>
 </section>
+<section class="card" id="cTool"><h3>转换</h3><div class="row"><button id="exRsm" class="fbtn sm" style="border:0;cursor:pointer" disabled title="把当前歌曲（谱面+音频+BGA）打成一个 .rsm 曲包，可直接再次载入">导出 .rsm 曲包</button><button id="exRsc" class="fbtn sm" style="border:0;cursor:pointer" disabled title="只导出谱面 JSON（不含音频素材）">导出 .rsc 谱面</button></div></section>
 <section class="card" id="cDbg"><h3>调试<span id="gpu" class="gpu" hidden></span></h3><div class="chk"><label><input type="checkbox" id="dbg">发声诊断</label><label><input type="checkbox" id="tm">测试模式（可拖动进度条）</label></div></section>
 </div>
 <canvas id="cv" width="420" height="640"></canvas>
@@ -552,8 +553,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.9';
+const VERSION='0.9.10';
 const CHANGELOG=[
+  ['0.9.10','2026-10-11','新增 .rsc 谱面（JSON）与 .rsm 曲包（ZIP：manifest.json + 谱面 + 采样/BGA）的读取与导出；VOS、BMS 都可一键转成 .rsm / .rsc 并再次载入；新增“转换”栏；导入时一个包里的多个谱面（含 .rsc 里的多难度）可下拉选择'],
   ['0.9.9','2026-10-10','BGA 修正（樱华月）：底层（04）遇到未定义的素材编号（如 #BMP7C）时保持上一帧，不再当成“清空”造成每秒十几次的黑屏闪烁；叠加层（07/0A）遇到未定义编号（如 #BMPFF）仍按清空处理，用来结束白闪'],
   ['0.9.8','2026-10-10','BGA 修正：第一个 BGA 事件出现后背景不再在“BGA / 主题背景”之间来回切换（某一刻所有层都为空时按黑底显示），修复闪屏；发声诊断里增加当前三层 BGA 编号，便于排查'],
   ['0.9.7','2026-10-10','BGA 修正：无法加载的素材（如 mpg/avi 或缺失文件）不再丢弃事件，而是按“清空该层”处理，避免上一张图（如白色闪光）一直停留造成白屏；该时刻没有任何可显示画面时恢复显示主题背景'],
@@ -854,28 +856,40 @@ async function decodeAudio(ab){
   const oc=new OfflineAudioContext(2,1,44100);
   return await oc.decodeAudioData(ab.slice(0));
 }
-async function buildBms(ch,find,say){
-  const P=parseBms(bmsText(await ch.ab())),ids=[...P.used].filter(i=>P.wav[i]),samples={};let done=0,bad=0,miss=0;
-  const q=ids.slice();
-  const work=async()=>{for(;;){const id=q.shift();if(id===undefined)return;
-    const e=find(P.wav[id]);
-    if(!e)miss++;else try{samples[id]=await decodeAudio(await e.ab())}catch(x){bad++}
-    done++;if(done%4==0||done==ids.length)say('解码音频 '+done+' / '+ids.length)}};
-  const bq=[...new Set(P.bga.map(x=>x.id))].filter(i=>P.bmp[i]),bmps={};let bmiss=0;
-  const bwork=async()=>{for(;;){const id=bq.shift();if(id===undefined)return;
-    const e=find(P.bmp[id],'v');if(!e){bmiss++;continue}
+// 载入 BGA 素材：items=[{id,e}]，图片→ImageBitmap，mp4/webm→<video>；其余格式（mpg/avi…）记为无法显示
+async function loadBgaAssets(items){
+  const q=items.slice(),bmps={};let miss=0;
+  const work=async()=>{for(;;){const it=q.shift();if(!it)return;
+    if(!it.e){miss++;continue}
     try{
-      const ab=await e.ab(),ext=(e.path.match(/\.([^.]+)$/)||[])[1]||'';
+      const ab=await it.e.ab(),ext=(it.e.path.match(/\.([^.]+)$/)||[])[1]||'';
       if(/^(mp4|webm|m4v)$/i.test(ext)){
         const v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';v.src=URL.createObjectURL(new Blob([ab],{type:'video/'+(ext=='webm'?'webm':'mp4')}));
-        await new Promise((ok,no)=>{v.onloadeddata=ok;v.onerror=()=>no(0);setTimeout(ok,4000)});bmps[id]={v};
-      }else if(/^(mpe?g|avi|wmv)$/i.test(ext))bmiss++;
-      else bmps[id]={i:await createImageBitmap(new Blob([ab]))};
-    }catch(x){bmiss++}}};
-  await Promise.all([work(),work(),work(),work(),bwork(),bwork()]);
+        await new Promise((ok,no)=>{v.onloadeddata=ok;v.onerror=()=>no(0);setTimeout(ok,4000)});bmps[it.id]={v};
+      }else if(/^(mpe?g|avi|wmv)$/i.test(ext))miss++;
+      else bmps[it.id]={i:await createImageBitmap(new Blob([ab]))};
+    }catch(x){miss++}}};
+  await Promise.all([work(),work(),work(),work()]);
+  return{bmps,miss};
+}
+async function decodeSamples(items,say){
+  const q=items.slice(),samples={};let done=0,bad=0,miss=0;
+  const work=async()=>{for(;;){const it=q.shift();if(!it)return;
+    if(!it.e)miss++;else try{samples[it.id]=await decodeAudio(await it.e.ab())}catch(x){bad++}
+    done++;if(done%4==0||done==items.length)say('解码音频 '+done+' / '+items.length)}};
+  await Promise.all([work(),work(),work(),work()]);
+  return{samples,bad,miss};
+}
+async function buildBms(ch,find,say){
+  const P=parseBms(bmsText(await ch.ab())),ids=[...P.used].filter(i=>P.wav[i]);
+  const sItems=ids.map(id=>({id,e:find(P.wav[id])})),bIds=[...new Set(P.bga.map(x=>x.id))].filter(i=>P.bmp[i]);
+  const bItems=bIds.map(id=>({id,e:find(P.bmp[id],'v')}));
+  const [S,B]=await Promise.all([decodeSamples(sItems,say),loadBgaAssets(bItems)]);
+  const samples=S.samples,bmps=B.bmps,miss=S.miss,bad=S.bad,bmiss=B.miss;
   let end=0;for(const n of P.notes)end=Math.max(end,n.end);
   for(const b of P.back){const s=samples[b.id];b.s=b.id;b.vel=127;b.ch=0;b.ins=0;b.p=60;b.dur=0;end=Math.max(end,b.t+(s?s.duration*1000:0))}
-  return{title:P.title||ch.path.split('/').pop(),lenMs:end+1500,notes:P.notes,back:P.back,ctl:{},mev:[],chan:{},tracks:0,bpm:P.bpm,samples,bga:P.bga,bmps,
+  const res={samples:{},media:{}};for(const it of sItems)if(it.e&&samples[it.id])res.samples[it.id]=it.e;for(const it of bItems)if(it.e&&bmps[it.id])res.media[it.id]=it.e;
+  return{title:P.title||ch.path.split('/').pop(),artist:P.artist,level:+P.level||0,chartName:ch.path.split('/').pop(),lenMs:end+1500,notes:P.notes,back:P.back,ctl:{},mev:[],chan:{},tracks:0,bpm:P.bpm,samples,bga:P.bga,bmps,res,
     kind:'BMS',note:((miss||bad)?`（缺少 ${miss} 个、无法解码 ${bad} 个音频）`:'')+(P.bga.length?` · BGA ${Object.keys(bmps).length} 个素材${bmiss?`（${bmiss} 个无法显示，如 mpg/avi）`:''}`:'')};
 }
 function setSong(s,name,extra){
@@ -883,7 +897,7 @@ function setSong(s,name,extra){
   if(typeof bgaReset=='function')bgaReset();
   $('midiBox').hidden=!!s.kind;$('sinkBox').hidden=!s.kind;if(s.kind)fillSink();
   song=s;songInfo=`${s.title||name} · 可玩音符 ${s.notes.length} · 伴奏事件 ${s.back.length}`+(s.kind?' · '+s.kind:' · MIDI 轨道 '+s.tracks)+(s.note||'');
-  $('info').textContent='';$('fname').textContent=name;$('go').disabled=false;$('pt').textContent=s.title||name;pKey='';draw(0);
+  $('info').textContent='';$('fname').textContent=name;$('go').disabled=false;$('exRsm').disabled=$('exRsc').disabled=false;$('pt').textContent=s.title||name;pKey='';draw(0);
 }
 async function fillSink(){
   const sel=$('sink');
@@ -905,9 +919,9 @@ async function loadSong(ab,name){
   catch(err){song=null;songInfo='';$('go').disabled=true;$('info').textContent='解析失败：'+err.message}
 }
 async function openChart(i){
-  const c=pack.charts[i];$('info').textContent='正在读取谱面…';
-  try{setSong(await buildBms(c,pack.find,t=>$('info').textContent=t),c.path.split('/').pop());$('info').textContent=''}
-  catch(err){song=null;songInfo='';$('go').disabled=true;$('info').textContent='BMS 解析失败：'+err.message}
+  const it=pack.items[i];$('info').textContent='正在读取谱面…';
+  try{setSong(await it.load(t=>$('info').textContent=t),it.name);$('info').textContent=''}
+  catch(err){song=null;songInfo='';$('go').disabled=true;$('info').textContent='谱面读取失败：'+err.message}
 }
 async function importFiles(list){
   list=[...list];if(!list.length)return;
@@ -915,24 +929,111 @@ async function importFiles(list){
   try{
     let ents=[];
     for(const f of list){
-      if(/\.zip$/i.test(f.name)){$('info').textContent='正在读取压缩包…';ents.push(...await readZip(await f.arrayBuffer()))}
+      if(/\.(zip|rsm)$/i.test(f.name)){$('info').textContent='正在读取压缩包…';ents.push(...await readZip(await f.arrayBuffer()))}
       else ents.push({path:f.webkitRelativePath||f.name,ab:()=>f.arrayBuffer()});
     }
-    const charts=ents.filter(e=>/\.(bms|bme|bml)$/i.test(e.path)),vos=ents.filter(e=>/\.(vos|vow)$/i.test(e.path));
-    if(!charts.length){
-      if(vos.length)return loadSong(await vos[0].ab(),vos[0].path.split('/').pop());
-      throw new Error('没有找到可用的谱面（支持 .vos .vow .bms .bme .bml，或包含它们的 .zip / 文件夹）');
+    const find=mkRes(ents),items=[];
+    for(const e of ents.filter(e=>/\.(bms|bme|bml)$/i.test(e.path))){
+      let t='';try{const P=parseBms(bmsText(await e.ab()));t=' · '+(P.title||'')+(P.level?' Lv'+P.level:'')+' · '+P.nlane+'K'}catch(x){}
+      items.push({name:e.path.split('/').pop(),label:e.path.split('/').pop()+t,load:say=>buildBms(e,find,say)});
     }
-    pack={charts,find:mkRes(ents)};
-    if(charts.length>1){
-      sel.innerHTML='';
-      for(let i=0;i<charts.length;i++){let t='';try{const P=parseBms(bmsText(await charts[i].ab()));t=' · '+(P.title||'')+(P.level?' Lv'+P.level:'')+' · '+P.nlane+'K'}catch(x){}
-        const o=document.createElement('option');o.value=i;o.textContent=charts[i].path.split('/').pop()+t;sel.appendChild(o)}
+    const mf=ents.find(e=>/(^|\/)manifest\.json$/i.test(e.path));let man=null;
+    if(mf)try{const m=JSON.parse(new TextDecoder().decode(await mf.ab()));if(m&&m.rsm)man=m}catch(x){}
+    for(const e of ents.filter(e=>/\.rsc$/i.test(e.path))){
+      let R;try{R=JSON.parse(new TextDecoder().decode(await e.ab()))}catch(x){continue}
+      if(!R||!R.rsc||!Array.isArray(R.charts))continue;
+      R.charts.forEach((c,ci)=>items.push({name:(R.meta&&R.meta.title)||e.path.split('/').pop(),
+        label:'[rsc] '+((R.meta&&R.meta.title)||e.path.split('/').pop())+(c.name?' · '+c.name:'')+(c.level?' Lv'+c.level:'')+' · '+(c.keys||7)+'K',
+        load:say=>buildRsc(R,ci,man,find,say)}));
+    }
+    if(!items.length){
+      const vos=ents.filter(e=>/\.(vos|vow)$/i.test(e.path));
+      if(vos.length)return loadSong(await vos[0].ab(),vos[0].path.split('/').pop());
+      throw new Error('没有找到可用的谱面（支持 .vos .vow .bms .bme .bml .rsc / .rsm，或包含它们的 .zip / 文件夹）');
+    }
+    pack={items};
+    if(items.length>1){
+      sel.innerHTML='';items.forEach((it,i)=>{const o=document.createElement('option');o.value=i;o.textContent=it.label;sel.appendChild(o)});
       sel.hidden=false;sel.onchange=()=>openChart(+sel.value);
     }
     await openChart(0);
   }catch(err){song=null;songInfo='';$('go').disabled=true;$('info').textContent='导入失败：'+err.message}
 }
+// ---------- .rsc 谱面 / .rsm 曲包：读写 ----------
+const CRCT=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=u=>{let c=-1;for(let i=0;i<u.length;i++)c=CRCT[(c^u[i])&255]^(c>>>8);return(c^-1)>>>0};
+async function deflateRaw(u){return new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer())}
+async function writeZip(files){
+  const parts=[],cen=[],te=new TextEncoder();let off=0,cs=0;
+  for(const f of files){
+    const nm=te.encode(f.path),crc=crc32(f.data);let d=f.data,m=0;
+    if(f.deflate&&d.length>64){const z=await deflateRaw(d);if(z.length<d.length){d=z;m=8}}
+    const h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x800,true);h.setUint16(8,m,true);h.setUint16(12,0x21,true);
+    h.setUint32(14,crc,true);h.setUint32(18,d.length,true);h.setUint32(22,f.data.length,true);h.setUint16(26,nm.length,true);
+    parts.push(h.buffer,nm,d);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x800,true);c.setUint16(10,m,true);c.setUint16(14,0x21,true);
+    c.setUint32(16,crc,true);c.setUint32(20,d.length,true);c.setUint32(24,f.data.length,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+    cen.push(c.buffer,nm);cs+=46+nm.length;off+=30+nm.length+d.length;
+  }
+  const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+  return new Blob([...parts,...cen,e.buffer],{type:'application/zip'});
+}
+const r2=x=>Math.round(x*100)/100;
+function songToRsc(s){
+  const snd=e=>e.s!==undefined?{s:e.s,vel:e.vel}:{midi:'vos',ch:e.ch,ins:e.ins,p:e.p,vel:e.vel,len:r2(e.dur*1000)};
+  const ch={id:'main',name:s.chartName||'',level:s.level||0,mode:'keys',keys:7,timebase:'ms',bpm:r2(s.bpm||120),
+    notes:s.notes.map(n=>{const o={t:r2(n.t),k:n.hold?'hold':'tap',lane:n.lane,snd:snd(n.snd)};if(n.hold)o.len=r2(n.end-n.t);return o}),
+    back:s.back.map(b=>({t:r2(b.t),snd:snd(b)}))};
+  if(s.bga&&s.bga.length)ch.bga=s.bga.map(x=>({t:r2(x.t),media:x.id,layer:x.l}));
+  const R={rsc:1,meta:{title:s.title||'',artist:s.artist||'',source:{format:s.kind=='BMS'?'bms':s.samples?'rsc':'vos'}},package:{rsm:'song.rsm'},charts:[ch],ext:{}};
+  if(!s.samples)R.ext.vos={ctl:s.ctl,mev:s.mev,chan:s.chan,tracks:s.tracks,lenMs:s.lenMs};
+  else R.ext.lenMs=s.lenMs;
+  return R;
+}
+async function buildRsc(R,ci,man,find,say){
+  const c=R.charts[ci],sid=new Set(),mid=new Set(),usesSample=x=>x&&x.s!==undefined;
+  for(const n of c.notes)if(n.snd&&n.snd.s!==undefined)sid.add(n.snd.s);
+  for(const b of c.back||[])if(b.snd&&b.snd.s!==undefined)sid.add(b.snd.s);
+  for(const b of c.bga||[])mid.add(b.media);
+  const mfile=(arr,id)=>{const x=(arr||[]).find(y=>y.id===id);return x?find(x.file):null};
+  const sItems=[...sid].map(id=>({id,e:mfile(man&&man.samples,id)||mfile(man&&man.tracks,id)}));
+  const bItems=[...mid].map(id=>({id,e:mfile(man&&man.media,id)}));
+  const [S,B]=await Promise.all([decodeSamples(sItems,say),loadBgaAssets(bItems)]);
+  const mk=(sn,t,len)=>{sn=sn||{};return sn.s!==undefined?{s:sn.s,vel:sn.vel||127,ch:0,ins:0,p:60,dur:0}:{ch:sn.ch||0,ins:sn.ins||0,p:sn.p||60,vel:sn.vel||100,dur:(sn.len||len||0)/1000}};
+  const notes=c.notes.filter(n=>n.k=='tap'||n.k=='hold').map(n=>({t:n.t,lane:n.lane,hold:n.k=='hold',end:n.k=='hold'?n.t+(n.len||0):n.t,snd:mk(n.snd,n.t,0),done:false})).sort((a,b)=>a.t-b.t);
+  const back=(c.back||[]).map(b=>({t:b.t,...mk(b.snd,b.t,0)})).sort((a,b)=>a.t-b.t);
+  const hasS=Object.keys(S.samples).length>0||sid.size>0,V=(R.ext&&R.ext.vos)||{};
+  let end=(V.lenMs||(R.ext&&R.ext.lenMs))||0;for(const n of notes)end=Math.max(end,n.end+500);
+  for(const b of back){const sm=S.samples[b.s];end=Math.max(end,b.t+(sm?sm.duration*1000:b.dur*1000))}
+  const bga=(c.bga||[]).map(x=>({t:x.t,id:x.media,l:x.layer||0})).sort((a,b)=>a.t-b.t);
+  const res={samples:{},media:{}};for(const it of sItems)if(it.e&&S.samples[it.id])res.samples[it.id]=it.e;for(const it of bItems)if(it.e&&B.bmps[it.id])res.media[it.id]=it.e;
+  return{title:(R.meta&&R.meta.title)||'',artist:(R.meta&&R.meta.artist)||'',level:c.level||0,chartName:c.name||'',lenMs:end+1000,notes,back,
+    ctl:V.ctl||{},mev:V.mev||[],chan:V.chan||{},tracks:V.tracks||0,bpm:c.bpm||120,
+    samples:hasS?S.samples:undefined,bga:bga.length?bga:undefined,bmps:B.bmps,res,kind:hasS?'RSM':undefined,
+    note:(S.miss||S.bad)?`（缺少 ${S.miss} 个、无法解码 ${S.bad} 个音频）`:''};
+}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)}
+const safeName=t=>(t||'song').replace(/[\\/:*?"<>|]+/g,'_').slice(0,60);
+async function exportRsc(pkg){
+  if(!song)return;const msg=t=>$('info').textContent=t;
+  try{
+    const R=songToRsc(song),nm=safeName(song.title);
+    if(!pkg){R.package={};download(new Blob([JSON.stringify(R)],{type:'application/json'}),nm+'.rsc');return}
+    const man={rsm:1,id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),title:song.title||'',samples:[],tracks:[],midi:[],media:[]},files=[];
+    const ext=e=>((e.path.match(/\.([^.]+)$/)||[])[1]||'bin').toLowerCase();
+    let n=0;const R_=song.res||{samples:{},media:{}},sk=Object.keys(R_.samples),mk=Object.keys(R_.media);
+    for(const id of sk){msg('打包 '+(++n)+' / '+(sk.length+mk.length));const e=R_.samples[id],x=ext(e),f='samples/'+id+'.'+x;
+      files.push({path:f,data:new Uint8Array(await e.ab()),deflate:/^(wav|bmp)$/.test(x)});man.samples.push({id,file:f})}
+    for(const id of mk){msg('打包 '+(++n)+' / '+(sk.length+mk.length));const e=R_.media[id],x=ext(e),f='bga/'+id+'.'+x;
+      files.push({path:f,data:new Uint8Array(await e.ab()),deflate:/^(bmp)$/.test(x)});man.media.push({id,file:f,type:/^(mp4|webm|m4v)$/.test(x)?'video':'image'})}
+    const te=new TextEncoder();R.package={rsm:nm+'.rsm'};
+    files.unshift({path:'manifest.json',data:te.encode(JSON.stringify(man,null,1)),deflate:true},{path:'charts/main.rsc',data:te.encode(JSON.stringify(R)),deflate:true});
+    msg('正在压缩…');download(await writeZip(files),nm+'.rsm');msg('');
+  }catch(err){msg('导出失败：'+err.message)}
+}
+$('exRsm').onclick=()=>exportRsc(true);$('exRsc').onclick=()=>exportRsc(false);
 $('file').onchange=async e=>{await importFiles(e.target.files);e.target.value=''};
 $('dirf').onchange=async e=>{await importFiles(e.target.files);e.target.value=''};
 
