@@ -12,6 +12,7 @@ Resonia.register({
   id: 'my-format',          // 唯一 id（同 id 再次注册会替换旧的）
   name: '显示名', version: '1',
   exts: ['ojn', 'ojm'],     // 接管的扩展名（不带点）；游戏的文件选择框会自动加上这些后缀
+  pairs: [['ojn','ojm']],   // 可选：配对格式。只选了其中一种时，游戏会提示并让用户补选另一种
   match(ents) { return false },   // 可选：扩展名没命中时，仍想处理这批文件就返回 true
   async open(files, ctx) { return [ { name, label, build } ] }
 });

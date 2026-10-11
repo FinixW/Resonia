@@ -126,8 +126,9 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 <div id="prog"><div id="pr1"><span id="pt">未载入歌曲</span><span id="pn">0:00 / 0:00</span></div><div id="pb"><i id="pf"></i></div></div>
 <div id="panel">
 <section class="card" id="cPlay"><h3>演奏</h3>
-  <div class="row top"><label class="fbtn">选择谱面<input type="file" id="file" multiple accept=".vos,.vow,.bms,.bme,.bml,.rsc,.rsm,.zip,.wav,.ogg,.mp3,.flac"></label><label class="fbtn sm" title="选择包含 BMS 与音频的文件夹">文件夹<input type="file" id="dirf" webkitdirectory multiple></label><span id="fname" class="fname">未选择文件</span><select id="cpick" hidden style="max-width:220px"></select><button id="go" disabled>开始</button></div>
-  <div id="info">选择 .vos / .vow 谱面文件</div>
+  <div class="row top"><label class="fbtn">打开歌曲<input type="file" id="file" multiple accept=".vos,.vow,.bms,.bme,.bml,.rsc,.rsm,.zip,.wav,.ogg,.mp3,.flac"></label><label class="fbtn sm" title="打开整个歌曲文件夹（BMS 等带有音频和 BGA 的歌曲，或一次载入多首）">打开文件夹<input type="file" id="dirf" webkitdirectory multiple></label><span id="fname" class="fname">未打开歌曲</span><select id="cpick" hidden style="max-width:220px"></select><button id="go" disabled>开始</button></div>
+  <div id="info"></div>
+  <div id="need" class="row" hidden style="font-size:13px"><span id="needt" style="color:var(--mu)"></span><label class="fbtn sm"><span id="needb">选择</span><input type="file" id="needf" multiple></label></div>
   <div class="sl"><span>速度</span><input type="range" id="spd" min="0.25" max="1.2" step="0.05" value="0.55" data-major="0.25" data-fmt="x"><b class="rv"></b></div>
   <div class="sl"><span>延迟</span><input type="range" id="off" min="-200" max="200" step="5" value="0" data-minor="20" data-major="100" data-fmt="ms"><b class="rv" id="offv"></b></div>
   <div class="sl"><span>触控范围</span><input type="range" id="tw" min="0.5" max="3" step="0.5" value="1.5" data-major="1" data-fmt="x"><b class="rv"></b></div>
@@ -553,8 +554,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.13';
+const VERSION='0.9.14';
 const CHANGELOG=[
+  ['0.9.14','2026-10-11','界面更直观：“选择谱面”改为“打开歌曲”，“文件夹”改为“打开文件夹”，去掉 .vos/.vow 的提示文字；插件可声明配对格式（如 .ojn + .ojm），只选其中一个时会提示并一键补选另一个，同一文件夹里的会自动配对，读取列表里显示歌名和难度而不是文件名'],
   ['0.9.13','2026-10-11','导入失败不再清掉当前歌曲（游玩中导入失败不会再报错）；插件读取失败时显示插件给出的具体原因'],
   ['0.9.12','2026-10-11','载入 .rsm / .rsc 时，多谱面下拉框优先显示谱面名（如 [7key Another]）；配套 Studio 0.1.1：谱面表格显示 BMS 的谱面名（#SUBTITLE）并另列文件名'],
   ['0.9.11','2026-10-11','谱面转换/导出功能移出游戏页，改为独立的 Studio 工具页（studio/，一次导出文件夹里所有谱面到一个 .rsm）；游戏页新增“第三方”插件接口：可在本机载入格式插件（.js）来读取 OJN/OJM、PAK/PT 等格式，插件只保存在本机浏览器；.rsc 支持谱面级 VOS 信息'],
@@ -973,9 +975,11 @@ $('plf').onchange=async e=>{
   await plugSave();plugRefresh();
 };
 (async()=>{const r=await idbGet('plugins');if(Array.isArray(r))for(const x of r){try{await plugRun(x.src);plugSrc[x.name]=x.src}catch(e){}}plugRefresh()})();
+let pendingList=null;
+$('needf').onchange=async e=>{const add=[...e.target.files];e.target.value='';if(add.length&&pendingList)await importFiles([...pendingList,...add])};
 async function importFiles(list){
   list=[...list];if(!list.length)return;
-  const sel=$('cpick');sel.hidden=true;pack=null;
+  const sel=$('cpick');sel.hidden=true;pack=null;$('need').hidden=true;pendingList=null;
   try{
     let ents=[];
     for(const f of list){
@@ -995,6 +999,16 @@ async function importFiles(list){
       R.charts.forEach((c,ci)=>items.push({name:(R.meta&&R.meta.title)||e.path.split('/').pop(),
         label:'[rsc] '+((R.meta&&R.meta.title)||e.path.split('/').pop())+(c.name?' · '+c.name:'')+(c.level?' Lv'+c.level:'')+' · '+(c.keys||7)+'K',
         load:say=>buildRsc(R,ci,man,find,say)}));
+    }
+    // 插件声明的配对格式（如 ojn+ojm）：只选了其中一种时，提示补选另一种
+    const fext=e=>(e.path.split('.').pop()||'').toLowerCase();
+    for(const p of plugins)for(const pr of p.pairs||[]){
+      const a=pr[0].toLowerCase(),b=pr[1].toLowerCase(),ha=ents.find(e=>fext(e)==a),hb=ents.find(e=>fext(e)==b);
+      if(!!ha===!!hb)continue;
+      const have=ha||hb,ne=ha?b:a,base=have.path.split('/').pop().replace(/\.[^.]+$/,'');
+      pendingList=list;$('needt').textContent='已选 '+have.path.split('/').pop()+'，还需要对应的 '+base+'.'+ne;
+      $('needb').textContent='选择 .'+ne;$('needf').accept='.'+ne;$('need').hidden=false;$('info').textContent='';
+      return;
     }
     const perr=[];
     for(const p of plugins){
@@ -1458,7 +1472,7 @@ function draw(now){
     c2.fillStyle='rgba(8,10,22,.82)';c2.fillRect(0,0,W,H);c2.textAlign='center';
     c2.fillStyle='#fff';c2.font='bold 54px system-ui';c2.fillText('鸣域',W/2,250);
     c2.fillStyle='#6c8cff';c2.font='600 24px system-ui';c2.fillText('R E S O N I A',W/2,292);
-    c2.fillStyle='#8b92c4';c2.font='14px system-ui';c2.fillText(song?'点击上方“开始”':'请先选择 .vos / .vow 谱面',W/2,340);
+    c2.fillStyle='#8b92c4';c2.font='14px system-ui';c2.fillText(song?'点击上方“开始”':'请先打开一首歌曲',W/2,340);
   }
   if(ended){
     c2.fillStyle='rgba(8,10,22,.88)';c2.fillRect(0,0,W,H);c2.textAlign='center';c2.fillStyle='#fff';c2.font='bold 30px system-ui';c2.fillText('结算',W/2,200);
