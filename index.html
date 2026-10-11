@@ -553,8 +553,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.11';
+const VERSION='0.9.12';
 const CHANGELOG=[
+  ['0.9.12','2026-10-11','载入 .rsm / .rsc 时，多谱面下拉框优先显示谱面名（如 [7key Another]）；配套 Studio 0.1.1：谱面表格显示 BMS 的谱面名（#SUBTITLE）并另列文件名'],
   ['0.9.11','2026-10-11','谱面转换/导出功能移出游戏页，改为独立的 Studio 工具页（studio/，一次导出文件夹里所有谱面到一个 .rsm）；游戏页新增“第三方”插件接口：可在本机载入格式插件（.js）来读取 OJN/OJM、PAK/PT 等格式，插件只保存在本机浏览器；.rsc 支持谱面级 VOS 信息'],
   ['0.9.10','2026-10-11','新增 .rsc 谱面（JSON）与 .rsm 曲包（ZIP：manifest.json + 谱面 + 采样/BGA）的读取与导出；VOS、BMS 都可一键转成 .rsm / .rsc 并再次载入；新增“转换”栏；导入时一个包里的多个谱面（含 .rsc 里的多难度）可下拉选择'],
   ['0.9.9','2026-10-10','BGA 修正（樱华月）：底层（04）遇到未定义的素材编号（如 #BMP7C）时保持上一帧，不再当成“清空”造成每秒十几次的黑屏闪烁；叠加层（07/0A）遇到未定义编号（如 #BMPFF）仍按清空处理，用来结束白闪'],

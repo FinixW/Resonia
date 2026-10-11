@@ -30,7 +30,7 @@ a{color:var(--ac)}
  <div class="row"><label class="btn">选择文件…<input type="file" id="f" multiple></label><label class="btn">选择文件夹…<input type="file" id="d" webkitdirectory multiple></label><span id="msg"></span></div>
 </section>
 <section class="card w"><h3>2 · 谱面（勾选要放进曲包的）</h3>
- <table><thead><tr><th></th><th>谱面</th><th>难度</th><th>键数</th><th>音符</th><th>伴奏</th><th>来源</th></tr></thead><tbody id="tb"><tr><td colspan="7" style="color:var(--mu)">还没有导入</td></tr></tbody></table>
+ <table><thead><tr><th></th><th>谱面名</th><th>文件</th><th>难度</th><th>键数</th><th>音符</th><th>伴奏</th><th>来源</th></tr></thead><tbody id="tb"><tr><td colspan="8" style="color:var(--mu)">还没有导入</td></tr></tbody></table>
  <div class="row"><span>标题</span><input type="text" id="mt"><span>作者</span><input type="text" id="ma"><button id="all">全选</button><button id="none">全不选</button></div>
 </section>
 <section class="card w"><h3>3 · 导出</h3>
@@ -39,7 +39,7 @@ a{color:var(--ac)}
 </section>
 <section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器（波形、放置/移动音符、节奏表、试玩）<br>· 其他格式互转（第三方模式：OJN/OJM、PAK/PT 等，以插件形式在本机载入）<br>· 音波采谱 / 自动作谱</div></section>
 <script>
-const STUDIO_VERSION='0.1.0';
+const STUDIO_VERSION='0.1.1';
 const $=id=>document.getElementById(id);$('ver').textContent='v'+STUDIO_VERSION;
 const TPB=768;
 function parseVos(buf){
@@ -293,11 +293,12 @@ function bmsToItem(P,find,e){
   const res={samples:{},media:{}},sk=id=>mapRes(res,'a',find,P.wav[id]),bk=id=>mapRes(res,'v',find,P.bmp[id]);
   const cache={},sc=id=>id in cache?cache[id]:(cache[id]=sk(id));
   const snd=id=>{const k=sc(id);return k?{s:k,vel:127}:undefined};
-  const ch={id:'',name:baseName(e.path),level:+P.level||0,mode:'keys',keys:7,timebase:'ms',bpm:r2(P.bpm),
+  const sub=(P.H.SUBTITLE||'').trim(),disp=P.title||baseName(e.path);
+  const ch={id:'',name:sub||disp,level:+P.level||0,mode:'keys',keys:7,timebase:'ms',bpm:r2(P.bpm),
     notes:P.notes.map(n=>{const o={t:r2(n.t),k:n.hold?'hold':'tap',lane:n.lane};if(n.hold)o.len=r2(n.end-n.t);const s=snd(n.snd.s);if(s)o.snd=s;return o}),
     back:P.back.map(b=>{const o={t:r2(b.t)};const s=snd(b.id);if(s)o.snd=s;return o})};
   if(P.bga.length){const bc={};ch.bga=P.bga.map(x=>({t:r2(x.t),media:x.id in bc?bc[x.id]:(bc[x.id]=bk(x.id)),layer:x.l}))}
-  return{label:baseName(e.path),src:'BMS',chart:ch,res,meta:{title:P.title,artist:P.artist},ext:{bms:{header:P.H}}};
+  return{label:disp,file:baseName(e.path),src:'BMS',chart:ch,res,meta:{title:(P.H.TITLE||P.title||'').trim(),artist:P.artist},ext:{bms:{header:P.H}}};
 }
 function vosToItem(buf,name){
   const s=parseVos(buf),snd=e=>({midi:'vos',ch:e.ch,ins:e.ins,p:e.p,vel:e.vel,len:r2(e.dur*1000)});
@@ -343,11 +344,11 @@ async function importAll(list){
 }
 function render(){
   const tb=$('tb');tb.innerHTML='';
-  if(!items.length){tb.innerHTML='<tr><td colspan="7" style="color:var(--mu)">还没有导入</td></tr>';$('exRsm').disabled=$('exRsc').disabled=true;return}
+  if(!items.length){tb.innerHTML='<tr><td colspan="8" style="color:var(--mu)">还没有导入</td></tr>';$('exRsm').disabled=$('exRsc').disabled=true;return}
   items.forEach((it,i)=>{
     const tr=document.createElement('tr'),c=it.chart,lanes=new Set(c.notes.map(n=>n.lane)).size;
-    tr.innerHTML=`<td><input type="checkbox" ${it.on?'checked':''}></td><td></td><td class="n">${c.level||'-'}</td><td class="n">${lanes}</td><td class="n">${c.notes.length}</td><td class="n">${(c.back||[]).length}</td><td>${it.src}</td>`;
-    tr.children[1].textContent=it.label;tr.children[0].firstChild.onchange=e=>{it.on=e.target.checked;btn()};tb.appendChild(tr);
+    tr.innerHTML=`<td><input type="checkbox" ${it.on?'checked':''}></td><td></td><td style="color:var(--mu)"></td><td class="n">${c.level||'-'}</td><td class="n">${lanes}</td><td class="n">${c.notes.length}</td><td class="n">${(c.back||[]).length}</td><td>${it.src}</td>`;
+    tr.children[1].textContent=it.label;tr.children[2].textContent=it.file||'';tr.children[0].firstChild.onchange=e=>{it.on=e.target.checked;btn()};tb.appendChild(tr);
   });btn();
 }
 const btn=()=>{$('exRsm').disabled=$('exRsc').disabled=!items.some(i=>i.on)};
