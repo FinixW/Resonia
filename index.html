@@ -554,8 +554,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.18';
+const VERSION='0.9.19';
 const CHANGELOG=[
+  ['0.9.19','2026-10-11','插件可提供“场景式 BGA”（bgaScene.render）：每帧由插件把动画画到背景画布上；用于 DJMAX 的 VCQ/VCE 多层动画 BGA'],
   ['0.9.18','2026-10-11','小节线改为固定显示且更亮（去掉开关）；曲目可带“下落缩放”（DJMAX 的 MeasureScale，音符间距按倍数拉开）；歌曲时间扣除声卡输出延迟（outputLatency），画面与听到的声音对齐'],
   ['0.9.17','2026-10-11','新增小节线（设置里可开关，默认开）：BMS 与插件曲目显示小节线，便于检查声音与 Note 是否同步；修复“跳过前奏”后 BGM/伴奏被丢掉或从头播放造成的声音与 Note 不同步（采样现在会按已过去的时间从中途接着播放）；插件可提供 bars / 每小节拍数'],
   ['0.9.16','2026-10-11','插件接口：配对支持“一对多”（选 PAK 自动找同名前缀的全部 PT/INI，选 PT 自动找 PAK）、辅助扩展名 hide、插件本地存储 api.kv；补选提示改为通用；提示类消息不再显示“导入失败”'],
@@ -961,7 +962,7 @@ const Resonia=window.Resonia={
       const back=(o.back||[]).slice().sort((a,b)=>a.t-b.t);
       let end=o.lenMs||0;for(const n of notes)end=Math.max(end,n.end+500);
       return{title:o.title||'',artist:o.artist||'',level:o.level||0,chartName:o.chartName||'',lenMs:end+1000,notes,back,ctl:o.ctl||{},mev:o.mev||[],chan:o.chan||{},tracks:o.tracks||0,
-        bpm:o.bpm||120,bars:o.bars,scroll:+o.scroll>0?+o.scroll:undefined,samples:o.samples,bga:o.bga,bmps:o.bmps||{},res:o.res,kind:o.samples?(o.kind||'PLUGIN'):undefined,note:o.note||''};
+        bpm:o.bpm||120,bars:o.bars,bgaScene:o.bgaScene,scroll:+o.scroll>0?+o.scroll:undefined,samples:o.samples,bga:o.bga,bmps:o.bmps||{},res:o.res,kind:o.samples?(o.kind||'PLUGIN'):undefined,note:o.note||''};
     }
   }
 };
@@ -1445,6 +1446,7 @@ function keyBlack(im){ // BMS 叠加层约定：纯黑 = 透明
 function drawBga(now){
   const dp=Math.min(devicePixelRatio||1,1.5),cw=Math.round(innerWidth*dp),chh=Math.round(innerHeight*dp);
   if(bgac.width!==cw||bgac.height!==chh){bgac.width=cw;bgac.height=chh}
+  if(song.bgaScene){try{song.bgaScene.render(bgx,cw,chh,now)}catch(x){return false}return true}
   const L=song.bga,cur=[null,null,null];
   let lo=0,hi=L.length-1,k=-1;while(lo<=hi){const m=(lo+hi)>>1;if(L[m].t<=now){k=m;lo=m+1}else hi=m-1}
   for(let i=k;i>=0&&k-i<2000;i--){const e=L[i];if(cur[e.l])continue;if(e.l==0&&!song.bmps[e.id])continue;cur[e.l]=e;if(cur[0]&&cur[1]&&cur[2])break} // 底层遇到未定义素材=保持上一帧；叠加层遇到未定义素材=清空
@@ -1467,7 +1469,7 @@ function drawBga(now){
 }
 function draw(now){
   c2.clearRect(0,0,W,H);
-  const bgaOn=false,bgaWant=!!(song&&song.bga&&song.bga.length&&$('bga').checked);
+  const bgaOn=false,bgaWant=!!(song&&((song.bga&&song.bga.length)||song.bgaScene)&&$('bga').checked);
   bgaVis(bgaWant?drawBga(now):false);
   const pr=progress(now);
   const gl=S.glow||'108,140,255';
