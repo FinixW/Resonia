@@ -152,7 +152,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div class="sl"><span>按键音量</span><input type="range" id="kv" min="0" max="2.5" step="0.1" value="1.3" data-minor="0.1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
 </section>
 <section class="card" id="cSkin"><h3>皮肤</h3>
-  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label><label class="il"><input type="checkbox" id="bars" checked>小节线</label></div>
+  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
   <details id="skCustom" hidden><summary>自定义素材（图片只保存在你的浏览器里，不会上传）</summary><div id="skSlots"></div><button id="skClear">清除全部素材</button></details>
 </section>
 <section class="card" id="cPlug"><h3>第三方<span class="gpu" style="color:var(--mu)">格式插件</span></h3><div class="row"><label class="fbtn sm">载入插件…<input type="file" id="plf" accept=".js" multiple></label><span id="plmsg" class="fname" style="color:var(--mu)">未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器</span></div><div id="pll"></div></section>
@@ -554,8 +554,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.17';
+const VERSION='0.9.18';
 const CHANGELOG=[
+  ['0.9.18','2026-10-11','小节线改为固定显示且更亮（去掉开关）；曲目可带“下落缩放”（DJMAX 的 MeasureScale，音符间距按倍数拉开）；歌曲时间扣除声卡输出延迟（outputLatency），画面与听到的声音对齐'],
   ['0.9.17','2026-10-11','新增小节线（设置里可开关，默认开）：BMS 与插件曲目显示小节线，便于检查声音与 Note 是否同步；修复“跳过前奏”后 BGM/伴奏被丢掉或从头播放造成的声音与 Note 不同步（采样现在会按已过去的时间从中途接着播放）；插件可提供 bars / 每小节拍数'],
   ['0.9.16','2026-10-11','插件接口：配对支持“一对多”（选 PAK 自动找同名前缀的全部 PT/INI，选 PT 自动找 PAK）、辅助扩展名 hide、插件本地存储 api.kv；补选提示改为通用；提示类消息不再显示“导入失败”'],
   ['0.9.15','2026-10-11','修复长条：漏掉/中途松开后不再凭空消失，而是变暗继续滚动到结束；第三方配对（如 .ojm → .ojn）支持“在文件夹中自动查找”：授权一次歌曲文件夹后，只选 .ojm 就会自动找到同名 .ojn（需 Chrome / Edge）'],
@@ -654,7 +655,9 @@ renderKeys();
 const $=id=>document.getElementById(id);
 let song=null,running=false,t0=0,startOff=0,bi=0,combo=0,maxCombo=0,score=0,cnt,keys=Array(7).fill(false),flash=Array(7).fill(0),lastJ='',lastJT=0,ended=false,schedTimer=0;
 let lanesQ=[],lp=[],holdN=[];
-const rawMs=()=>(ctx.currentTime-t0)*1000+startOff;
+// 声卡输出延迟：音频时钟走到 currentTime 时，耳朵里听到的其实是 outputLatency 之前的声音；画面要对齐听到的
+const outLat=()=>{const v=+(ctx.outputLatency||0);return v>0&&v<.5?v:0};
+const rawMs=()=>(ctx.currentTime-outLat()-t0)*1000+startOff;
 // 平滑的歌曲时间：音频时钟 currentTime 是一格一格跳的（每次约 3~10ms），直接拿来画画面会让音符抖动，看起来像掉帧；
 // 这里用 performance.now() 在两次音频时钟更新之间插值，并缓慢向真实音频时间靠拢（误差大时直接对齐）
 const ck={p:0,m:0,ok:false};
@@ -958,7 +961,7 @@ const Resonia=window.Resonia={
       const back=(o.back||[]).slice().sort((a,b)=>a.t-b.t);
       let end=o.lenMs||0;for(const n of notes)end=Math.max(end,n.end+500);
       return{title:o.title||'',artist:o.artist||'',level:o.level||0,chartName:o.chartName||'',lenMs:end+1000,notes,back,ctl:o.ctl||{},mev:o.mev||[],chan:o.chan||{},tracks:o.tracks||0,
-        bpm:o.bpm||120,bars:o.bars,samples:o.samples,bga:o.bga,bmps:o.bmps||{},res:o.res,kind:o.samples?(o.kind||'PLUGIN'):undefined,note:o.note||''};
+        bpm:o.bpm||120,bars:o.bars,scroll:+o.scroll>0?+o.scroll:undefined,samples:o.samples,bga:o.bga,bmps:o.bmps||{},res:o.res,kind:o.samples?(o.kind||'PLUGIN'):undefined,note:o.note||''};
     }
   }
 };
@@ -1277,9 +1280,9 @@ function bad(){cnt.B++;lastJ='BAD';lastJT=performance.now()}
 function badOK(now){ // 第一个音符开始掉落之前、最后一个音符结束之后，按键不判 BAD
   const a=song.notes[0],z=song.notes[song.notes.length-1];if(!a)return false;
   if(holdN.some(Boolean))return false; // 长条按住期间，其他轨道没有音符时乱按不判 BAD
-  if(!(now>=a.t-JY/(+$('spd').value)&&now<=z.end))return false;
+  if(!(now>=a.t-JY/(+$('spd').value*(song.scroll||1))&&now<=z.end))return false;
   // BAD 只在音符已经贴近判定线时才判：命中区之外再多一个音符高度（约16px）以内；更早之前乱按只发按键音，不判 BAD
-  const near=HIT+16/(+$('spd').value);
+  const near=HIT+16/(+$('spd').value*(song.scroll||1));
   for(let l=0;l<7;l++){const q=lanesQ[l];let i=lp[l];while(i<q.length&&q[i].done)i++;if(i<q.length){const d=q[i].t-now;if(d<=near&&d>=-HIT)return true}}
   return false;
 }
@@ -1477,10 +1480,10 @@ function draw(now){
   c2.strokeStyle=S.field=='glass'||imOK(SI.field)?'rgba(255,255,255,.1)':'#232a52';c2.lineWidth=1;
   for(let l=1;l<7;l++){c2.beginPath();c2.moveTo(l*LW,0);c2.lineTo(l*LW,H);c2.stroke()}
   if(song){
-    const pps=+$('spd').value,jn=now+offs(),vis=JY/pps+200;
-    if(song.bars&&$('bars').checked){
-      c2.fillStyle='rgba(255,255,255,.22)';
-      for(const bt of song.bars){const d=bt-jn;if(d>vis)break;if(d<-100)continue;c2.fillRect(0,Math.round(JY-d*pps)-1,W,1)}
+    const pps=+$('spd').value*(song.scroll||1),jn=now+offs(),vis=JY/pps+200;
+    if(song.bars){
+      c2.fillStyle='rgba(255,255,255,.6)';
+      for(const bt of song.bars){const d=bt-jn;if(d>vis)break;if(d<-100)continue;c2.fillRect(0,Math.round(JY-d*pps)-1,W,2)}
     }
     for(const n of song.notes){
       if(n.t-jn>vis)break;
