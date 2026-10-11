@@ -69,6 +69,13 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 .lb{flex:none;width:56px}
 .card select{background:#0f1228;color:var(--fg);border:1px solid #2c3366;border-radius:6px;padding:5px 6px;min-width:0;flex:1 1 0;max-width:100%}
 .row .fname{flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg);font-size:13px}
+#cal{position:fixed;inset:0;z-index:9999;background:rgba(5,7,18,.88);display:flex;align-items:center;justify-content:center;padding:16px}
+#cal[hidden]{display:none}
+.calbox{background:var(--panel);border-radius:12px;padding:20px 22px;max-width:420px;width:100%;text-align:center;box-shadow:0 10px 40px #000a}
+.calbox p{font-size:13px;color:var(--mut);line-height:1.6;margin:10px 0}
+#caldot{width:72px;height:72px;border-radius:50%;margin:14px auto;background:#2a3166;transition:background .06s,transform .06s}
+#caldot.on{background:#fff;transform:scale(1.15)}
+#calp{font-size:14px;margin:8px 0 14px;min-height:42px;line-height:1.5}
 .fbtn{flex:none;display:inline-block;background:#2a3166;color:var(--fg);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;position:relative;overflow:hidden}
 .fbtn.sm{padding:5px 8px;font-size:12px}
 .fbtn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
@@ -130,7 +137,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div id="info"></div>
   <div id="need" class="row" hidden style="font-size:13px"><span id="needt" style="color:var(--mu)"></span><label class="fbtn sm"><span id="needb">选择</span><input type="file" id="needf" multiple></label><button id="needd" class="fbtn sm" style="border:0;cursor:pointer" hidden title="选一次歌曲所在的文件夹，之后选 OJM 就会自动找同名 OJN（仅 Chrome / Edge）">在文件夹中自动查找</button></div>
   <div class="sl"><span>速度</span><input type="range" id="spd" min="0.25" max="1.2" step="0.05" value="0.55" data-major="0.25" data-fmt="x"><b class="rv"></b></div>
-  <div class="sl"><span>延迟</span><input type="range" id="off" min="-200" max="200" step="5" value="0" data-minor="20" data-major="100" data-fmt="ms"><b class="rv" id="offv"></b></div>
+  <div class="sl"><span>延迟</span><input type="range" id="off" min="-400" max="400" step="5" value="0" data-minor="20" data-major="100" data-fmt="ms"><b class="rv" id="offv"></b><button id="calb" class="fbtn sm" style="border:0;margin:2px 0 0 auto" title="跟着节拍点按，自动测出你的设备延迟并设置“延迟”">校准</button></div>
   <div class="sl"><span>触控范围</span><input type="range" id="tw" min="0.5" max="3" step="0.5" value="1.5" data-major="1" data-fmt="x"><b class="rv"></b></div>
   <div class="chk"><label><input type="checkbox" id="skip" checked>跳过前奏</label><label><input type="checkbox" id="fs">开局隐藏设置</label></div>
 </section>
@@ -160,6 +167,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 </div>
 <canvas id="cv" width="420" height="640"></canvas>
 <small><a href="studio/" target="_blank" style="color:#8ea6ff">谱面工具 Studio</a>（转换 / 导出 .rsm，之后还有谱面编辑）· 默认按键 S D F 空格 J K L，可在上方自定义（手机可直接点按轨道，可滑动扫音符；手指较粗时调大“触控范围”，一指可同时按多条轨道）。按 1/↓ 减速，2/↑ 加速。Esc 结束（手机上开局后会隐藏设置，点右上角 ✕ 退出）。伴奏为内置简易合成音色，音质不代表最终效果。</small>
+<div id="cal" hidden><div class="calbox"><h3>延迟校准</h3><p id="calt">戴上平时玩游戏用的耳机/音箱。听到“嘀”声（或看到圆点闪烁）就按任意键、点击或触摸；先 4 拍预备，再测 16 拍。</p><div id="caldot"></div><div id="calp">准备中…</div><div style="display:flex;justify-content:center;gap:12px"><button id="calgo" class="fbtn sm" style="border:0">开始</button><button id="calx" class="fbtn sm" style="border:0;background:#3a3f66">关闭</button></div></div></div>
 <script>
 // ---------- VOS parser (7 lanes; 768 ticks/beat; BPM from embedded MIDI) ----------
 const TPB=768;
@@ -554,8 +562,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.19';
+const VERSION='0.9.20';
 const CHANGELOG=[
+  ['0.9.20','2026-10-11','新增“延迟校准”：节拍器 + 点按，自动测出设备/个人延迟并设置“延迟”；“延迟”范围扩大到 ±400ms，并记住上次的值'],
   ['0.9.19','2026-10-11','插件可提供“场景式 BGA”（bgaScene.render）：每帧由插件把动画画到背景画布上；用于 DJMAX 的 VCQ/VCE 多层动画 BGA'],
   ['0.9.18','2026-10-11','小节线改为固定显示且更亮（去掉开关）；曲目可带“下落缩放”（DJMAX 的 MeasureScale，音符间距按倍数拉开）；歌曲时间扣除声卡输出延迟（outputLatency），画面与听到的声音对齐'],
   ['0.9.17','2026-10-11','新增小节线（设置里可开关，默认开）：BMS 与插件曲目显示小节线，便于检查声音与 Note 是否同步；修复“跳过前奏”后 BGM/伴奏被丢掉或从头播放造成的声音与 Note 不同步（采样现在会按已过去的时间从中途接着播放）；插件可提供 bars / 每小节拍数'],
@@ -668,6 +677,56 @@ const songMs=()=>{
   const est=ck.m+(pn-ck.p),e=Math.max(ck.m,est+(r-est)*.05);ck.m=e;ck.p=pn;return e;
 };
 const offs=()=>+$('off').value;
+
+// ---------- 延迟校准：节拍器 + 点按，测出“按键 − 声音”的平均偏差，换算成“延迟”滑条的值 ----------
+setTimeout(()=>{try{const sv=localStorage.getItem('resonia-off');if(sv!==null&&sv!==''){$('off').value=sv;$('off').dispatchEvent(new Event('input'))}}catch(x){}},0);
+$('off').addEventListener('change',()=>{try{localStorage.setItem('resonia-off',$('off').value)}catch(x){}});
+(function(){
+  const box=$('cal'),dot=$('caldot'),pt=$('calp'),go=$('calgo');
+  const BEAT=0.6,PRE=4,N=16;let st=null;
+  const ctxOf=ts=>{ // 把事件时间戳换算成音频时钟
+    try{const o=ctx.getOutputTimestamp();if(o&&o.performanceTime>0)return o.contextTime+(ts-o.performanceTime)/1000}catch(x){}
+    return ctx.currentTime-(performance.now()-ts)/1000;
+  };
+  function stop(){if(!st)return;st.on=false;cancelAnimationFrame(st.raf);document.removeEventListener('keydown',st.kd,true);box.removeEventListener('pointerdown',st.pd,true);st=null;dot.classList.remove('on')}
+  function finish(){
+    const d=st.taps.slice(PRE),all=[];
+    // 每次点按匹配最近的一拍；偏差用 (按键时间 − 节拍时间) 表示
+    for(const t of d){const k=Math.round((t-st.t0)/BEAT);if(k<PRE||k>=PRE+N)continue;all.push((t-(st.t0+k*BEAT))*1000)}
+    stop();
+    if(all.length<8){pt.textContent='有效点按太少（'+all.length+' / '+N+'），请重试：听到声音再按，不要连按。';go.textContent='重测';go.disabled=false;return}
+    const med=a=>{const b=[...a].sort((x,y)=>x-y),m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2};
+    const m0=med(all),ok=all.filter(x=>Math.abs(x-m0)<150);
+    const mean=ok.reduce((a,b)=>a+b,0)/ok.length,sd=Math.sqrt(ok.reduce((a,b)=>a+(b-mean)**2,0)/ok.length);
+    const out=outLat()*1000,off=-Math.round((mean-out)/5)*5,clamped=Math.max(-400,Math.min(400,off));
+    $('off').value=clamped;$('off').dispatchEvent(new Event('input'));$('off').dispatchEvent(new Event('change'));
+    pt.innerHTML='已设置“延迟”为 <b>'+(clamped>0?'+':'')+clamped+' ms</b><br><span style="color:var(--mut);font-size:12px">'+ok.length+' 次有效 · 平均 '+mean.toFixed(0)+' ms · 抖动 ±'+sd.toFixed(0)+' ms'+(sd>45?' · 抖动偏大，建议重测':'')+(clamped!==off?' · 已到上限':'')+'</span>';
+    go.textContent='重测';go.disabled=false;
+  }
+  function begin(){
+    initAudio();if(ctx.resume)ctx.resume();
+    const t0=ctx.currentTime+0.8;st={t0,taps:[],on:true,raf:0,shown:-1};
+    for(let i=0;i<PRE+N;i++){ // 预排所有“嘀”声（前 4 拍音调更低）
+      const o=ctx.createOscillator(),g=ctx.createGain(),t=t0+i*BEAT;o.frequency.value=i<PRE?660:1000;o.connect(g);g.connect(ctx.destination);
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.5,t+.002);g.gain.exponentialRampToValueAtTime(.001,t+.05);o.start(t);o.stop(t+.06);
+    }
+    st.kd=e=>{if(e.key==='Escape'){stop();pt.textContent='已取消';go.textContent='开始';go.disabled=false;return}if(e.repeat)return;e.preventDefault();e.stopPropagation();tap(e.timeStamp)};
+    st.pd=e=>{if(e.target.closest('button'))return;tap(e.timeStamp)};
+    document.addEventListener('keydown',st.kd,true);box.addEventListener('pointerdown',st.pd,true);
+    go.disabled=true;go.textContent='测量中…';
+    const loop=()=>{if(!st||!st.on)return;
+      const now=ctx.currentTime-outLat(),k=Math.floor((now-t0)/BEAT+1e-9),ph=now-(t0+k*BEAT);
+      dot.classList.toggle('on',k>=0&&ph<0.08&&k<PRE+N);
+      if(k!==st.shown&&k>=0){st.shown=k;pt.textContent=k<PRE?'预备… '+(k+1)+' / '+PRE:'测量 '+Math.min(N,k-PRE+1)+' / '+N}
+      if(ctx.currentTime>t0+(PRE+N)*BEAT+0.5)return finish();
+      st.raf=requestAnimationFrame(loop)};
+    st.raf=requestAnimationFrame(loop);
+  }
+  function tap(ts){if(!st)return;st.taps.push(ctxOf(ts))}
+  $('calb').onclick=()=>{if(running){hint('请先退出当前演奏再校准');return}box.hidden=false;pt.textContent='准备中…';go.textContent='开始';go.disabled=false};
+  go.onclick=()=>{if(!st)begin()};
+  $('calx').onclick=()=>{stop();box.hidden=true};
+})();
 
 let midiAccess=null,midiOut=null,mi=0;
 const chOf=k=>(song&&song.chan&&song.chan[k]!==undefined)?song.chan[k]:(k==9||k==10?9:k&15);
