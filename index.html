@@ -142,6 +142,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 </section>
 <section class="card" id="cLib" hidden><h3>曲库</h3><div class="row"><span class="lb">曲目</span><select id="lib"></select></div></section>
 <section class="card" id="cKeys"><h3>按键<small class="hint">点击后按新键</small><button id="kreset">恢复默认</button></h3><div id="keys"><span id="kb"></span></div></section>
+<section class="card" id="cOpt"><h3>效果<small class="hint">自选，开始时生效</small></h3><div class="chk"><label><input type="checkbox" id="ofi">上隐</label><label><input type="checkbox" id="ofo">下隐</label><label><input type="checkbox" id="oran">打乱</label><label><input type="checkbox" id="omir">镜像</label><label><input type="checkbox" id="oman" title="音符先在原轨道下落，再快速飞到另一条没有音符遮挡的轨道上">乱窜</label></div></section>
 <section class="card" id="cSnd"><h3>声音</h3>
   <div class="sl"><span>游戏音量</span><input type="range" id="mv" min="0" max="1.5" step="0.1" value="1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
   <div id="sinkBox" class="row" hidden><span class="lb">声卡输出</span><select id="sink"><option value="">系统默认</option></select><button id="sinkNm" class="fbtn sm" style="border:0;cursor:pointer" title="浏览器要先获得一次麦克风授权才会提供设备名称（只用于读取名称，不会录音）">显示设备名</button></div>
@@ -564,8 +565,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.29';
+const VERSION='0.9.30';
 const CHANGELOG=[
+  ['0.9.30','2026-10-12','新增“效果”（自选）：上隐、下隐、打乱（Random）、镜像（Mirror）、乱窜（Maniac：音符先在原轨道下落，在轨道上 1/4 处飞到另一条没有音符遮挡的轨道，每个音符只变一次）。带转盘的 BMS 谱面，转盘轨道不参与打乱/镜像/乱窜。'],
   ['0.9.29','2026-10-12','配合 Studio：支持隐藏窗口里的“编辑器试听”（自动演奏，VOS 的 MIDI 也能听）。'],
   ['0.9.28','2026-10-12','.rsc 谱面带节奏表（tempo）时，小节线按它画（变速曲目也准）。'],
   ['0.9.27','2026-10-12','配合 Studio 谱面编辑器：游戏页可接收 Studio 的“在游戏里试玩”（同源窗口传入 .rsm）。'],
@@ -681,6 +683,8 @@ function renderKeys(){
 document.getElementById('kreset').onclick=()=>{bind=DEFS[LANES].slice();rebind=null;saveBind();renderKeys();draw(0)};
 renderKeys();
 const $=id=>document.getElementById(id);
+const OPT={fi:false,fo:false,ran:false,mir:false,man:false};
+try{Object.assign(OPT,JSON.parse(localStorage.getItem('resonia-opt')||'{}'))}catch(x){}
 let song=null,running=false,t0=0,startOff=0,bi=0,combo=0,maxCombo=0,score=0,cnt,keys=Array(7).fill(false),flash=Array(7).fill(0),lastJ='',lastJT=0,ended=false,schedTimer=0;
 let lanesQ=[],lp=[],holdN=[];
 // 声卡输出延迟：音频时钟走到 currentTime 时，耳朵里听到的其实是 outputLatency 之前的声音；画面要对齐听到的
@@ -935,7 +939,7 @@ function parseBms(txt){
   const used=new Set([...notes.map(n=>n.snd.s),...back.map(b=>b.id)]);
   const bga=bgaE.map(x=>({t:toMs(x.b),id:x.id,l:x.l})).sort((a,b)=>a.t-b.t);
   const bars=bs.map(toMs);
-  return{H,bmp,bga,bars,title:[H.TITLE,H.SUBTITLE].filter(Boolean).join(' '),artist:H.ARTIST||'',level:H.PLAYLEVEL||'',keys:has67?7:5,lanes:nl,wav,notes,back,used,bpm:bpm0,
+  return{H,bmp,bga,bars,title:[H.TITLE,H.SUBTITLE].filter(Boolean).join(' '),artist:H.ARTIST||'',level:H.PLAYLEVEL||'',keys:has67?7:5,lanes:nl,scratch:hasSc,wav,notes,back,used,bpm:bpm0,
     nlane:new Set(notes.map(n=>n.lane)).size};
 }
 // ---------- 资源包导入（多文件 / 文件夹 / ZIP）----------
@@ -984,7 +988,7 @@ async function buildBms(ch,find,say){
   let end=0;for(const n of P.notes)end=Math.max(end,n.end);
   for(const b of P.back){const s=samples[b.id];b.s=b.id;b.vel=127;b.ch=0;b.ins=0;b.p=60;b.dur=0;end=Math.max(end,b.t+(s?s.duration*1000:0))}
   const res={samples:{},media:{}};for(const it of sItems)if(it.e&&samples[it.id])res.samples[it.id]=it.e;for(const it of bItems)if(it.e&&bmps[it.id])res.media[it.id]=it.e;
-  return{title:P.title||ch.path.split('/').pop(),artist:P.artist,level:+P.level||0,chartName:ch.path.split('/').pop(),lenMs:end+1500,bars:P.bars,lanes:P.lanes,notes:P.notes,back:P.back,ctl:{},mev:[],chan:{},tracks:0,bpm:P.bpm,samples,bga:P.bga,bmps,res,
+  return{title:P.title||ch.path.split('/').pop(),artist:P.artist,level:+P.level||0,chartName:ch.path.split('/').pop(),lenMs:end+1500,bars:P.bars,lanes:P.lanes,scratch:P.scratch,notes:P.notes,back:P.back,ctl:{},mev:[],chan:{},tracks:0,bpm:P.bpm,samples,bga:P.bga,bmps,res,
     kind:'BMS',note:((miss||bad)?`（缺少 ${miss} 个、无法解码 ${bad} 个音频）`:'')+(P.bga.length?` · BGA ${Object.keys(bmps).length} 个素材${bmiss?`（${bmiss} 个无法显示，如 mpg/avi）`:''}`:'')};
 }
 let volMode='v';const volUser={};
@@ -1047,7 +1051,7 @@ const Resonia=window.Resonia={
       const back=(o.back||[]).slice().sort((a,b)=>a.t-b.t);
       let end=o.lenMs||0;for(const n of notes)end=Math.max(end,n.end+500);
       return{title:o.title||'',artist:o.artist||'',level:o.level||0,chartName:o.chartName||'',lenMs:end+1000,notes,back,ctl:o.ctl||{},mev:o.mev||[],chan:o.chan||{},tracks:o.tracks||0,
-        bpm:o.bpm||120,lanes:o.lanes,bars:o.bars,bgaScene:o.bgaScene,scroll:+o.scroll>0?+o.scroll:undefined,samples:o.samples,bga:o.bga,bmps:o.bmps||{},res:o.res,kind:o.samples?(o.kind||'PLUGIN'):undefined,note:o.note||''};
+        bpm:o.bpm||120,lanes:o.lanes,scratch:o.scratch,bars:o.bars,bgaScene:o.bgaScene,scroll:+o.scroll>0?+o.scroll:undefined,samples:o.samples,bga:o.bga,bmps:o.bmps||{},res:o.res,kind:o.samples?(o.kind||'PLUGIN'):undefined,note:o.note||''};
     }
   }
 };
@@ -1218,6 +1222,7 @@ const touchish=()=>{let m=false;try{m=matchMedia('(pointer:coarse), (max-width:7
 {let sv=null;try{sv=localStorage.getItem('resonia-fs')}catch(x){}$('fs').checked=sv===null?touchish():sv==='1'}
 $('fs').onchange=()=>{try{localStorage.setItem('resonia-fs',$('fs').checked?'1':'0')}catch(x){}};
 $('go').onclick=start;
+for(const [id,k] of [['ofi','fi'],['ofo','fo'],['oran','ran'],['omir','mir'],['oman','man']]){const el=$(id);el.checked=!!OPT[k];el.onchange=()=>{OPT[k]=el.checked;if(el.checked&&k=='ran'){OPT.mir=false;$('omir').checked=false}if(el.checked&&k=='mir'){OPT.ran=false;$('oran').checked=false}try{localStorage.setItem('resonia-opt',JSON.stringify(OPT))}catch(x){}if(!running&&song){applyLaneMap(song);draw(song&&ctx?songMs():0)}}}
 // 从 Studio 的“在游戏里试玩”打开：同源窗口之间用 postMessage 传 .rsm
 // Studio 编辑器里的试听（隐藏 iframe）：收谱面、从指定位置自动演奏（用游戏自带的音源，VOS 的 MIDI 也能听）
 if(window.parent!==window&&location.hash=='#preview'){
@@ -1408,9 +1413,36 @@ function setLanes(n){
 }
 function applyLaneMap(sg){
   const N=songLanes(sg),M=DEFS[sg&&sg.lanes]?sg.lanes:7;
-  if(sg)for(const n of sg.notes){if(n.l0===undefined)n.l0=n.lane;n.lane=N==M?n.l0:Math.round(n.l0*(N-1)/(M-1))}
-  setLanes(N);
+  if(sg)for(const n of sg.notes){if(n.l0===undefined)n.l0=n.lane;n.bl=n.lane=N==M?n.l0:Math.round(n.l0*(N-1)/(M-1))}
+  setLanes(N);applyEffects(sg);
 }
+// ---- 自选效果：打乱 / 镜像 / 乱窜（上隐、下隐在绘制时处理）----
+function applyEffects(sg){
+  if(!sg)return;const N=LANES,f0=sg.scratch&&N>1?1:0,ks=[];for(let l=f0;l<N;l++)ks.push(l); // 转盘轨道不参与
+  const perm=Array.from({length:N},(_,l)=>l);
+  if(OPT.ran){const a=ks.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}ks.forEach((l,i)=>perm[l]=a[i])}
+  else if(OPT.mir)ks.forEach((l,i)=>perm[l]=ks[ks.length-1-i]);
+  for(const n of sg.notes){n.lane=perm[n.bl===undefined?n.lane:n.bl];n.sl=undefined}
+  if(OPT.man&&ks.length>1)maniac(sg,ks);
+}
+// 乱窜：每个单点音符最多变轨一次，判定在目标轨道；目标轨道（及飞行经过的轨道）在前后 MW 毫秒内不能有别的音符（长条按整段算）
+const MW=250;
+function maniac(sg,ks){
+  const L=Array.from({length:LANES},()=>[]);
+  for(const n of sg.notes)L[n.lane].push(n);                       // sg.notes 已按时间排序
+  const busy=(l,n)=>{const a=L[l];let lo=0,hi=a.length;while(lo<hi){const m=(lo+hi)>>1;if(a[m].t<n.t-MW-(sg.maxHold||0))lo=m+1;else hi=m}
+    for(let i=lo;i<a.length;i++){const m=a[i];if(m===n)continue;if(m.t>n.t+MW)break;if(m.t-MW<=n.end&&m.end+MW>=n.t)return true}return false};
+  const put=(l,n)=>{const a=L[l];let lo=0,hi=a.length;while(lo<hi){const m=(lo+hi)>>1;if(a[m].t<=n.t)lo=m+1;else hi=m}a.splice(lo,0,n)};
+  sg.maxHold=0;for(const n of sg.notes)if(n.hold)sg.maxHold=Math.max(sg.maxHold,n.end-n.t);
+  for(const n of sg.notes){
+    if(n.hold)continue;const src=n.lane,cand=[];
+    for(const l of ks){if(l===src)continue;const a=Math.min(l,src),b=Math.max(l,src);let ok=true;for(let k=a;k<=b&&ok;k++)if(k!==src&&busy(k,n))ok=false;if(ok)cand.push(l)}
+    if(!cand.length)continue;
+    const to=cand[Math.floor(Math.random()*cand.length)],a=L[src],i=a.indexOf(n);if(i>=0)a.splice(i,1);
+    n.sl=src;n.lane=to;put(to,n);
+  }
+}
+const smooth=x=>{x=x<0?0:x>1?1:x;return x*x*(3-2*x)};
 function applySkin(){skG={};
   const id=$('skinSel').value;S={...(SK[id]||SK.classic)};SI=id=='custom'?CI:{};
   const lay=$('skLay').value||S.layout;
@@ -1656,6 +1688,7 @@ function draw(now){
   if(II())iiLine();
   if(song){
     const pps=+$('spd').value*(song.scroll||1),jn=now+offs(),vis=JY/pps+200;
+    const fi=OPT.fi,fo=OPT.fo;if(fi||fo){c2.save();const y0=fi?JY*.38:0,y1=fo?JY*.62:H;c2.beginPath();c2.rect(0,y0,W,y1-y0);c2.clip()} // 上隐 / 下隐：只露出中间一段
     if(song.bars){
       c2.fillStyle='rgba(255,255,255,.6)';
       for(const bt of song.bars){const d=bt-jn;if(d>vis)break;if(d<-100)continue;c2.fillRect(0,Math.round(JY-d*pps)-1,W,2)}
@@ -1665,7 +1698,9 @@ function draw(now){
       if(n.end-jn<-200)continue;
       if(n.done&&!n.hold)continue;
       if(n.done&&n.hold&&!n.holding&&!n.dead)continue; // 打断/漏掉的长条继续滚动（变暗），不再凭空消失
-      const x=LX[n.lane]+3,lwn=LD[n.lane]-6,y=Math.round((JY-(n.t-jn)*pps)*dpr)/dpr;
+      const y=Math.round((JY-(n.t-jn)*pps)*dpr)/dpr;let lx=LX[n.lane],ld=LD[n.lane];
+      if(n.sl!==undefined){const k=smooth((y/JY-.06)/.19);lx=LX[n.sl]+(LX[n.lane]-LX[n.sl])*k;ld=LD[n.sl]+(LD[n.lane]-LD[n.sl])*k} // 乱窜：在上 1/4 处完成变轨
+      const x=lx+3,lwn=ld-6;
       c2.globalAlpha=n.done&&!n.holding?.3:1; // dead 长条：整条变暗
       if(n.hold){
         const yt=Math.round((JY-(n.end-jn)*pps)*dpr)/dpr,yb=(n.holding?JY:y)+6,h=Math.max(3,yb-yt);
@@ -1681,6 +1716,7 @@ function draw(now){
       if(!n.holding||!n.hold){if(S.pal)skNote(x,y,lwn,n.lane);else{c2.fillStyle=lcol(n.lane);c2.fillRect(x,y-8,lwn,14);c2.fillStyle='rgba(0,0,0,.25)';c2.fillRect(x,y+3,lwn,3)}}
       c2.globalAlpha=1;
     }
+    if(fi||fo)c2.restore();
   }
   if(S.pal){c2.fillStyle=S.field=='glass'?'rgba(8,10,26,.92)':'#161a36';c2.fillRect(0,JY+7,W,H-JY);skLine();drawFx();skKeys()}
   else{
