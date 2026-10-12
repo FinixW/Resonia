@@ -162,7 +162,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <details id="skCustom" hidden><summary>自定义素材（图片只保存在你的浏览器里，不会上传）</summary><div id="skSlots"></div><button id="skClear">清除全部素材</button></details>
 </section>
 <section class="card" id="cPlug"><h3>第三方<span class="gpu" style="color:var(--mu)">格式插件</span></h3><div class="row"><label class="fbtn sm">载入插件…<input type="file" id="plf" accept=".js" multiple></label><span id="plmsg" class="fname" style="color:var(--mu)">未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器</span></div><div id="pll"></div></section>
-<section class="card" id="cDbg"><h3>调试<span id="gpu" class="gpu" hidden></span></h3><div class="chk"><label><input type="checkbox" id="dbg">发声诊断</label><label><input type="checkbox" id="tm">测试模式（可拖动进度条）</label><label>轨道数 <select id="lanesel"><option value="0">按谱面</option><option value="4">4K</option><option value="5">5K</option><option value="6">6K</option><option value="7">7K</option><option value="8">8K</option><option value="9">9K</option><option value="10">10K</option></select></label></div></section>
+<section class="card" id="cDbg"><h3>调试<span id="gpu" class="gpu" hidden></span></h3><div class="chk"><label><input type="checkbox" id="dbg">诊断</label><label><input type="checkbox" id="tm">测试模式</label><label>轨道数<select id="lanesel" style="padding:3px 4px"><option value="0">按谱面</option><option value="4">4K</option><option value="5">5K</option><option value="6">6K</option><option value="7">7K</option><option value="8">8K</option><option value="9">9K</option><option value="10">10K</option></select></label></div></section>
 </div>
 <canvas id="cv" width="420" height="640"></canvas>
 <small><a href="studio/" target="_blank" style="color:#8ea6ff">谱面工具 Studio</a>（转换 / 导出 .rsm，之后还有谱面编辑）· 默认按键 S D F 空格 J K L，可在上方自定义（手机可直接点按轨道，可滑动扫音符；一指可同时按多条轨道）。按 1/↓ 减速，2/↑ 加速。Esc 结束（手机上开局后会隐藏设置，点右上角 ✕ 退出）。伴奏为内置简易合成音色，音质不代表最终效果。</small>
@@ -561,8 +561,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.23';
+const VERSION='0.9.24';
 const CHANGELOG=[
+  ['0.9.24','2026-10-12','“调试”卡片精简：“发声诊断”改名“诊断”，“测试模式”去掉括号说明，轨道数与它们排在同一行。'],
   ['0.9.23','2026-10-12','IIDX 1P 皮肤按参考图重做：黑色轨道、金属边框、转盘 + 黑白键（白键音符白色、黑键音符蓝色、转盘音符红色）、青色光晕加红色判定线、转盘中心红白贴纸（按下时旋转）、青色数码风分数、粉红斜体“GREAT 连击数”。'],
   ['0.9.22','2026-10-12','轨道数改为可变：由谱面决定（4/5/6/7/8/9/10 键），每种键数有各自的默认按键并分别保存；轨道几何、判定、触控都按实际轨道数计算。IIDX 1P 皮肤现在是真正的 8 键（转盘 + 7 键）。“调试”里新增“轨道数”，可把现有谱面折算成指定键数来测试。'],
   ['0.9.21','2026-10-12','新增“IIDX 1P”皮肤（转盘轨道在左、加宽并与键区拉开间隔，其余轨道收窄）；轨道几何改为每条轨道可单独设置；去掉从未生效的“触控范围”；“延迟校准”按钮并入“跳过前奏”一行'],
