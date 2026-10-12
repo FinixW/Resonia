@@ -564,8 +564,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.27';
+const VERSION='0.9.28';
 const CHANGELOG=[
+  ['0.9.28','2026-10-12','.rsc 谱面带节奏表（tempo）时，小节线按它画（变速曲目也准）。'],
   ['0.9.27','2026-10-12','配合 Studio 谱面编辑器：游戏页可接收 Studio 的“在游戏里试玩”（同源窗口传入 .rsm）。'],
   ['0.9.26','2026-10-12','BMS 改用原生轨道：5 键谱面是 5 轨、7 键是 7 轨，不再居中塞进 7 条；1P 的转盘（16 通道）不再当作伴奏，而是放在最左的转盘轨道（带转盘时为 6 / 8 轨，8 轨可配 IIDX 皮肤）。'],
   ['0.9.25','2026-10-12','VOS 曲目补上小节线（按 MIDI 拍号与速度表）；没有小节信息的曲目（如 O2JAM）按首个 BPM 等间隔估算小节线；伴奏音量/按键音量默认值：VOS 为 0.5 / 1.3，其他格式为 1 / 1，手动调整后按类别记住。'],
@@ -1184,9 +1185,11 @@ async function buildRsc(R,ci,man,find,say){
   let end=(V.lenMs||(R.ext&&R.ext.lenMs))||0;for(const n of notes)end=Math.max(end,n.end+500);
   for(const b of back){const sm=S.samples[b.s];end=Math.max(end,b.t+(sm?sm.duration*1000:b.dur*1000))}
   const bga=(c.bga||[]).map(x=>({t:x.t,id:x.media,l:x.layer||0})).sort((a,b)=>a.t-b.t);
+  // 小节线：按谱面的节奏表（Studio 导出的 tempo）每 4 拍一条；没有节奏表就不画，由 setSong 按 BPM 估算
+  let bars;if(c.tempo&&c.tempo.length){bars=[];let n=0;const T=c.tempo;for(let i=0;i<T.length&&bars.length<6000;i++){const bm=60000/T[i].bpm,e=i+1<T.length?T[i+1].t:end+bm*4;for(let t=T[i].t;t<e-1e-3&&bars.length<6000;t+=bm){if(n%4==0)bars.push(t);n++}}}
   const res={samples:{},media:{}};for(const it of sItems)if(it.e&&S.samples[it.id])res.samples[it.id]=it.e;for(const it of bItems)if(it.e&&B.bmps[it.id])res.media[it.id]=it.e;
   return{title:(R.meta&&R.meta.title)||'',artist:(R.meta&&R.meta.artist)||'',level:c.level||0,chartName:c.name||'',lenMs:end+1000,notes,back,
-    ctl:V.ctl||{},mev:V.mev||[],chan:V.chan||{},tracks:V.tracks||0,bpm:c.bpm||120,lanes:c.lanes,
+    ctl:V.ctl||{},mev:V.mev||[],chan:V.chan||{},tracks:V.tracks||0,bpm:c.bpm||120,lanes:c.lanes,bars,
     samples:hasS?S.samples:undefined,bga:bga.length?bga:undefined,bmps:B.bmps,res,kind:hasS?'RSM':undefined,
     note:(S.miss||S.bad)?`（缺少 ${S.miss} 个、无法解码 ${S.bad} 个音频）`:''};
 }

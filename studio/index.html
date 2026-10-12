@@ -26,6 +26,7 @@ a{color:var(--ac)}
 #ed{position:fixed;inset:0;background:#080a16;z-index:50;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px;overflow:auto}
 #ed[hidden]{display:none}.edbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:13px;color:var(--mu)}.edbar b{color:var(--fg)}
 .edbar input[type=number],.edbar select{background:#0e1230;border:1px solid #2a3170;border-radius:6px;color:var(--fg);padding:4px 6px}
+#ed .edpan{width:min(760px,100%);display:flex;flex-direction:column;gap:8px}#ed .card{background:var(--card)}
 #edC{background:#0a0d1c;border-radius:8px;max-width:100%;cursor:crosshair}
 </style></head><body>
 <div class="w"><h1>鸣域 <span>Studio</span><em id="ver"></em></h1><div class="sub">谱面转换与编辑工具 · 文件只在你的浏览器里处理，不会上传</div></div>
@@ -41,23 +42,33 @@ a{color:var(--ac)}
  <div class="row"><button class="pri" id="exRsm" disabled>导出 .rsm 曲包（所选谱面 + 音频 + BGA）</button><button id="exRsc" disabled>只导出 .rsc 谱面</button></div>
  <div class="todo">.rsm 里所有谱面共用同一份音频和 BGA 素材，只存一份；在游戏页载入 .rsm 后可以下拉选择谱面。</div>
 </section>
-<section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器已有基础版（每张谱面右侧的“编辑”）；还缺：变速节奏表、复制粘贴、音色分配、BGA 编辑<br>· 其他格式互转（第三方模式：OJN/OJM、PAK/PT 等，以插件形式在本机载入）<br>· 音波采谱 / 自动作谱</div></section>
+<section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器已有基础版（每张谱面右侧的“编辑”）；还缺：MIDI（VOS）发声的试听、长条头尾拖动调整<br>· 其他格式互转（第三方模式：OJN/OJM、PAK/PT 等，以插件形式在本机载入）<br>· 音波采谱 / 自动作谱</div></section>
 <div id="ed" hidden>
  <div class="edbar"><b id="edT"></b>
   <label>键数 <select id="edK"><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
-  <label>BPM <input id="edB" type="number" step="0.01" style="width:84px"></label>
-  <label>偏移(ms) <input id="edO" type="number" step="1" style="width:72px"></label>
   <label>吸附 <select id="edD"><option value="4">1/4</option><option value="8">1/8</option><option value="12">1/12</option><option value="16" selected>1/16</option><option value="24">1/24</option><option value="32">1/32</option><option value="48">1/48</option><option value="64">1/64</option></select></label>
   <label>缩放 <input id="edZ" type="range" min="60" max="700" value="240"></label>
   <label><input type="checkbox" id="edS" checked> 按键音</label></div>
- <div class="edbar"><button id="edP">▶ 播放</button><button id="edU">撤销</button><button id="edR">重做</button><button id="edG">在游戏里试玩</button><button class="pri" id="edX">完成</button></div>
+ <div class="edbar"><button id="edP">▶ 播放</button><button id="edU">撤销</button><button id="edR">重做</button><button id="edCp">复制</button><button id="edPs">粘贴</button><button id="edG">在游戏里试玩</button><button class="pri" id="edX">完成</button></div>
  <canvas id="edC" width="600" height="620"></canvas>
- <div class="todo" style="max-width:760px;text-align:center"><span id="edM"></span><br>点击空白处放置音符，拖动出长条；拖动音符移动，右键或 Delete 删除，Shift 点击多选，Ctrl+Z / Ctrl+Y 撤销重做；滚轮滚动，Ctrl+滚轮缩放；空格播放，点击左侧标尺跳转播放头。网格按固定 BPM 与偏移计算（变速曲目的网格只是参考）。</div>
+<div class="edpan">
+  <section class="card"><h3>节奏表（网格按这里计算；音符的时间不会跟着变）</h3>
+   <table><thead><tr><th></th><th>时间(ms)</th><th>BPM</th><th></th></tr></thead><tbody id="edTb"></tbody></table>
+   <div class="row"><input id="edTv" type="number" step="0.01" min="1" placeholder="BPM" style="width:90px"><button id="edTa">在播放头处加变速</button><button id="edTf">把播放头设为第一拍</button></div></section>
+  <section class="card"><h3>音色</h3>
+   <div class="row"><select id="edSn" style="max-width:300px"></select><button id="edSp">试听</button><button id="edSa">应用到所选音符</button><label class="btn">添加音频…<input type="file" id="edSf" multiple accept="audio/*,.wav,.ogg,.mp3"></label></div>
+   <div class="todo">新放置的音符使用这里选的音色；选“沿用同轨道最近音符的音色”会自动复制附近音符的音色。</div></section>
+  <section class="card"><h3>BGA 事件</h3>
+   <table><thead><tr><th>时间(ms)</th><th>素材</th><th>层</th><th></th></tr></thead><tbody id="edBb"></tbody></table><div class="todo" id="edBn"></div>
+   <div class="row"><button id="edBa">在播放头处添加</button><label class="btn">添加素材…<input type="file" id="edBf" multiple accept="image/*,video/*"></label></div></section>
+ </div>
+ <div class="todo" style="max-width:760px;text-align:center"><span id="edM"></span><br>点击空白处放置音符，拖动出长条；拖动音符移动，右键或 Delete 删除，Shift 点击多选，Ctrl+C / X / V 复制剪切粘贴，Ctrl+Z / Ctrl+Y 撤销重做；滚轮滚动，Ctrl+滚轮缩放；空格播放，点击左侧标尺跳转播放头。</div>
 </div>
 <script>
-const STUDIO_VERSION='0.2.0';
+const STUDIO_VERSION='0.3.0';
 const $=id=>document.getElementById(id);$('ver').textContent='v'+STUDIO_VERSION;
 const TPB=768;
+const tempoOf=a=>{const o=[];for(const e of a){const t=Math.round(e.ms*100)/100,bp=Math.round(e.bpm*1000)/1000;if(o.length&&o[o.length-1].t===t){o[o.length-1].bpm=bp;continue}if(!o.length||Math.abs(o[o.length-1].bpm-bp)>1e-6)o.push({t,bpm:bp})}return o};
 function parseVos(buf){
   const d=new Uint8Array(buf),v=new DataView(buf);
   const u32=o=>v.getUint32(o,true),u16=o=>v.getUint16(o,true);
@@ -163,7 +174,7 @@ function parseVos(buf){
   const back=[];
   ch.forEach((c,i)=>c.notes.forEach((n,j)=>{if(used.has(i+':'+j))return;const t=toMs(n.t);back.push({t,ch:i,ins:c.ins,p:n.p,vel:n.vel,dur:(toMs(n.t+n.len)-t)/1000})}));
   back.sort((a,b)=>a.t-b.t);
-  return{title,lenMs,notes,back,ctl,mev,chan:chanOf,tracks:ntr-1,bpm:tempos.length?60e6/tempos[0].us:120};
+  return{title,lenMs,notes,back,ctl,mev,chan:chanOf,tracks:ntr-1,tempo:tempoOf(segs.map(g=>({ms:g.ms,bpm:60e6/g.us}))),bpm:tempos.length?60e6/tempos[0].us:120};
 }
 
 // ---------- 压缩包（ZIP）读取：只用浏览器自带的 DecompressionStream ----------
@@ -262,7 +273,7 @@ function parseBms(txt){
   notes.sort((a,b)=>a.t-b.t);back.sort((a,b)=>a.t-b.t);
   const used=new Set([...notes.map(n=>n.snd.s),...back.map(b=>b.id)]);
   const bga=bgaE.map(x=>({t:toMs(x.b),id:x.id,l:x.l})).sort((a,b)=>a.t-b.t);
-  return{H,bmp,bga,title:[H.TITLE,H.SUBTITLE].filter(Boolean).join(' '),artist:H.ARTIST||'',level:H.PLAYLEVEL||'',keys:has67?7:5,lanes:nl,wav,notes,back,used,bpm:bpm0,
+  return{H,bmp,bga,title:[H.TITLE,H.SUBTITLE].filter(Boolean).join(' '),artist:H.ARTIST||'',level:H.PLAYLEVEL||'',tempo:tempoOf(T),keys:has67?7:5,lanes:nl,wav,notes,back,used,bpm:bpm0,
     nlane:new Set(notes.map(n=>n.lane)).size};
 }
 const AUD=/\.(wav|ogg|mp3|flac|m4a|opus|aac)$/i,VIS=/\.(png|jpe?g|bmp|gif|webp|mp4|webm|mpe?g|avi|wmv|m4v)$/i;
@@ -311,7 +322,7 @@ function bmsToItem(P,find,e){
   const cache={},sc=id=>id in cache?cache[id]:(cache[id]=sk(id));
   const snd=id=>{const k=sc(id);return k?{s:k,vel:127}:undefined};
   const sub=(P.H.SUBTITLE||'').trim(),disp=P.title||baseName(e.path);
-  const ch={id:'',name:sub||disp,level:+P.level||0,mode:'keys',keys:P.lanes,lanes:P.lanes,timebase:'ms',bpm:r2(P.bpm),
+  const ch={id:'',name:sub||disp,level:+P.level||0,mode:'keys',keys:P.lanes,lanes:P.lanes,timebase:'ms',bpm:r2(P.bpm),tempo:P.tempo,
     notes:P.notes.map(n=>{const o={t:r2(n.t),k:n.hold?'hold':'tap',lane:n.lane};if(n.hold)o.len=r2(n.end-n.t);const s=snd(n.snd.s);if(s)o.snd=s;return o}),
     back:P.back.map(b=>{const o={t:r2(b.t)};const s=snd(b.id);if(s)o.snd=s;return o})};
   if(P.bga.length){const bc={};ch.bga=P.bga.map(x=>({t:r2(x.t),media:x.id in bc?bc[x.id]:(bc[x.id]=bk(x.id)),layer:x.l}))}
@@ -319,7 +330,7 @@ function bmsToItem(P,find,e){
 }
 function vosToItem(buf,name){
   const s=parseVos(buf),snd=e=>({midi:'vos',ch:e.ch,ins:e.ins,p:e.p,vel:e.vel,len:r2(e.dur*1000)});
-  const ch={id:'',name:'',level:0,mode:'keys',keys:7,lanes:7,timebase:'ms',bpm:r2(s.bpm||120),
+  const ch={id:'',name:'',level:0,mode:'keys',keys:7,lanes:7,timebase:'ms',bpm:r2(s.bpm||120),tempo:s.tempo,
     notes:s.notes.map(n=>{const o={t:r2(n.t),k:n.hold?'hold':'tap',lane:n.lane,snd:snd(n.snd)};if(n.hold)o.len=r2(n.end-n.t);return o}),
     back:s.back.map(b=>({t:r2(b.t),snd:snd(b)})),ext:{vos:{ctl:s.ctl,mev:s.mev,chan:s.chan,tracks:s.tracks,lenMs:s.lenMs}}};
   return{label:name,src:'VOS',chart:ch,res:{samples:{},media:{}},meta:{title:s.title||'',artist:''},ext:{}};
@@ -412,69 +423,93 @@ addEventListener('drop',async e=>{
 // ================= 谱面编辑器 =================
 let E=null,edRaf=0,edCtx=null;
 const EDL=54,EDX=110,EDH=620;
+const bmOf=b=>60000/b;
 function openEd(i){
   const it=items[i],c=it.chart;c.notes.sort((a,b)=>a.t-b.t);
   const used=Math.max(0,...c.notes.map(n=>n.lane))+1;
-  E={it,c,N:Math.max(4,Math.min(10,c.lanes||c.keys||used)),bpm:+c.bpm||120,off:+c.gridMs||0,div:16,pps:240,sc:-200,sel:new Set(),undo:[],redo:[],ph:0,play:null,buf:{},env:null,drag:null,hover:null,audioP:null};
+  let tempo=(c.tempo&&c.tempo.length?c.tempo:[{t:+c.gridMs||0,bpm:+c.bpm||120}]).map(x=>({t:+x.t,bpm:+x.bpm})).sort((a,b)=>a.t-b.t);
+  E={it,c,N:Math.max(4,Math.min(10,c.lanes||c.keys||used)),tempo,div:16,pps:240,sc:-200,sel:new Set(),undo:[],redo:[],ph:0,play:null,buf:{},env:null,drag:null,hover:null,audioP:null,clip:null};
   if(E.N<used)E.N=Math.min(10,used);
   $('ed').hidden=false;document.body.style.overflow='hidden';
   $('edT').textContent=(it.meta.title||it.label)+' · '+(c.name||'');
-  $('edK').value=E.N;$('edB').value=E.bpm;$('edO').value=E.off;$('edD').value=E.div;$('edZ').value=E.pps;
-  sizeEd();cancelAnimationFrame(edRaf);const loop=()=>{if(!E)return;drawEd();edRaf=requestAnimationFrame(loop)};loop();
+  $('edK').value=E.N;$('edD').value=E.div;$('edZ').value=E.pps;
+  sizeEd();edUI();cancelAnimationFrame(edRaf);const loop=()=>{if(!E)return;drawEd();edRaf=requestAnimationFrame(loop)};loop();
   edAudio().catch(()=>{});
 }
 function sizeEd(){const cv=$('edC'),w=EDX+E.N*EDL+12;cv.width=w;cv.height=EDH;cv.style.width=w+'px'}
-const edBeat=()=>60000/E.bpm,edStep=()=>edBeat()*4/E.div;
+// ---- 节奏表 ----
+const edSeg=t=>{let k=0;for(let i=0;i<E.tempo.length;i++)if(E.tempo[i].t<=t+1e-6)k=i;return k};
+function edSave(){const T=E.tempo;E.c.tempo=T.map(x=>({t:Math.round(x.t*100)/100,bpm:Math.round(x.bpm*1000)/1000}));E.c.bpm=T[0].bpm;E.c.gridMs=T[0].t;E.c.lanes=E.c.keys=E.N}
+function edSnap(t){
+  const T=E.tempo,i=edSeg(t),s=T[i],step=bmOf(s.bpm)*4/E.div;let v=s.t+Math.round((t-s.t)/step)*step;
+  if(i+1<T.length&&v>=T[i+1].t-.01)v=T[i+1].t;return Math.max(0,v);
+}
+const edStep=()=>{const s=E.tempo[Math.max(0,edSeg(E.hover?E.hover.t:E.ph))];return bmOf(s.bpm)*4/E.div};
+// 网格线：[{t,beat,measure}]（小节从第一拍起每 4 拍一小节，和游戏里的小节线一致）
+function edGrid(t0,t1){
+  const T=E.tempo,out=[];let n=0;
+  for(let i=0;i<T.length;i++){
+    const bm=bmOf(T[i].bpm),e=i+1<T.length?T[i+1].t:Infinity,cnt=e===Infinity?Infinity:Math.max(0,Math.ceil((e-T[i].t-1e-3)/bm));
+    let k0=0,k1=cnt-1;
+    if(i==0)k0=Math.floor((t0-T[0].t)/bm)-1;
+    const kv0=Math.max(k0,Math.floor((t0-T[i].t)/bm)-1),kv1=Math.min(k1,Math.ceil((t1-T[i].t)/bm)+1);
+    for(let k=kv0;k<=kv1;k++){const t=T[i].t+k*bm;if(t<-1)continue;out.push({t,n:n+k})}
+    if(cnt===Infinity)break;n+=cnt;
+  }
+  return out;
+}
 const edY=t=>EDH-30-(t-E.sc)*E.pps/1000,edT=y=>E.sc+(EDH-30-y)*1000/E.pps;
-const edSnap=t=>{const s=edStep();return Math.max(0,Math.round((t-E.off)/s)*s+E.off)};
-const edSnapMs=()=>{const s=edStep();return s};
 function edPush(before){E.undo.push(before);if(E.undo.length>100)E.undo.shift();E.redo=[]}
 const edSnapshot=()=>JSON.stringify(E.c.notes);
 function edRestore(js){E.c.notes=JSON.parse(js);E.sel.clear()}
-function edUndo(){if(!E.undo.length)return;E.redo.push(edSnapshot());edRestore(E.undo.pop())}
-function edRedo(){if(!E.redo.length)return;E.undo.push(edSnapshot());edRestore(E.redo.pop())}
+function edUndo(){if(!E||!E.undo.length)return;E.redo.push(edSnapshot());edRestore(E.undo.pop())}
+function edRedo(){if(!E||!E.redo.length)return;E.undo.push(edSnapshot());edRestore(E.redo.pop())}
 function edHit(x,y){
   const l=Math.floor((x-EDX)/EDL);if(l<0||l>=E.N)return null;
-  const n=E.c.notes;let best=null;
-  for(let i=n.length-1;i>=0;i--){const o=n[i];if(o.lane!==l)continue;const y0=edY(o.t),y1=o.k=='hold'?edY(o.t+(o.len||0)):y0;if(y<=y0+7&&y>=y1-7){best=o;break}}
-  return best;
+  const n=E.c.notes;
+  for(let i=n.length-1;i>=0;i--){const o=n[i];if(o.lane!==l)continue;const y0=edY(o.t),y1=o.k=='hold'?edY(o.t+(o.len||0)):y0;if(y<=y0+7&&y>=y1-7)return o}
+  return null;
+}
+// ---- 新音符的音色 ----
+function edNewSnd(lane,t){
+  const m=$('edSn').value;
+  if(m=='none')return undefined;
+  if(m!='auto')return{s:m,vel:127};
+  let best=null,bd=1e18;for(const o of E.c.notes){if(o.lane!==lane||!o.snd)continue;const d=Math.abs(o.t-t);if(d<bd){bd=d;best=o}}
+  return best?JSON.parse(JSON.stringify(best.snd)):undefined;
 }
 function drawEd(){
-  const cv=$('edC'),c=cv.getContext('2d'),W=cv.width,N=E.N,bm=edBeat(),tmax=E.sc+(EDH)*1000/E.pps;
+  const cv=$('edC'),c=cv.getContext('2d'),W=cv.width,N=E.N,tmax=E.sc+(EDH)*1000/E.pps;
   if(E.play){E.ph=E.play.t0+(edCtx.currentTime-E.play.now)*1000;if(edY(E.ph)<EDH*.3||edY(E.ph)>EDH-30)E.sc=E.ph-(EDH*.3-30)*1000/E.pps}
   c.fillStyle='#0a0d1c';c.fillRect(0,0,W,EDH);
-  // 波形
   if(E.env){c.fillStyle='rgba(108,140,255,.55)';for(let y=0;y<EDH-30;y+=2){const t=edT(y),b=Math.floor(t/20);if(b<0||b>=E.env.length)continue;const w=Math.min(1,E.env[b]*.8)*32;c.fillRect(35-w,y,w*2,2)}}
-  // 轨道底色
   for(let l=0;l<N;l++){c.fillStyle=l%2?'#10142b':'#0c1024';c.fillRect(EDX+l*EDL,0,EDL,EDH-30)}
-  // 网格
-  const b0=Math.max(0,Math.floor((E.sc-E.off)/bm)),b1=Math.ceil((tmax-E.off)/bm);c.font='11px system-ui';c.textAlign='right';
-  const sub=E.div/4,showSub=bm*E.pps/1000/sub>=9;
-  for(let b=b0;b<=b1;b++){
-    const t=E.off+b*bm,y=Math.round(edY(t))+.5;
-    if(showSub&&sub>1)for(let k=1;k<sub;k++){const yy=Math.round(edY(t+bm*k/sub))+.5;c.strokeStyle='rgba(255,255,255,.05)';c.beginPath();c.moveTo(EDX,yy);c.lineTo(EDX+N*EDL,yy);c.stroke()}
-    const mea=b%4==0;c.strokeStyle=mea?'rgba(255,255,255,.4)':'rgba(255,255,255,.14)';c.beginPath();c.moveTo(EDX,y);c.lineTo(EDX+N*EDL,y);c.stroke();
-    if(mea&&y<EDH-30){c.fillStyle='#8b92c4';c.fillText(String(b/4),EDX-6,y-3)}
+  c.font='11px system-ui';c.textAlign='right';
+  const T=E.tempo,grid=edGrid(E.sc-50,tmax+50),sub=E.div/4;
+  for(let gi=0;gi<grid.length;gi++){
+    const g=grid[gi],y=Math.round(edY(g.t))+.5,seg=T[edSeg(g.t)],bm=bmOf(seg.bpm),showSub=bm*E.pps/1000/sub>=9;
+    if(showSub&&sub>1)for(let k=1;k<sub;k++){const tt=g.t+bm*k/sub,nx=T[edSeg(g.t)+1];if(nx&&tt>=nx.t-.01)break;const yy=Math.round(edY(tt))+.5;c.strokeStyle='rgba(255,255,255,.05)';c.beginPath();c.moveTo(EDX,yy);c.lineTo(EDX+N*EDL,yy);c.stroke()}
+    const mea=((g.n%4)+4)%4==0;c.strokeStyle=mea?'rgba(255,255,255,.4)':'rgba(255,255,255,.14)';c.beginPath();c.moveTo(EDX,y);c.lineTo(EDX+N*EDL,y);c.stroke();
+    if(mea&&y<EDH-30){c.fillStyle='#8b92c4';c.fillText(String(g.n/4),EDX-6,y-3)}
   }
+  // 变速标记
+  for(const s of T){const y=edY(s.t);if(y<0||y>EDH-30)continue;c.fillStyle='#ffd24d';c.textAlign='left';c.fillText('♪'+(Math.round(s.bpm*100)/100),EDX+N*EDL-60,y-3);c.fillRect(EDX,Math.round(y),N*EDL,1);c.textAlign='right'}
   c.strokeStyle='rgba(255,255,255,.12)';for(let l=0;l<=N;l++){const x=EDX+l*EDL+.5;c.beginPath();c.moveTo(x,0);c.lineTo(x,EDH-30);c.stroke()}
-  // 音符
   const col=l=>(N==8&&l==0)?['#ff4a4a','#a80f1a']:(l%2?['#6c9cff','#2a5fc4']:['#f1f4ff','#aab3d8']);
   const drawNote=(o,sel,ghost)=>{
-    const x=EDX+o.lane*EDL+3,w=EDL-6,y0=edY(o.t),k=col(o.lane);if(y0<-20&&!(o.k=='hold'))return;
+    const x=EDX+o.lane*EDL+3,w=EDL-6,y0=edY(o.t),k=col(o.lane);
     if(o.k=='hold'){const y1=edY(o.t+(o.len||0));if(y1>EDH||y0<-20)return;c.fillStyle=k[1]+(ghost?'55':'aa');c.fillRect(x+4,y1,w-8,y0-y1)}
-    if(y0>EDH+10)return;c.fillStyle=ghost?k[0]+'88':k[0];c.fillRect(x,y0-6,w,12);
+    if(y0>EDH+10||y0<-20)return;c.fillStyle=ghost?k[0]+'88':k[0];c.fillRect(x,y0-6,w,12);
     c.strokeStyle=sel?'#ffd24d':'rgba(0,0,0,.6)';c.lineWidth=sel?2:1;c.strokeRect(x+.5,y0-5.5,w-1,11);c.lineWidth=1;
     if(o.snd&&!ghost){c.fillStyle='rgba(0,0,0,.45)';c.fillRect(x+w-6,y0-3,3,6)}
   };
   c.save();c.beginPath();c.rect(EDX,0,N*EDL,EDH-30);c.clip();
-  for(const o of E.c.notes){if(o.lane>=N)continue;if(o.t>tmax+((o.len)||0)+50)break;drawNote(o,E.sel.has(o),false)}
+  for(const o of E.c.notes){if(o.lane>=N)continue;if(o.t>tmax+50)break;drawNote(o,E.sel.has(o),false)}
   if(E.drag&&E.drag.type=='new'){const a=Math.min(E.drag.t0,E.drag.t1),b=Math.max(E.drag.t0,E.drag.t1);drawNote({lane:E.drag.lane,t:a,k:b-a>edStep()*.5?'hold':'tap',len:b-a},false,true)}
   else if(E.hover&&!E.drag)drawNote({lane:E.hover.lane,t:E.hover.t,k:'tap'},false,true);
   c.restore();
-  // 判定区/底部
   c.fillStyle='#161a33';c.fillRect(0,EDH-30,W,30);c.fillStyle='#8b92c4';c.textAlign='left';c.font='12px system-ui';
   c.fillText(fmtMs(E.hover?E.hover.t:E.ph)+'  ·  音符 '+E.c.notes.length+'  ·  已选 '+E.sel.size+(E.play?'  ·  播放中':''),8,EDH-10);
-  // 播放头
   const py=edY(E.ph);if(py>=0&&py<=EDH-30){c.strokeStyle='#ff4a5e';c.lineWidth=2;c.beginPath();c.moveTo(0,py);c.lineTo(EDX+N*EDL,py);c.stroke();c.lineWidth=1}
 }
 const fmtMs=t=>{t=Math.max(0,t);const m=Math.floor(t/60000),s=(t%60000)/1000;return m+':'+(s<10?'0':'')+s.toFixed(2)};
@@ -501,9 +536,10 @@ addEventListener('mousemove',e=>{
 addEventListener('mouseup',()=>{
   if(!E||!E.drag)return;const d=E.drag;E.drag=null;
   if(d.type=='new'){
-    const a=Math.min(d.t0,d.t1),b=Math.max(d.t0,d.t1),st=edStep();
+    const a=Math.min(d.t0,d.t1),b=Math.max(d.t0,d.t1),st=bmOf(E.tempo[edSeg(a)].bpm)*4/E.div;
     if(E.c.notes.some(o=>o.lane===d.lane&&Math.abs(o.t-a)<1))return;
     const o=b-a>st*.5?{t:Math.round(a*100)/100,k:'hold',lane:d.lane,len:Math.round((b-a)*100)/100}:{t:Math.round(a*100)/100,k:'tap',lane:d.lane};
+    const sn=edNewSnd(d.lane,a);if(sn)o.snd=sn;
     E.c.notes.push(o);E.c.notes.sort((x,y)=>x.t-y.t);E.sel.clear();E.sel.add(o);edPush(d.before);
   }else if(d.moved){E.c.notes.sort((x,y)=>x.t-y.t);edPush(d.before)}
 });
@@ -514,30 +550,99 @@ $('edC').addEventListener('wheel',e=>{
   else E.sc+=-e.deltaY*1000/E.pps*.9;
   if(E.sc<-400)E.sc=-400;
 },{passive:false});
+// ---- 复制 / 粘贴 ----
+function edCopy(cut){
+  if(!E.sel.size)return;const a=[...E.sel],t0=Math.min(...a.map(o=>o.t)),l0=Math.min(...a.map(o=>o.lane));
+  E.clip=a.map(o=>({...JSON.parse(JSON.stringify(o)),t:o.t-t0,lane:o.lane-l0}));
+  if(cut){const b=edSnapshot();E.c.notes=E.c.notes.filter(o=>!E.sel.has(o));E.sel.clear();edPush(b)}
+  $('edM').textContent='已复制 '+E.clip.length+' 个音符（Ctrl+V 粘贴到鼠标/播放头位置）';
+}
+function edPaste(){
+  if(!E.clip||!E.clip.length)return;const b=edSnapshot(),t0=E.hover?E.hover.t:edSnap(E.ph),l0=E.hover?E.hover.lane:0,add=[];
+  for(const r of E.clip){const o=JSON.parse(JSON.stringify(r));o.t=Math.round((t0+r.t)*100)/100;o.lane=r.lane+l0;if(o.lane>=E.N)continue;if(E.c.notes.some(x=>x.lane===o.lane&&Math.abs(x.t-o.t)<1))continue;add.push(o)}
+  if(!add.length)return;E.c.notes.push(...add);E.c.notes.sort((x,y)=>x.t-y.t);E.sel=new Set(add);edPush(b);
+}
 addEventListener('keydown',e=>{
-  if(!E||$('ed').hidden)return;const tag=e.target.tagName;if(tag=='INPUT'||tag=='SELECT')return;
+  if(!E||$('ed').hidden)return;const tag=e.target.tagName;if(tag=='INPUT'||tag=='SELECT'||tag=='TEXTAREA')return;
+  const ctl=e.ctrlKey||e.metaKey;
   if(e.code=='Space'){e.preventDefault();E.play?edStop():edPlay()}
   else if(e.code=='Delete'||e.code=='Backspace'){if(E.sel.size){e.preventDefault();const b=edSnapshot();E.c.notes=E.c.notes.filter(o=>!E.sel.has(o));E.sel.clear();edPush(b)}}
-  else if((e.ctrlKey||e.metaKey)&&e.code=='KeyZ'){e.preventDefault();e.shiftKey?edRedo():edUndo()}
-  else if((e.ctrlKey||e.metaKey)&&e.code=='KeyY'){e.preventDefault();edRedo()}
-  else if((e.ctrlKey||e.metaKey)&&e.code=='KeyA'){e.preventDefault();E.sel=new Set(E.c.notes)}
+  else if(ctl&&e.code=='KeyZ'){e.preventDefault();e.shiftKey?edRedo():edUndo()}
+  else if(ctl&&e.code=='KeyY'){e.preventDefault();edRedo()}
+  else if(ctl&&e.code=='KeyA'){e.preventDefault();E.sel=new Set(E.c.notes)}
+  else if(ctl&&e.code=='KeyC'){e.preventDefault();edCopy(false)}
+  else if(ctl&&e.code=='KeyX'){e.preventDefault();edCopy(true)}
+  else if(ctl&&e.code=='KeyV'){e.preventDefault();edPaste()}
   else if(e.code=='Escape'){closeEd()}
   else if(e.code=='Home'){E.ph=0;E.sc=-200}
 });
-$('edK').onchange=()=>{const n=+$('edK').value,used=Math.max(0,...E.c.notes.map(o=>o.lane))+1;if(n<used){say('键数不能小于已用的轨道数 '+used+'（先删掉或移走多出来的音符）',1);$('edK').value=E.N;return}E.N=n;sizeEd()};
-$('edB').onchange=()=>{const v=+$('edB').value;if(v>0)E.bpm=v};
-$('edO').onchange=()=>{E.off=+$('edO').value||0};
+$('edK').onchange=()=>{const n=+$('edK').value,used=Math.max(0,...E.c.notes.map(o=>o.lane))+1;if(n<used){say('键数不能小于已用的轨道数 '+used+'（先删掉或移走多出来的音符）',1);$('edK').value=E.N;return}E.N=n;sizeEd();edSave()};
 $('edD').onchange=()=>{E.div=+$('edD').value};
 $('edZ').oninput=()=>{E.pps=+$('edZ').value};
 $('edU').onclick=edUndo;$('edR').onclick=edRedo;
+$('edCp').onclick=()=>edCopy(false);$('edPs').onclick=edPaste;
+// ---- 面板：节奏表 / 音色 / BGA ----
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function edUI(){edTempoUI();edSndUI();edBgaUI();edSave()}
+function edTempoUI(){
+  const b=$('edTb');b.innerHTML='';
+  E.tempo.forEach((s,i)=>{
+    const tr=document.createElement('tr');tr.innerHTML=`<td class="n">${i?'变速':'起点'}</td><td><input type="number" step="1" value="${Math.round(s.t*100)/100}" style="width:90px"></td><td><input type="number" step="0.01" min="1" value="${s.bpm}" style="width:80px"></td><td></td>`;
+    const [ti,bi]=tr.querySelectorAll('input');
+    ti.onchange=()=>{s.t=Math.max(0,+ti.value||0);E.tempo.sort((a,b)=>a.t-b.t);edUI()};
+    bi.onchange=()=>{const v=+bi.value;if(v>0){s.bpm=v;edSave()}else bi.value=s.bpm};
+    const d=document.createElement('button');d.textContent='跳转';d.onclick=()=>{E.ph=s.t;E.sc=s.t-200};tr.lastChild.appendChild(d);
+    if(i){const x=document.createElement('button');x.textContent='删除';x.onclick=()=>{E.tempo.splice(i,1);edUI()};tr.lastChild.appendChild(x)}
+    b.appendChild(tr);
+  });
+}
+$('edTa').onclick=()=>{const t=Math.round(E.ph*100)/100,i=edSeg(t),v=+$('edTv').value||E.tempo[i].bpm;if(E.tempo.some(s=>Math.abs(s.t-t)<1)){say('这个位置已经有节奏点了',1);return}E.tempo.push({t,bpm:v});E.tempo.sort((a,b)=>a.t-b.t);edUI()};
+$('edTf').onclick=()=>{const d=E.ph-E.tempo[0].t;E.tempo[0].t=Math.max(0,Math.round(E.ph*100)/100);if(E.tempo.length>1&&E.tempo[1].t<=E.tempo[0].t)E.tempo.splice(1,1);edUI()};
+function edSndUI(){
+  const sel=$('edSn'),keep=sel.value;sel.innerHTML='<option value="auto">沿用同轨道最近音符的音色</option><option value="none">无声</option>';
+  const ks=Object.keys(E.it.res.samples).sort();for(const k of ks){const o=document.createElement('option');o.value=k;o.textContent=k;sel.appendChild(o)}
+  sel.value=[...sel.options].some(o=>o.value==keep)?keep:'auto';
+}
+$('edSa').onclick=()=>{
+  if(!E.sel.size){say('先选中要换音色的音符',1);return}const m=$('edSn').value;if(m=='auto'){say('请在下拉里选一个具体的音频，再点“应用到所选”',1);return}
+  const b=edSnapshot();for(const o of E.sel){if(m=='none')delete o.snd;else o.snd={s:m,vel:127}}edPush(b);
+};
+$('edSp').onclick=async()=>{const m=$('edSn').value;if(m=='auto'||m=='none')return;await edAudio();let b=E.buf[m];if(!b){const en=E.it.res.samples[m];if(!en)return;try{b=E.buf[m]=await edCtx.decodeAudioData((await en.ab()).slice(0))}catch(x){say('无法解码这个音频',1);return}}const s=edCtx.createBufferSource();s.buffer=b;s.connect(edCtx.destination);s.start()};
+$('edSf').onchange=async e=>{
+  for(const f of e.target.files){let k=f.name.replace(/[\\/:*?"<>|]+/g,'_'),n=1;while(E.it.res.samples[k])k=(n++)+'_'+f.name;E.it.res.samples[k]={path:f.name,ab:()=>f.arrayBuffer()}}
+  e.target.value='';edSndUI();say('已添加音频，可在“音色”下拉里选用')
+};
+function edBgaUI(){
+  const c=E.c;c.bga=c.bga||[];const b=$('edBb');b.innerHTML='';const keys=Object.keys(E.it.res.media);
+  c.bga.sort((a,b)=>a.t-b.t).forEach((g,i)=>{
+    const tr=document.createElement('tr');tr.innerHTML='<td><input type="number" step="1" style="width:90px"></td><td><select></select></td><td><select><option value="0">底层</option><option value="1">叠加 1</option><option value="2">叠加 2</option></select></td><td></td>';
+    const ti=tr.querySelector('input'),[ms,ls]=tr.querySelectorAll('select');ti.value=Math.round(g.t*100)/100;ls.value=g.layer||0;
+    for(const k of keys){const o=document.createElement('option');o.value=k;o.textContent=k;ms.appendChild(o)}
+    if(g.media&&!keys.includes(g.media)){const o=document.createElement('option');o.value=g.media;o.textContent=g.media+'（素材缺失）';ms.appendChild(o)}
+    ms.value=g.media||'';
+    ti.onchange=()=>{g.t=Math.max(0,+ti.value||0);edBgaUI()};ms.onchange=()=>{g.media=ms.value};ls.onchange=()=>{g.layer=+ls.value};
+    const j=document.createElement('button');j.textContent='跳转';j.onclick=()=>{E.ph=g.t;E.sc=g.t-200};const x=document.createElement('button');x.textContent='删除';x.onclick=()=>{c.bga.splice(i,1);edBgaUI()};
+    tr.lastChild.append(j,x);b.appendChild(tr);
+  });
+  $('edBn').textContent=c.bga.length?'':'这张谱面还没有 BGA 事件';
+  if(!c.bga.length)delete c.bga;
+}
+$('edBa').onclick=()=>{
+  const keys=Object.keys(E.it.res.media);if(!keys.length){say('先“添加素材…”再放置 BGA',1);return}
+  E.c.bga=E.c.bga||[];E.c.bga.push({t:Math.round(E.ph*100)/100,media:keys[0],layer:0});edBgaUI()
+};
+$('edBf').onchange=e=>{
+  for(const f of e.target.files){let k=f.name.replace(/[\\/:*?"<>|]+/g,'_'),n=1;while(E.it.res.media[k])k=(n++)+'_'+f.name;E.it.res.media[k]={path:f.name,ab:()=>f.arrayBuffer()}}
+  e.target.value='';edBgaUI();say('已添加 BGA 素材')
+};
+// ---- 播放 ----
 async function edAudio(){
   if(E.audioP)return E.audioP;
   const e0=E;return E.audioP=(async()=>{
     if(!edCtx)edCtx=new(window.AudioContext||window.webkitAudioContext)();
     const ids=new Set();for(const o of e0.c.notes)if(o.snd&&o.snd.s!==undefined)ids.add(o.snd.s);for(const o of e0.c.back||[])if(o.snd&&o.snd.s!==undefined)ids.add(o.snd.s);
     let n=0;for(const id of ids){const en=e0.it.res.samples[id];if(!en)continue;try{e0.buf[id]=await edCtx.decodeAudioData((await en.ab()).slice(0))}catch(x){}if(++n%20==0)$('edM').textContent='解码音频 '+n+' / '+ids.size}
-    $('edM').textContent=ids.size?'音频已就绪（'+Object.keys(e0.buf).length+' / '+ids.size+'）':'这张谱面没有可试听的音频（如 VOS 使用 MIDI 发声，编辑器里暂不试听）';
-    // 波形包络（20ms 一格，伴奏 + 按键音）
+    $('edM').textContent=ids.size?'音频已就绪（'+Object.keys(e0.buf).length+' / '+ids.size+'）':'这张谱面没有可试听的音频（如 VOS 使用 MIDI 发声，编辑器里不能试听，请用“在游戏里试玩”）';
     let tmax=0;const ev=[];for(const o of e0.c.back||[])if(o.snd&&o.snd.s!==undefined)ev.push([o.t,o.snd.s]);for(const o of e0.c.notes)if(o.snd&&o.snd.s!==undefined)ev.push([o.t,o.snd.s]);
     for(const [t,id] of ev){const b=e0.buf[id];if(b)tmax=Math.max(tmax,t+b.duration*1000)}
     const env=new Float32Array(Math.ceil(tmax/20)+2);
@@ -555,15 +660,14 @@ async function edPlay(){
 }
 function edStop(){if(!E||!E.play)return;for(const s of E.play.src)try{s.stop()}catch(x){}E.play=null;$('edP').textContent='▶ 播放'}
 $('edP').onclick=()=>E&&(E.play?edStop():edPlay());
-function closeEd(){edStop();E=null;cancelAnimationFrame(edRaf);$('ed').hidden=true;document.body.style.overflow='';render()}
+function closeEd(){edStop();if(E)edSave();E=null;cancelAnimationFrame(edRaf);$('ed').hidden=true;document.body.style.overflow='';render()}
 $('edX').onclick=closeEd;
-// 试玩：在游戏页打开当前谱面（同源页面之间用 postMessage 传 .rsm）
 $('edG').onclick=async()=>{
-  if(!E)return;const it=E.it;edStop();
+  if(!E)return;const it=E.it;edStop();edSave();
   const w=window.open('../index.html#studio','resonia-game');if(!w){say('浏览器拦截了新窗口，请允许弹出窗口后重试',1);return}
   let ready=false,pack=null;const send=()=>{if(ready&&pack)w.postMessage({type:'resonia-rsm',blob:pack.blob,name:pack.nm},location.origin)};
   const onMsg=ev=>{if(ev.origin===location.origin&&ev.data&&ev.data.type=='resonia-ready'){ready=true;send()}};
   addEventListener('message',onMsg);setTimeout(()=>removeEventListener('message',onMsg),120000);
-  try{const was=it.on;it.on=true;pack=await buildRsm([it]);it.on=was;say('已准备试玩');send()}catch(x){say('试玩失败：'+x.message,1)}
+  try{pack=await buildRsm([it]);say('已准备试玩');send()}catch(x){say('试玩失败：'+x.message,1)}
 };
 </script></body></html>
