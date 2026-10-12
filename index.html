@@ -23,8 +23,8 @@ body.playing{position:fixed;inset:0;gap:8px;justify-content:flex-start;overflow:
 body.playing>#vlog,body.playing>#panel,body.playing>small{display:none!important}
 body.playing canvas{flex:1 1 0;min-height:0;width:min(100%,420px)}
 #keys{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;justify-content:center;font-size:13px;color:var(--mut)}
-#kb{display:flex;gap:5px}
-#kb button,#kreset{background:var(--panel);border:1px solid #2c3366;min-width:38px;padding:6px 8px;font-weight:600}
+#kb{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+#kb button,#kreset{background:var(--panel);border:1px solid #2c3366;min-width:34px;padding:6px 6px;font-weight:600}
 #kb button.on{background:var(--acc);border-color:var(--acc)}
 #kreset{font-weight:500;color:var(--mut)}
 #snd{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;justify-content:center;font-size:13px;color:var(--mut);max-width:420px}
@@ -162,7 +162,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <details id="skCustom" hidden><summary>自定义素材（图片只保存在你的浏览器里，不会上传）</summary><div id="skSlots"></div><button id="skClear">清除全部素材</button></details>
 </section>
 <section class="card" id="cPlug"><h3>第三方<span class="gpu" style="color:var(--mu)">格式插件</span></h3><div class="row"><label class="fbtn sm">载入插件…<input type="file" id="plf" accept=".js" multiple></label><span id="plmsg" class="fname" style="color:var(--mu)">未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器</span></div><div id="pll"></div></section>
-<section class="card" id="cDbg"><h3>调试<span id="gpu" class="gpu" hidden></span></h3><div class="chk"><label><input type="checkbox" id="dbg">发声诊断</label><label><input type="checkbox" id="tm">测试模式（可拖动进度条）</label></div></section>
+<section class="card" id="cDbg"><h3>调试<span id="gpu" class="gpu" hidden></span></h3><div class="chk"><label><input type="checkbox" id="dbg">发声诊断</label><label><input type="checkbox" id="tm">测试模式（可拖动进度条）</label><label>轨道数 <select id="lanesel"><option value="0">按谱面</option><option value="4">4K</option><option value="5">5K</option><option value="6">6K</option><option value="7">7K</option><option value="8">8K</option><option value="9">9K</option><option value="10">10K</option></select></label></div></section>
 </div>
 <canvas id="cv" width="420" height="640"></canvas>
 <small><a href="studio/" target="_blank" style="color:#8ea6ff">谱面工具 Studio</a>（转换 / 导出 .rsm，之后还有谱面编辑）· 默认按键 S D F 空格 J K L，可在上方自定义（手机可直接点按轨道，可滑动扫音符；一指可同时按多条轨道）。按 1/↓ 减速，2/↑ 加速。Esc 结束（手机上开局后会隐藏设置，点右上角 ✕ 退出）。伴奏为内置简易合成音色，音质不代表最终效果。</small>
@@ -561,8 +561,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.21';
+const VERSION='0.9.22';
 const CHANGELOG=[
+  ['0.9.22','2026-10-12','轨道数改为可变：由谱面决定（4/5/6/7/8/9/10 键），每种键数有各自的默认按键并分别保存；轨道几何、判定、触控都按实际轨道数计算。IIDX 1P 皮肤现在是真正的 8 键（转盘 + 7 键）。“调试”里新增“轨道数”，可把现有谱面折算成指定键数来测试。'],
   ['0.9.21','2026-10-12','新增“IIDX 1P”皮肤（转盘轨道在左、加宽并与键区拉开间隔，其余轨道收窄）；轨道几何改为每条轨道可单独设置；去掉从未生效的“触控范围”；“延迟校准”按钮并入“跳过前奏”一行'],
   ['0.9.20','2026-10-11','新增“延迟校准”：节拍器 + 点按，自动测出设备/个人延迟并设置“延迟”；“延迟”范围扩大到 ±400ms，并记住上次的值'],
   ['0.9.19','2026-10-11','插件可提供“场景式 BGA”（bgaScene.render）：每帧由插件把动画画到背景画布上；用于 DJMAX 的 VCQ/VCE 多层动画 BGA'],
@@ -633,7 +634,7 @@ const CHANGELOG=[
   g('vbtn').onclick=()=>{g('vlog').hidden=!g('vlog').hidden}})();
 
 // ---------- Game ----------
-const cv=document.getElementById('cv'),c2=cv.getContext('2d'),W=420,LW=W/7,LX=[0,1,2,3,4,5,6].map(l=>l*LW),LD=Array(7).fill(LW);let H=640,JY=H-110;
+const cv=document.getElementById('cv'),c2=cv.getContext('2d'),W=420,LX=[],LD=[];let LANES=7;let H=640,JY=H-110;
 const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;c2.scale(dpr,dpr);
 // 游玩时画布高度随浏览器高度伸缩（宽度不变）：逻辑高度 H 按实际显示比例换算，落点区随之拉长
 const JYo=()=>S.hud=='panel'?152:110; // 信息面板模式下底部留出更高的区域
@@ -645,11 +646,18 @@ function fit(){
   if(typeof draw=='function'&&!running)draw(song&&ctx?songMs():0);
 }
 addEventListener('resize',fit);if(typeof ResizeObserver!='undefined')new ResizeObserver(fit).observe(cv);
-const LCOL=['#dfe4ff','#6c8cff','#dfe4ff','#ffd24d','#dfe4ff','#6c8cff','#dfe4ff'];
-const DEF=['KeyS','KeyD','KeyF','Space','KeyJ','KeyK','KeyL'];
-let bind=DEF.slice(),rebind=null;
-try{const s=JSON.parse(localStorage.getItem('resonia-keys')||'null');if(Array.isArray(s)&&s.length==7&&new Set(s).size==7&&s.every(x=>typeof x=='string'))bind=s}catch(x){}
-const saveBind=()=>{try{localStorage.setItem('resonia-keys',JSON.stringify(bind))}catch(x){}};
+const LCOLS=['#dfe4ff','#6c8cff','#ffd24d'],lcol=l=>LCOLS[KIND[l]||0];
+// 轨道数可变：每种键数一套默认键位和轨道类型（0 白键 / 1 蓝键 / 2 特殊键），键位按键数分别保存
+const DEFS={4:['KeyD','KeyF','KeyJ','KeyK'],5:['KeyD','KeyF','Space','KeyJ','KeyK'],6:['KeyS','KeyD','KeyF','KeyJ','KeyK','KeyL'],
+  7:['KeyS','KeyD','KeyF','Space','KeyJ','KeyK','KeyL'],8:['ShiftLeft','KeyS','KeyD','KeyF','Space','KeyJ','KeyK','KeyL'],
+  9:['KeyA','KeyS','KeyD','KeyF','Space','KeyJ','KeyK','KeyL','Semicolon'],10:['KeyA','KeyS','KeyD','KeyF','KeyC','KeyN','KeyJ','KeyK','KeyL','Semicolon']};
+const KINDS={4:[0,1,1,0],5:[0,1,2,1,0],6:[0,1,0,0,1,0],7:[0,1,0,2,0,1,0],8:[2,0,1,0,2,0,1,0],9:[0,1,0,1,2,1,0,1,0],10:[0,1,0,1,0,0,1,0,1,0]};
+const kindsFor=n=>KINDS[n]||KINDS[7];
+const DEF=DEFS[7];
+const bindKey=n=>n==7?'resonia-keys':'resonia-keys-'+n;
+function loadBind(n){let b=DEFS[n].slice();try{const s=JSON.parse(localStorage.getItem(bindKey(n))||'null');if(Array.isArray(s)&&s.length==n&&new Set(s).size==n&&s.every(x=>typeof x=='string'))b=s}catch(x){}return b}
+let bind=loadBind(7),rebind=null;
+const saveBind=()=>{try{localStorage.setItem(bindKey(LANES),JSON.stringify(bind))}catch(x){}};
 const NAMES={Space:'␣',Semicolon:';',Comma:',',Period:'.',Slash:'/',Quote:"'",BracketLeft:'[',BracketRight:']',Backslash:'\\',Minus:'-',Equal:'=',Backquote:'`',ArrowUp:'↑',ArrowDown:'↓',ArrowLeft:'←',ArrowRight:'→',ShiftLeft:'LShift',ShiftRight:'RShift',Enter:'Enter',Tab:'Tab',CapsLock:'Caps'};
 const label=c=>NAMES[c]||c.replace(/^(Key|Digit)/,'').replace('Numpad','N');
 function renderKeys(){
@@ -660,7 +668,7 @@ function renderKeys(){
     kb.appendChild(b);
   });
 }
-document.getElementById('kreset').onclick=()=>{bind=DEF.slice();rebind=null;saveBind();renderKeys();draw(0)};
+document.getElementById('kreset').onclick=()=>{bind=DEFS[LANES].slice();rebind=null;saveBind();renderKeys();draw(0)};
 renderKeys();
 const $=id=>document.getElementById(id);
 let song=null,running=false,t0=0,startOff=0,bi=0,combo=0,maxCombo=0,score=0,cnt,keys=Array(7).fill(false),flash=Array(7).fill(0),lastJ='',lastJT=0,ended=false,schedTimer=0;
@@ -970,7 +978,7 @@ function setSong(s,name,extra){
   stopAll();stopSamples();
   if(typeof bgaReset=='function')bgaReset();
   $('midiBox').hidden=!!s.kind;$('sinkBox').hidden=!s.kind;if(s.kind)fillSink();
-  song=s;songInfo=`${s.title||name} · 可玩音符 ${s.notes.length} · 伴奏事件 ${s.back.length}`+(s.kind?' · '+s.kind:' · MIDI 轨道 '+s.tracks)+(s.note||'');
+  song=s;applyLaneMap(s);songInfo=`${s.title||name} · 可玩音符 ${s.notes.length} · 伴奏事件 ${s.back.length}`+(s.kind?' · '+s.kind:' · MIDI 轨道 '+s.tracks)+(s.note||'');
   $('info').textContent='';$('fname').textContent=name;$('go').disabled=false;$('pt').textContent=s.title||name;pKey='';draw(0);
 }
 async function fillSink(){
@@ -1021,7 +1029,7 @@ const Resonia=window.Resonia={
       const back=(o.back||[]).slice().sort((a,b)=>a.t-b.t);
       let end=o.lenMs||0;for(const n of notes)end=Math.max(end,n.end+500);
       return{title:o.title||'',artist:o.artist||'',level:o.level||0,chartName:o.chartName||'',lenMs:end+1000,notes,back,ctl:o.ctl||{},mev:o.mev||[],chan:o.chan||{},tracks:o.tracks||0,
-        bpm:o.bpm||120,bars:o.bars,bgaScene:o.bgaScene,scroll:+o.scroll>0?+o.scroll:undefined,samples:o.samples,bga:o.bga,bmps:o.bmps||{},res:o.res,kind:o.samples?(o.kind||'PLUGIN'):undefined,note:o.note||''};
+        bpm:o.bpm||120,lanes:o.lanes,bars:o.bars,bgaScene:o.bgaScene,scroll:+o.scroll>0?+o.scroll:undefined,samples:o.samples,bga:o.bga,bmps:o.bmps||{},res:o.res,kind:o.samples?(o.kind||'PLUGIN'):undefined,note:o.note||''};
     }
   }
 };
@@ -1162,7 +1170,7 @@ async function buildRsc(R,ci,man,find,say){
   const bga=(c.bga||[]).map(x=>({t:x.t,id:x.media,l:x.layer||0})).sort((a,b)=>a.t-b.t);
   const res={samples:{},media:{}};for(const it of sItems)if(it.e&&S.samples[it.id])res.samples[it.id]=it.e;for(const it of bItems)if(it.e&&B.bmps[it.id])res.media[it.id]=it.e;
   return{title:(R.meta&&R.meta.title)||'',artist:(R.meta&&R.meta.artist)||'',level:c.level||0,chartName:c.name||'',lenMs:end+1000,notes,back,
-    ctl:V.ctl||{},mev:V.mev||[],chan:V.chan||{},tracks:V.tracks||0,bpm:c.bpm||120,
+    ctl:V.ctl||{},mev:V.mev||[],chan:V.chan||{},tracks:V.tracks||0,bpm:c.bpm||120,lanes:c.lanes,
     samples:hasS?S.samples:undefined,bga:bga.length?bga:undefined,bmps:B.bmps,res,kind:hasS?'RSM':undefined,
     note:(S.miss||S.bad)?`（缺少 ${S.miss} 个、无法解码 ${S.bad} 个音频）`:''};
 }
@@ -1190,13 +1198,14 @@ const touchish=()=>{let m=false;try{m=matchMedia('(pointer:coarse), (max-width:7
 {let sv=null;try{sv=localStorage.getItem('resonia-fs')}catch(x){}$('fs').checked=sv===null?touchish():sv==='1'}
 $('fs').onchange=()=>{try{localStorage.setItem('resonia-fs',$('fs').checked?'1':'0')}catch(x){}};
 $('go').onclick=start;
+$('lanesel').onchange=()=>{laneOv=+$('lanesel').value;if(running)return;applyLaneMap(song);draw(song&&ctx?songMs():0)};
 
 async function start(){
   if(!song)return;const wasRunning=running;
   initAudio();ctx.resume();
   if(useSf()&&!song.samples){const go=$('go');go.disabled=true;try{await sfPreload()}catch(x){}go.disabled=false;go.textContent=wasRunning?'重新开始':'开始'}clearInterval(schedTimer);rebind=null;renderKeys();$('go').blur();
   for(const n of song.notes){n.done=false;n.hit=false;n.holding=false;n.rel=null;n.dead=false}
-  lanesQ=[0,1,2,3,4,5,6].map(l=>song.notes.filter(n=>n.lane==l));lp=Array(7).fill(0);holdN=Array(7).fill(null);
+  applyLaneMap(song);lanesQ=Array.from({length:LANES},(_,l)=>song.notes.filter(n=>n.lane==l));lp=Array(LANES).fill(0);holdN=Array(LANES).fill(null);
   keys.fill(false);resetPtr();drops=0;dbgLast='';
   if($('fs').checked){document.body.classList.add('playing');window.scrollTo(0,0);fit()}
   combo=maxCombo=score=0;cnt={P:0,G:0,O:0,B:0,M:0};bi=0;lastJ='';ended=false;fx.length=0;
@@ -1225,7 +1234,7 @@ function addFx(l,j){
   fx.push({l,s:performance.now(),c:FXC[j],p});
 }
 // ---------- Skin（皮肤）：主题 + 自定义图片素材 ----------
-const K3=[['#f4f6ff','#aeb8f0'],['#62b8ff','#2c72d6'],['#ffd24d','#e0961a']],KIND0=[0,1,0,2,0,1,0];let KIND=KIND0;
+const K3=[['#f4f6ff','#aeb8f0'],['#62b8ff','#2c72d6'],['#ffd24d','#e0961a']];let KIND=kindsFor(7);setGeo(null);const hasTT=()=>!!(S.tt&&LANES==8);
 const SKSLOTS=[['bg','页面背景'],['field','轨道背景'],['note0','白键音符'],['note1','蓝键音符'],['note2','黄键音符'],['hold','长条'],['line','判定线'],['key0','按键（松开）'],['key1','按键（按下）'],['fx','打击特效']];
 const svgUrl=x=>'url("data:image/svg+xml,'+encodeURIComponent(x)+'")';
 const MEADOW=svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 750" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#241a4d"/><stop offset=".45" stop-color="#6d54b0"/><stop offset=".72" stop-color="#d9c8ee"/></linearGradient><radialGradient id="m" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6d8"/><stop offset="1" stop-color="#fff6d8" stop-opacity="0"/></radialGradient></defs><rect width="1000" height="750" fill="url(#s)"/><circle cx="820" cy="150" r="130" fill="url(#m)"/><g fill="#fff" opacity=".8"><circle cx="120" cy="80" r="2"/><circle cx="260" cy="150" r="1.5"/><circle cx="420" cy="60" r="2"/><circle cx="560" cy="130" r="1.5"/><circle cx="700" cy="50" r="2"/><circle cx="930" cy="260" r="1.5"/></g><ellipse cx="300" cy="760" rx="700" ry="250" fill="#7fd05c"/><ellipse cx="880" cy="780" rx="520" ry="230" fill="#5db854"/><ellipse cx="620" cy="560" rx="150" ry="70" fill="#a6e07f"/><g><circle cx="700" cy="470" r="95" fill="#f6c9dc"/><rect x="655" y="470" width="90" height="70" fill="#f6c9dc"/><circle cx="700" cy="455" r="22" fill="#fff3a8" stroke="#e59ab8" stroke-width="5"/><path d="M590 480a110 70 0 0 1 220 0z" fill="#e9577f"/></g><g><circle cx="900" cy="560" r="70" fill="#fff"/><ellipse cx="880" cy="500" rx="14" ry="48" fill="#fff"/><ellipse cx="925" cy="500" rx="14" ry="48" fill="#fff"/><circle cx="880" cy="560" r="7" fill="#7a3d3d"/><circle cx="920" cy="560" r="7" fill="#7a3d3d"/></g><g fill="#fff"><circle cx="560" cy="690" r="9"/><circle cx="590" cy="680" r="7"/><circle cx="780" cy="710" r="9"/><circle cx="440" cy="705" r="7"/></g><g fill="#ffd24d"><circle cx="560" cy="690" r="3"/><circle cx="780" cy="710" r="3"/></g></svg>`);
@@ -1234,7 +1243,7 @@ const SK={
   meadow:{name:'糖果星球',layout:'left',hud:'panel',field:'glass',pal:K3,style:'pill',page:MEADOW+' center/cover fixed #2b1d4f',glow:'255,226,160',line:'rgba(255,255,255,.95)'},
   neon:{name:'霓虹',layout:'center',hud:'panel',field:'glass',pal:[['#eafcff','#7fd9ff'],['#25d9ff','#0a8ab0'],['#ff4fd8','#a01788']],style:'neon',
     page:'radial-gradient(ellipse at 50% 20%,#1b1650 0,transparent 60%),linear-gradient(rgba(37,217,255,.07) 1px,transparent 1px) 0 0/42px 42px,linear-gradient(90deg,rgba(37,217,255,.07) 1px,transparent 1px) 0 0/42px 42px,#05060f',glow:'37,217,255',line:'#25d9ff'},
-  iidx:{name:'IIDX 1P',layout:'center',hud:'panel',field:'glass',pal:[['#f4f6ff','#b9c2f2'],['#5fb4ff','#2a6fd0'],['#ff5a6a','#b3162a']],style:'pill',kind:[2,0,1,0,1,0,1],geo:{tt:104,gap:18},tt:true,page:'radial-gradient(ellipse at 50% 0,#2a1630 0,transparent 65%),linear-gradient(#0a0b14,#10101c)',glow:'255,90,106',line:'#ff4d5e'},
+  iidx:{name:'IIDX 1P',layout:'center',hud:'panel',field:'glass',pal:[['#f4f6ff','#b9c2f2'],['#5fb4ff','#2a6fd0'],['#ff5a6a','#b3162a']],style:'pill',kind:[2,0,1,0,1,0,1,0],geo:{tt:104,gap:18},tt:true,page:'radial-gradient(ellipse at 50% 0,#2a1630 0,transparent 65%),linear-gradient(#0a0b14,#10101c)',glow:'255,90,106',line:'#ff4d5e'},
   custom:{name:'自定义',layout:'center',hud:'classic',pal:K3,style:'pill',field:''}
 };
 let S=SK.classic,SI={};const CI={},CIfile={};
@@ -1277,9 +1286,9 @@ function skTT(x,y,w,h,on){ // IIDX 转盘：圆盘 + 红色刻线，按下时亮
 }
 function skKeys(){
   c2.font='bold 15px system-ui';c2.textAlign='center';
-  for(let l=0;l<7;l++){
+  for(let l=0;l<LANES;l++){
     const x=LX[l]+3,y=JY+12,w=LD[l]-6,h=38,k=KIND[l],on=keys[l],im=on?SI.key1:SI.key0;
-    if(S.tt&&l==0&&!imOK(im)){skTT(x,y,w,h,on);continue}
+    if(hasTT()&&l==0&&!imOK(im)){skTT(x,y,w,h,on);continue}
     if(imOK(im))c2.drawImage(im,x,y,w,h);
     else{
       const c=S.pal[k];rr(x,y,w,h,7);
@@ -1307,9 +1316,23 @@ function skHud(now){
     it.forEach((q,i)=>{c2.fillStyle=q[2];c2.font='bold 9px system-ui';c2.fillText(q[0],x+cw*i+cw/2,y+h-14);c2.fillStyle='#fff';c2.font='bold 12px system-ui';c2.fillText(String(q[1]),x+cw*i+cw/2,y+h-3)});
   }
 }
-function setGeo(g){ // 每条轨道的横向位置与宽度；默认等宽，IIDX：第 0 条（转盘）加宽，并与键区拉开间隔，其余变窄
-  if(!g){for(let l=0;l<7;l++){LX[l]=l*LW;LD[l]=LW}return}
-  const n=7,kw=(W-g.tt-g.gap)/(n-1);LX[0]=0;LD[0]=g.tt;for(let l=1;l<n;l++){LX[l]=g.tt+g.gap+(l-1)*kw;LD[l]=kw}
+function setGeo(g){ // 每条轨道的横向位置与宽度；默认等宽，IIDX（8 轨）：第 0 条（转盘）加宽，并与键区拉开间隔，其余变窄
+  LX.length=LD.length=LANES;
+  if(!g){const w=W/LANES;for(let l=0;l<LANES;l++){LX[l]=l*w;LD[l]=w}return}
+  const n=LANES,kw=(W-g.tt-g.gap)/(n-1);LX[0]=0;LD[0]=g.tt;for(let l=1;l<n;l++){LX[l]=g.tt+g.gap+(l-1)*kw;LD[l]=kw}
+}
+// ---- 轨道数：由歌曲决定（song.lanes，默认 7）；“调试”里可强制折算成别的键数来测试 ----
+let laneOv=0;
+const songLanes=sg=>laneOv||(sg&&DEFS[sg.lanes]?sg.lanes:7);
+function setLanes(n){
+  if(!DEFS[n])n=7;if(n===LANES)return;
+  LANES=n;bind=loadBind(n);rebind=null;keys=Array(n).fill(false);flash=Array(n).fill(0);laneRef=Array(n).fill(0);ptr.clear();fx.length=0;
+  KIND=(S.kind&&S.kind.length==n)?S.kind:kindsFor(n);setGeo(S.geo&&n==8?S.geo:null);renderKeys();
+}
+function applyLaneMap(sg){
+  const N=songLanes(sg),M=DEFS[sg&&sg.lanes]?sg.lanes:7;
+  if(sg)for(const n of sg.notes){if(n.l0===undefined)n.l0=n.lane;n.lane=N==M?n.l0:Math.round(n.l0*(N-1)/(M-1))}
+  setLanes(N);
 }
 function applySkin(){skG={};
   const id=$('skinSel').value;S={...(SK[id]||SK.classic)};SI=id=='custom'?CI:{};
@@ -1319,7 +1342,7 @@ function applySkin(){skG={};
   document.body.style.background=pg;
   S.hud=$('skHud').checked?'panel':'classic';
   $('skCustom').hidden=id!='custom';
-  KIND=S.kind||KIND0;setGeo(S.geo);
+  KIND=(S.kind&&S.kind.length==LANES)?S.kind:kindsFor(LANES);setGeo(S.geo&&LANES==8?S.geo:null);
   JY=H-JYo();
   try{localStorage.setItem('resonia-skin',JSON.stringify({id,lay:$('skLay').value,hud:$('skHud').checked}))}catch(x){}
   if(typeof draw=='function'&&!running)draw(song&&ctx?songMs():0);
@@ -1355,7 +1378,7 @@ function badOK(now){ // 第一个音符开始掉落之前、最后一个音符�
   if(!(now>=a.t-JY/(+$('spd').value*(song.scroll||1))&&now<=z.end))return false;
   // BAD 只在音符已经贴近判定线时才判：命中区之外再多一个音符高度（约16px）以内；更早之前乱按只发按键音，不判 BAD
   const near=HIT+16/(+$('spd').value*(song.scroll||1));
-  for(let l=0;l<7;l++){const q=lanesQ[l];let i=lp[l];while(i<q.length&&q[i].done)i++;if(i<q.length){const d=q[i].t-now;if(d<=near&&d>=-HIT)return true}}
+  for(let l=0;l<LANES;l++){const q=lanesQ[l];let i=lp[l];while(i<q.length&&q[i].done)i++;if(i<q.length){const d=q[i].t-now;if(d<=near&&d>=-HIT)return true}}
   return false;
 }
 function press(l,quiet){
@@ -1399,15 +1422,15 @@ addEventListener('keydown',e=>{
   e.preventDefault();if(!e.repeat)press(l);
 });
 addEventListener('keyup',e=>{const l=bind.indexOf(e.code);if(l>=0)release(l)});
-const ptr=new Map(),laneRef=Array(7).fill(0);
+const ptr=new Map();let laneRef=Array(7).fill(0);
 function resetPtr(){ptr.clear();laneRef.fill(0)}
 function exitGame(){running=false;stopAll();ended=false;keys.fill(false);resetPtr();document.body.classList.remove('playing');fit();draw(0)}
 // Lanes covered by a touch: centre lane always; neighbours when the contact patch overlaps them enough (hysteresis keeps a held lane).
 function calcLanes(e,cur){
   const r=cv.getBoundingClientRect(),k=W/r.width,cx=(e.clientX-r.left)*k;
   const hw=e.pointerType=='mouse'?0:Math.max(2,(e.width||0)*k*1.5)/2;
-  let c=6;for(let l=0;l<7;l++){if(cx<LX[l]+LD[l]+(l<6?(LX[l+1]-LX[l]-LD[l])/2:0)){c=l;break}}const out=new Set([c]);
-  if(hw>0)for(let l=0;l<7;l++){const ov=Math.min(LX[l]+LD[l],cx+hw)-Math.max(LX[l],cx-hw);if(ov>=(cur&&cur.has(l)?.2:.4)*LD[l])out.add(l)}
+  let c=LANES-1;for(let l=0;l<LANES;l++){if(cx<LX[l]+LD[l]+(l<LANES-1?(LX[l+1]-LX[l]-LD[l])/2:0)){c=l;break}}const out=new Set([c]);
+  if(hw>0)for(let l=0;l<LANES;l++){const ov=Math.min(LX[l]+LD[l],cx+hw)-Math.max(LX[l],cx-hw);if(ov>=(cur&&cur.has(l)?.2:.4)*LD[l])out.add(l)}
   return{set:out,primary:c};
 }
 cv.addEventListener('pointerdown',e=>{
@@ -1546,12 +1569,12 @@ function draw(now){
   const gl=S.glow||'108,140,255';
   if(imOK(SI.field))c2.drawImage(SI.field,0,0,W,H);
   else if(S.field=='glass'){c2.fillStyle='rgba(6,8,22,.84)';c2.fillRect(0,0,W,H)}
-  for(let l=0;l<7;l++){
+  for(let l=0;l<LANES;l++){
     if(!imOK(SI.field)&&!bgaOn){if(S.field=='glass'){if(l%2){c2.fillStyle='rgba(255,255,255,.035)';c2.fillRect(LX[l],0,LD[l],H)}}else{c2.fillStyle=l%2?'#10142a':'#0b0e20';c2.fillRect(LX[l],0,LD[l],H)}}
     if(flash[l]>0||keys[l]){const g=c2.createLinearGradient(0,JY-160,0,JY);g.addColorStop(0,'rgba('+gl+',0)');g.addColorStop(1,'rgba('+gl+','+(keys[l]?.45:flash[l]*.3)+')');c2.fillStyle=g;c2.fillRect(LX[l],JY-160,LD[l],160);flash[l]=Math.max(0,flash[l]-.08)}
   }
   c2.strokeStyle=S.field=='glass'||imOK(SI.field)?'rgba(255,255,255,.1)':'#232a52';c2.lineWidth=1;
-  for(let l=1;l<7;l++){const gx=LX[l]-(LX[l]-LX[l-1]-LD[l-1])/2;c2.beginPath();c2.moveTo(gx,0);c2.lineTo(gx,H);c2.stroke()}
+  for(let l=1;l<LANES;l++){const gx=LX[l]-(LX[l]-LX[l-1]-LD[l-1])/2;c2.beginPath();c2.moveTo(gx,0);c2.lineTo(gx,H);c2.stroke()}
   if(song){
     const pps=+$('spd').value*(song.scroll||1),jn=now+offs(),vis=JY/pps+200;
     if(song.bars){
@@ -1571,12 +1594,12 @@ function draw(now){
         const ya=Math.max(yt,-12),hb=Math.min(yt+h,H+12)-ya;
         if(hb>0){
           if(S.pal)skHold(x,ya,lwn,hb,n.lane,yt,h);
-          else{c2.fillStyle=LCOL[n.lane];c2.fillRect(x,ya,lwn,hb);
+          else{c2.fillStyle=lcol(n.lane);c2.fillRect(x,ya,lwn,hb);
             c2.fillStyle='rgba(0,0,0,.2)';c2.fillRect(x,ya,1,hb);c2.fillRect(x+lwn-1,ya,1,hb);if(yt>=-12)c2.fillRect(x,yt,lwn,2)}
         }
       }
       if(n.holding){c2.fillStyle='rgba(255,255,255,'+(.35+.2*Math.sin(performance.now()/60))+')';c2.fillRect(LX[n.lane]+2,JY-11,LD[n.lane]-4,20)}
-      if(!n.holding||!n.hold){if(S.pal)skNote(x,y,lwn,n.lane);else{c2.fillStyle=LCOL[n.lane];c2.fillRect(x,y-8,lwn,14);c2.fillStyle='rgba(0,0,0,.25)';c2.fillRect(x,y+3,LW-6,3)}}
+      if(!n.holding||!n.hold){if(S.pal)skNote(x,y,lwn,n.lane);else{c2.fillStyle=lcol(n.lane);c2.fillRect(x,y-8,lwn,14);c2.fillStyle='rgba(0,0,0,.25)';c2.fillRect(x,y+3,lwn,3)}}
       c2.globalAlpha=1;
     }
   }
@@ -1586,7 +1609,7 @@ function draw(now){
   c2.fillStyle='rgba(150,160,215,.45)';c2.fillRect(0,JY-9,W,1);c2.fillRect(0,JY+6,W,1);
   drawFx();
   c2.font='bold 16px system-ui';c2.textAlign='center';
-  for(let l=0;l<7;l++){c2.fillStyle=keys[l]?'#fff':'#6a73b0';c2.fillText(label(bind[l]),LX[l]+LD[l]/2,JY+34)}
+  for(let l=0;l<LANES;l++){c2.fillStyle=keys[l]?'#fff':'#6a73b0';c2.fillText(label(bind[l]),LX[l]+LD[l]/2,JY+34)}
   }
   // HUD
   if(S.hud=='panel')skHud(now);
