@@ -212,13 +212,13 @@ function parseVos(buf){
     for(let i=0;i<n;i++,o+=6){const c=d[o],j=u32(o+1),k=d[o+5];if(c<nch&&j<ch[c].notes.length&&k<7)refs.push({c,j,k})}
   }
   // MIDI: read every channel message of EVERY track; controller state is kept per MIDI channel (tracks sharing a channel merge, like a real synth)
-  const div=v.getUint16(mo+12),ntr=v.getUint16(mo+10);let p=mo+14;const tempos=[],mraw=[],chanOf={},tk=[],CCN={0:'bm',32:'bl',7:'vol',11:'exp',10:'pan',1:'mod',74:'cut',91:'rev'};
+  const div=v.getUint16(mo+12),ntr=v.getUint16(mo+10);let p=mo+14;const tempos=[],tsig=[],mraw=[],chanOf={},tk=[],CCN={0:'bm',32:'bl',7:'vol',11:'exp',10:'pan',1:'mod',74:'cut',91:'rev'};
   const vlq=()=>{let x=0,b;do{b=d[p++];x=(x<<7)|(b&127)}while(b&128);return x};
   for(let t=0;t<ntr&&asc(p,4)=='MTrk';t++){
     const end=p+8+v.getUint32(p+4);p+=8;let tick=0,run=0;
     while(p<end){
       tick+=vlq();let st=d[p];
-      if(st==255){const ty=d[p+1];p+=2;const l=vlq();if(ty==0x51)tempos.push({tick,us:(d[p]<<16)|(d[p+1]<<8)|d[p+2]});p+=l}
+      if(st==255){const ty=d[p+1];p+=2;const l=vlq();if(ty==0x51)tempos.push({tick,us:(d[p]<<16)|(d[p+1]<<8)|d[p+2]});else if(ty==0x58&&l>=2)tsig.push({tick,n:d[p]||4,dd:1<<Math.min(6,d[p+1])});p+=l}
       else if(st==240||st==247){p++;p+=vlq()}
       else{
         if(st&128){run=st;p++}else st=run;
@@ -275,7 +275,10 @@ function parseVos(buf){
   const back=[];
   ch.forEach((c,i)=>c.notes.forEach((n,j)=>{if(used.has(i+':'+j))return;const t=toMs(n.t);back.push({t,ch:i,ins:c.ins,p:n.p,vel:n.vel,dur:(toMs(n.t+n.len)-t)/1000})}));
   back.sort((a,b)=>a.t-b.t);
-  return{title,lenMs,notes,back,ctl,mev,chan:chanOf,tracks:ntr-1,bpm:tempos.length?60e6/tempos[0].us:120};
+  // 小节线：按 MIDI 拍号（默认 4/4）和速度表推出每个小节的起点
+  const bars=[];{tsig.sort((a,b)=>a.tick-b.tick);let b=0,si=0,n=4,dn=4;
+    while(bars.length<4000){while(si<tsig.length&&tsig[si].tick/div<=b+1e-6){n=tsig[si].n;dn=tsig[si].dd;si++}const m=beatMs(b);if(m>(lenMs||0)+2000)break;bars.push(m);b+=n*4/dn}}
+  return{title,lenMs,notes,back,ctl,mev,bars,chan:chanOf,tracks:ntr-1,bpm:tempos.length?60e6/tempos[0].us:120};
 }
 
 // ---------- Synth (applies the file's MIDI controllers: program, volume, expression, pan, bend, mod, cutoff, reverb, XG drum NRPN) ----------
@@ -561,8 +564,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.24';
+const VERSION='0.9.25';
 const CHANGELOG=[
+  ['0.9.25','2026-10-12','VOS 曲目补上小节线（按 MIDI 拍号与速度表）；没有小节信息的曲目（如 O2JAM）按首个 BPM 等间隔估算小节线；伴奏音量/按键音量默认值：VOS 为 0.5 / 1.3，其他格式为 1 / 1，手动调整后按类别记住。'],
   ['0.9.24','2026-10-12','“调试”卡片精简：“发声诊断”改名“诊断”，“测试模式”去掉括号说明，轨道数与它们排在同一行。'],
   ['0.9.23','2026-10-12','IIDX 1P 皮肤按参考图重做：黑色轨道、金属边框、转盘 + 黑白键（白键音符白色、黑键音符蓝色、转盘音符红色）、青色光晕加红色判定线、转盘中心红白贴纸（按下时旋转）、青色数码风分数、粉红斜体“GREAT 连击数”。'],
   ['0.9.22','2026-10-12','轨道数改为可变：由谱面决定（4/5/6/7/8/9/10 键），每种键数有各自的默认按键并分别保存；轨道几何、判定、触控都按实际轨道数计算。IIDX 1P 皮肤现在是真正的 8 键（转盘 + 7 键）。“调试”里新增“轨道数”，可把现有谱面折算成指定键数来测试。'],
@@ -976,10 +980,14 @@ async function buildBms(ch,find,say){
   return{title:P.title||ch.path.split('/').pop(),artist:P.artist,level:+P.level||0,chartName:ch.path.split('/').pop(),lenMs:end+1500,bars:P.bars,notes:P.notes,back:P.back,ctl:{},mev:[],chan:{},tracks:0,bpm:P.bpm,samples,bga:P.bga,bmps,res,
     kind:'BMS',note:((miss||bad)?`（缺少 ${miss} 个、无法解码 ${bad} 个音频）`:'')+(P.bga.length?` · BGA ${Object.keys(bmps).length} 个素材${bmiss?`（${bmiss} 个无法显示，如 mpg/avi）`:''}`:'')};
 }
+let volMode='v';const volUser={};
 function setSong(s,name,extra){
   stopAll();stopSamples();
   if(typeof bgaReset=='function')bgaReset();
   $('midiBox').hidden=!!s.kind;$('sinkBox').hidden=!s.kind;if(s.kind)fillSink();
+  if(!s.bars&&s.bpm>0){s.bars=[];const iv=240000/s.bpm;for(let t=0;t<(s.lenMs||0)&&s.bars.length<5000;t+=iv)s.bars.push(t)} // 没有小节信息的曲目：按首个 BPM 等间隔估算
+  // 伴奏/按键音量的默认值：VOS 为 0.5 / 1.3，其他格式为 1 / 1（手动调过的值按类别记住）
+  {const m=s.kind?'o':'v',d=m=='v'?[.5,1.3]:[1,1],u=volUser[m]||d;volMode=m;for(const [id,v] of [['bv',u[0]],['kv',u[1]]]){$(id).value=v;$(id).dispatchEvent(new Event('input'))}}
   song=s;applyLaneMap(s);songInfo=`${s.title||name} · 可玩音符 ${s.notes.length} · 伴奏事件 ${s.back.length}`+(s.kind?' · '+s.kind:' · MIDI 轨道 '+s.tracks)+(s.note||'');
   $('info').textContent='';$('fname').textContent=name;$('go').disabled=false;$('pt').textContent=s.title||name;pKey='';draw(0);
 }
@@ -998,6 +1006,7 @@ $('sinkNm').onclick=async()=>{try{const st=await navigator.mediaDevices.getUserM
 $('sink').onchange=()=>{const v=$('sink').value;try{localStorage.setItem('resonia-sink',v)}catch(x){}initAudio();if(ctx.setSinkId)ctx.setSinkId(v).catch(()=>{})};
 try{const m=localStorage.getItem('resonia-mv');if(m)$('mv').value=m}catch(x){}
 $('mv').oninput=()=>{if(master)master.gain.value=.6*(+$('mv').value);try{localStorage.setItem('resonia-mv',$('mv').value)}catch(x){}};
+for(const id of ['bv','kv'])$(id).addEventListener('change',()=>{volUser[volMode]=[+$('bv').value,+$('kv').value]});
 async function loadSong(ab,name){
   try{setSong(parseVos(ab),name)}
   catch(err){$('info').textContent='解析失败：'+err.message}
