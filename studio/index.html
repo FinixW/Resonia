@@ -23,6 +23,10 @@ td.n{font-variant-numeric:tabular-nums}
 #msg{color:var(--mu);min-height:1.4em}#msg.err{color:var(--bad)}
 .todo{color:var(--mu);font-size:13px;line-height:1.7}
 a{color:var(--ac)}
+#ed{position:fixed;inset:0;background:#080a16;z-index:50;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px;overflow:auto}
+#ed[hidden]{display:none}.edbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:13px;color:var(--mu)}.edbar b{color:var(--fg)}
+.edbar input[type=number],.edbar select{background:#0e1230;border:1px solid #2a3170;border-radius:6px;color:var(--fg);padding:4px 6px}
+#edC{background:#0a0d1c;border-radius:8px;max-width:100%;cursor:crosshair}
 </style></head><body>
 <div class="w"><h1>鸣域 <span>Studio</span><em id="ver"></em></h1><div class="sub">谱面转换与编辑工具 · 文件只在你的浏览器里处理，不会上传</div></div>
 <section class="card w"><h3>1 · 导入</h3>
@@ -30,16 +34,28 @@ a{color:var(--ac)}
  <div class="row"><label class="btn">选择文件…<input type="file" id="f" multiple></label><label class="btn">选择文件夹…<input type="file" id="d" webkitdirectory multiple></label><span id="msg"></span></div>
 </section>
 <section class="card w"><h3>2 · 谱面（勾选要放进曲包的）</h3>
- <table><thead><tr><th></th><th>谱面名</th><th>文件</th><th>难度</th><th>键数</th><th>音符</th><th>伴奏</th><th>来源</th></tr></thead><tbody id="tb"><tr><td colspan="8" style="color:var(--mu)">还没有导入</td></tr></tbody></table>
+ <table><thead><tr><th></th><th>谱面名</th><th>文件</th><th>难度</th><th>键数</th><th>音符</th><th>伴奏</th><th>来源</th><th></th></tr></thead><tbody id="tb"><tr><td colspan="9" style="color:var(--mu)">还没有导入</td></tr></tbody></table>
  <div class="row"><span>标题</span><input type="text" id="mt"><span>作者</span><input type="text" id="ma"><button id="all">全选</button><button id="none">全不选</button></div>
 </section>
 <section class="card w"><h3>3 · 导出</h3>
  <div class="row"><button class="pri" id="exRsm" disabled>导出 .rsm 曲包（所选谱面 + 音频 + BGA）</button><button id="exRsc" disabled>只导出 .rsc 谱面</button></div>
  <div class="todo">.rsm 里所有谱面共用同一份音频和 BGA 素材，只存一份；在游戏页载入 .rsm 后可以下拉选择谱面。</div>
 </section>
-<section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器（波形、放置/移动音符、节奏表、试玩）<br>· 其他格式互转（第三方模式：OJN/OJM、PAK/PT 等，以插件形式在本机载入）<br>· 音波采谱 / 自动作谱</div></section>
+<section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器已有基础版（每张谱面右侧的“编辑”）；还缺：变速节奏表、复制粘贴、音色分配、BGA 编辑<br>· 其他格式互转（第三方模式：OJN/OJM、PAK/PT 等，以插件形式在本机载入）<br>· 音波采谱 / 自动作谱</div></section>
+<div id="ed" hidden>
+ <div class="edbar"><b id="edT"></b>
+  <label>键数 <select id="edK"><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
+  <label>BPM <input id="edB" type="number" step="0.01" style="width:84px"></label>
+  <label>偏移(ms) <input id="edO" type="number" step="1" style="width:72px"></label>
+  <label>吸附 <select id="edD"><option value="4">1/4</option><option value="8">1/8</option><option value="12">1/12</option><option value="16" selected>1/16</option><option value="24">1/24</option><option value="32">1/32</option><option value="48">1/48</option><option value="64">1/64</option></select></label>
+  <label>缩放 <input id="edZ" type="range" min="60" max="700" value="240"></label>
+  <label><input type="checkbox" id="edS" checked> 按键音</label></div>
+ <div class="edbar"><button id="edP">▶ 播放</button><button id="edU">撤销</button><button id="edR">重做</button><button id="edG">在游戏里试玩</button><button class="pri" id="edX">完成</button></div>
+ <canvas id="edC" width="600" height="620"></canvas>
+ <div class="todo" style="max-width:760px;text-align:center"><span id="edM"></span><br>点击空白处放置音符，拖动出长条；拖动音符移动，右键或 Delete 删除，Shift 点击多选，Ctrl+Z / Ctrl+Y 撤销重做；滚轮滚动，Ctrl+滚轮缩放；空格播放，点击左侧标尺跳转播放头。网格按固定 BPM 与偏移计算（变速曲目的网格只是参考）。</div>
+</div>
 <script>
-const STUDIO_VERSION='0.1.1';
+const STUDIO_VERSION='0.2.0';
 const $=id=>document.getElementById(id);$('ver').textContent='v'+STUDIO_VERSION;
 const TPB=768;
 function parseVos(buf){
@@ -199,8 +215,8 @@ function parseBms(txt){
   const nm=Math.max(0,...ch.map(x=>x.m))+1,bs=[0];
   for(let i=0;i<nm;i++)bs.push(bs[i]+4*(len[i]||1));
   const bpm0=parseFloat(H.BPM)||120,tev=[],bgm=[],keys=[],lns=[],bgaE=[];
-  const LANE={'1':0,'2':1,'3':2,'4':3,'5':4,'8':5,'9':6};
-  let has67=false;
+  const LANE={'1':0,'2':1,'3':2,'4':3,'5':4,'6':-1,'8':5,'9':6}; // 6 = 转盘（-1，之后放到最左）
+  let has67=false,hasSc=false;
   for(const x of ch){
     const n=x.s.length>>1;if(!n)continue;
     for(let i=0;i<n;i++){
@@ -213,11 +229,11 @@ function parseBms(txt){
       else if(c=='04'||c=='07'||c=='0A')bgaE.push({b,id:pr,l:c=='04'?0:c=='07'?1:2});
       else if(/^[12][1-9]$/.test(c)){
         const side=c[0],k=c[1];
-        if(side=='1'&&LANE[k]!==undefined){keys.push({b,id:pr,l:LANE[k]});if(k=='8'||k=='9')has67=true}
+        if(side=='1'&&LANE[k]!==undefined){keys.push({b,id:pr,l:LANE[k]});if(k=='8'||k=='9')has67=true;if(k=='6')hasSc=true}
         else bgm.push({b,id:pr});
       }else if(/^[56][1-9]$/.test(c)){
         const side=c[0],k=c[1];
-        if(side=='5'&&LANE[k]!==undefined){lns.push({b,id:pr,l:LANE[k]});if(k=='8'||k=='9')has67=true}
+        if(side=='5'&&LANE[k]!==undefined){lns.push({b,id:pr,l:LANE[k]});if(k=='8'||k=='9')has67=true;if(k=='6')hasSc=true}
       }
     }
   }
@@ -228,9 +244,10 @@ function parseBms(txt){
     T.push(e.t?{b:e.b,ms:ms+e.sb*60000/p.bpm,bpm:p.bpm}:{b:e.b,ms,bpm:e.bpm});
   }
   const toMs=b=>{let lo=0,hi=T.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(T[m].b<b)lo=m;else hi=m-1}const e=T[lo];return e.ms+(b-e.b)*60000/e.bpm};
-  const sh=has67?0:1,lnobj=(H.LNOBJ||'').toUpperCase();
+  const off=hasSc?1:0,nl=(has67?7:5)+off;for(const k of keys.concat(lns))k.l=k.l<0?0:k.l+off;
+  const sh=0,lnobj=(H.LNOBJ||'').toUpperCase();
   const notes=[],back=bgm.map(x=>({t:toMs(x.b),id:x.id}));
-  const byL=Array.from({length:7},()=>[]);
+  const byL=Array.from({length:nl},()=>[]);
   for(const k of keys)byL[k.l].push(k);
   const mk=(l,t,e,id)=>notes.push({t,lane:l+sh,hold:e>t,end:Math.max(t,e),snd:{s:id,ch:0,ins:0,p:60,vel:127,dur:0},done:false});
   byL.forEach((a,l)=>{
@@ -240,12 +257,12 @@ function parseBms(txt){
       const t=toMs(k.b);last={t,lane:l+sh,hold:false,end:t,snd:{s:k.id,ch:0,ins:0,p:60,vel:127,dur:0},done:false};notes.push(last);
     }
   });
-  const byLn=Array.from({length:7},()=>[]);for(const k of lns)byLn[k.l].push(k);
+  const byLn=Array.from({length:nl},()=>[]);for(const k of lns)byLn[k.l].push(k);
   byLn.forEach((a,l)=>{a.sort((x,y)=>x.b-y.b);for(let i=0;i+1<a.length;i+=2)mk(l,toMs(a[i].b),toMs(a[i+1].b),a[i].id)});
   notes.sort((a,b)=>a.t-b.t);back.sort((a,b)=>a.t-b.t);
   const used=new Set([...notes.map(n=>n.snd.s),...back.map(b=>b.id)]);
   const bga=bgaE.map(x=>({t:toMs(x.b),id:x.id,l:x.l})).sort((a,b)=>a.t-b.t);
-  return{H,bmp,bga,title:[H.TITLE,H.SUBTITLE].filter(Boolean).join(' '),artist:H.ARTIST||'',level:H.PLAYLEVEL||'',keys:has67?7:5,wav,notes,back,used,bpm:bpm0,
+  return{H,bmp,bga,title:[H.TITLE,H.SUBTITLE].filter(Boolean).join(' '),artist:H.ARTIST||'',level:H.PLAYLEVEL||'',keys:has67?7:5,lanes:nl,wav,notes,back,used,bpm:bpm0,
     nlane:new Set(notes.map(n=>n.lane)).size};
 }
 const AUD=/\.(wav|ogg|mp3|flac|m4a|opus|aac)$/i,VIS=/\.(png|jpe?g|bmp|gif|webp|mp4|webm|mpe?g|avi|wmv|m4v)$/i;
@@ -294,7 +311,7 @@ function bmsToItem(P,find,e){
   const cache={},sc=id=>id in cache?cache[id]:(cache[id]=sk(id));
   const snd=id=>{const k=sc(id);return k?{s:k,vel:127}:undefined};
   const sub=(P.H.SUBTITLE||'').trim(),disp=P.title||baseName(e.path);
-  const ch={id:'',name:sub||disp,level:+P.level||0,mode:'keys',keys:7,timebase:'ms',bpm:r2(P.bpm),
+  const ch={id:'',name:sub||disp,level:+P.level||0,mode:'keys',keys:P.lanes,lanes:P.lanes,timebase:'ms',bpm:r2(P.bpm),
     notes:P.notes.map(n=>{const o={t:r2(n.t),k:n.hold?'hold':'tap',lane:n.lane};if(n.hold)o.len=r2(n.end-n.t);const s=snd(n.snd.s);if(s)o.snd=s;return o}),
     back:P.back.map(b=>{const o={t:r2(b.t)};const s=snd(b.id);if(s)o.snd=s;return o})};
   if(P.bga.length){const bc={};ch.bga=P.bga.map(x=>({t:r2(x.t),media:x.id in bc?bc[x.id]:(bc[x.id]=bk(x.id)),layer:x.l}))}
@@ -302,7 +319,7 @@ function bmsToItem(P,find,e){
 }
 function vosToItem(buf,name){
   const s=parseVos(buf),snd=e=>({midi:'vos',ch:e.ch,ins:e.ins,p:e.p,vel:e.vel,len:r2(e.dur*1000)});
-  const ch={id:'',name:'',level:0,mode:'keys',keys:7,timebase:'ms',bpm:r2(s.bpm||120),
+  const ch={id:'',name:'',level:0,mode:'keys',keys:7,lanes:7,timebase:'ms',bpm:r2(s.bpm||120),
     notes:s.notes.map(n=>{const o={t:r2(n.t),k:n.hold?'hold':'tap',lane:n.lane,snd:snd(n.snd)};if(n.hold)o.len=r2(n.end-n.t);return o}),
     back:s.back.map(b=>({t:r2(b.t),snd:snd(b)})),ext:{vos:{ctl:s.ctl,mev:s.mev,chan:s.chan,tracks:s.tracks,lenMs:s.lenMs}}};
   return{label:name,src:'VOS',chart:ch,res:{samples:{},media:{}},meta:{title:s.title||'',artist:''},ext:{}};
@@ -344,11 +361,11 @@ async function importAll(list){
 }
 function render(){
   const tb=$('tb');tb.innerHTML='';
-  if(!items.length){tb.innerHTML='<tr><td colspan="8" style="color:var(--mu)">还没有导入</td></tr>';$('exRsm').disabled=$('exRsc').disabled=true;return}
+  if(!items.length){tb.innerHTML='<tr><td colspan="9" style="color:var(--mu)">还没有导入</td></tr>';$('exRsm').disabled=$('exRsc').disabled=true;return}
   items.forEach((it,i)=>{
     const tr=document.createElement('tr'),c=it.chart,lanes=new Set(c.notes.map(n=>n.lane)).size;
-    tr.innerHTML=`<td><input type="checkbox" ${it.on?'checked':''}></td><td></td><td style="color:var(--mu)"></td><td class="n">${c.level||'-'}</td><td class="n">${lanes}</td><td class="n">${c.notes.length}</td><td class="n">${(c.back||[]).length}</td><td>${it.src}</td>`;
-    tr.children[1].textContent=it.label;tr.children[2].textContent=it.file||'';tr.children[0].firstChild.onchange=e=>{it.on=e.target.checked;btn()};tb.appendChild(tr);
+    tr.innerHTML=`<td><input type="checkbox" ${it.on?'checked':''}></td><td></td><td style="color:var(--mu)"></td><td class="n">${c.level||'-'}</td><td class="n">${lanes}</td><td class="n">${c.notes.length}</td><td class="n">${(c.back||[]).length}</td><td>${it.src}</td><td><button>编辑</button></td>`;
+    tr.children[1].textContent=it.label;tr.children[2].textContent=it.file||'';tr.children[8].firstChild.onclick=()=>openEd(i);tr.children[0].firstChild.onchange=e=>{it.on=e.target.checked;btn()};tb.appendChild(tr);
   });btn();
 }
 const btn=()=>{$('exRsm').disabled=$('exRsc').disabled=!items.some(i=>i.on)};
@@ -359,9 +376,7 @@ function makeRsc(sel){
     package:{rsm:nm+'.rsm'},charts:sel.map((i,k)=>({...i.chart,id:'c'+(k+1)})),ext:Object.assign({},...sel.map(i=>i.ext))};
 }
 $('exRsc').onclick=()=>{const sel=items.filter(i=>i.on);if(!sel.length)return;download(new Blob([JSON.stringify(makeRsc(sel))],{type:'application/json'}),safeName($('mt').value||sel[0].meta.title)+'.rsc')};
-$('exRsm').onclick=async()=>{
-  const sel=items.filter(i=>i.on);if(!sel.length)return;
-  try{
+async function buildRsm(sel){
     const R=makeRsc(sel),nm=safeName($('mt').value||sel[0].meta.title),te=new TextEncoder();
     const S={},M={};for(const i of sel){Object.assign(S,i.res.samples);Object.assign(M,i.res.media)}
     const man={rsm:1,id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),title:R.meta.title,samples:[],tracks:[],midi:[],media:[]},files=[];
@@ -372,8 +387,11 @@ $('exRsm').onclick=async()=>{
     for(const id of mk){say('打包 '+(++n)+' / '+(sk.length+mk.length));const e=M[id],x=ext(e),f='bga/'+id;
       files.push({path:f,data:new Uint8Array(await e.ab()),deflate:/^(bmp)$/.test(x)});man.media.push({id,file:f,type:/^(mp4|webm|m4v)$/.test(x)?'video':'image'})}
     files.unshift({path:'manifest.json',data:te.encode(JSON.stringify(man,null,1)),deflate:true},{path:'charts/main.rsc',data:te.encode(JSON.stringify(R)),deflate:true});
-    say('正在压缩…');download(await writeZip(files),nm+'.rsm');say('已导出 '+nm+'.rsm（'+sel.length+' 张谱面，'+sk.length+' 个音频，'+mk.length+' 个 BGA 素材）');
-  }catch(err){say('导出失败：'+err.message,1)}
+    say('正在压缩…');return{blob:await writeZip(files),nm,info:'（'+sel.length+' 张谱面，'+sk.length+' 个音频，'+mk.length+' 个 BGA 素材）'};
+}
+$('exRsm').onclick=async()=>{
+  const sel=items.filter(i=>i.on);if(!sel.length)return;
+  try{const r=await buildRsm(sel);download(r.blob,r.nm+'.rsm');say('已导出 '+r.nm+'.rsm'+r.info)}catch(err){say('导出失败：'+err.message,1)}
 };
 $('f').onchange=async e=>{await importAll(e.target.files);e.target.value=''};
 $('d').onchange=async e=>{await importAll(e.target.files);e.target.value=''};
@@ -391,4 +409,161 @@ addEventListener('drop',async e=>{
   if(!its.length){importAll(e.dataTransfer.files);return}
   say('读取中…');const out=[];for(const en of its)await walk(en,out,'');importAll(out);
 });
+// ================= 谱面编辑器 =================
+let E=null,edRaf=0,edCtx=null;
+const EDL=54,EDX=110,EDH=620;
+function openEd(i){
+  const it=items[i],c=it.chart;c.notes.sort((a,b)=>a.t-b.t);
+  const used=Math.max(0,...c.notes.map(n=>n.lane))+1;
+  E={it,c,N:Math.max(4,Math.min(10,c.lanes||c.keys||used)),bpm:+c.bpm||120,off:+c.gridMs||0,div:16,pps:240,sc:-200,sel:new Set(),undo:[],redo:[],ph:0,play:null,buf:{},env:null,drag:null,hover:null,audioP:null};
+  if(E.N<used)E.N=Math.min(10,used);
+  $('ed').hidden=false;document.body.style.overflow='hidden';
+  $('edT').textContent=(it.meta.title||it.label)+' · '+(c.name||'');
+  $('edK').value=E.N;$('edB').value=E.bpm;$('edO').value=E.off;$('edD').value=E.div;$('edZ').value=E.pps;
+  sizeEd();cancelAnimationFrame(edRaf);const loop=()=>{if(!E)return;drawEd();edRaf=requestAnimationFrame(loop)};loop();
+  edAudio().catch(()=>{});
+}
+function sizeEd(){const cv=$('edC'),w=EDX+E.N*EDL+12;cv.width=w;cv.height=EDH;cv.style.width=w+'px'}
+const edBeat=()=>60000/E.bpm,edStep=()=>edBeat()*4/E.div;
+const edY=t=>EDH-30-(t-E.sc)*E.pps/1000,edT=y=>E.sc+(EDH-30-y)*1000/E.pps;
+const edSnap=t=>{const s=edStep();return Math.max(0,Math.round((t-E.off)/s)*s+E.off)};
+const edSnapMs=()=>{const s=edStep();return s};
+function edPush(before){E.undo.push(before);if(E.undo.length>100)E.undo.shift();E.redo=[]}
+const edSnapshot=()=>JSON.stringify(E.c.notes);
+function edRestore(js){E.c.notes=JSON.parse(js);E.sel.clear()}
+function edUndo(){if(!E.undo.length)return;E.redo.push(edSnapshot());edRestore(E.undo.pop())}
+function edRedo(){if(!E.redo.length)return;E.undo.push(edSnapshot());edRestore(E.redo.pop())}
+function edHit(x,y){
+  const l=Math.floor((x-EDX)/EDL);if(l<0||l>=E.N)return null;
+  const n=E.c.notes;let best=null;
+  for(let i=n.length-1;i>=0;i--){const o=n[i];if(o.lane!==l)continue;const y0=edY(o.t),y1=o.k=='hold'?edY(o.t+(o.len||0)):y0;if(y<=y0+7&&y>=y1-7){best=o;break}}
+  return best;
+}
+function drawEd(){
+  const cv=$('edC'),c=cv.getContext('2d'),W=cv.width,N=E.N,bm=edBeat(),tmax=E.sc+(EDH)*1000/E.pps;
+  if(E.play){E.ph=E.play.t0+(edCtx.currentTime-E.play.now)*1000;if(edY(E.ph)<EDH*.3||edY(E.ph)>EDH-30)E.sc=E.ph-(EDH*.3-30)*1000/E.pps}
+  c.fillStyle='#0a0d1c';c.fillRect(0,0,W,EDH);
+  // 波形
+  if(E.env){c.fillStyle='rgba(108,140,255,.55)';for(let y=0;y<EDH-30;y+=2){const t=edT(y),b=Math.floor(t/20);if(b<0||b>=E.env.length)continue;const w=Math.min(1,E.env[b]*.8)*32;c.fillRect(35-w,y,w*2,2)}}
+  // 轨道底色
+  for(let l=0;l<N;l++){c.fillStyle=l%2?'#10142b':'#0c1024';c.fillRect(EDX+l*EDL,0,EDL,EDH-30)}
+  // 网格
+  const b0=Math.max(0,Math.floor((E.sc-E.off)/bm)),b1=Math.ceil((tmax-E.off)/bm);c.font='11px system-ui';c.textAlign='right';
+  const sub=E.div/4,showSub=bm*E.pps/1000/sub>=9;
+  for(let b=b0;b<=b1;b++){
+    const t=E.off+b*bm,y=Math.round(edY(t))+.5;
+    if(showSub&&sub>1)for(let k=1;k<sub;k++){const yy=Math.round(edY(t+bm*k/sub))+.5;c.strokeStyle='rgba(255,255,255,.05)';c.beginPath();c.moveTo(EDX,yy);c.lineTo(EDX+N*EDL,yy);c.stroke()}
+    const mea=b%4==0;c.strokeStyle=mea?'rgba(255,255,255,.4)':'rgba(255,255,255,.14)';c.beginPath();c.moveTo(EDX,y);c.lineTo(EDX+N*EDL,y);c.stroke();
+    if(mea&&y<EDH-30){c.fillStyle='#8b92c4';c.fillText(String(b/4),EDX-6,y-3)}
+  }
+  c.strokeStyle='rgba(255,255,255,.12)';for(let l=0;l<=N;l++){const x=EDX+l*EDL+.5;c.beginPath();c.moveTo(x,0);c.lineTo(x,EDH-30);c.stroke()}
+  // 音符
+  const col=l=>(N==8&&l==0)?['#ff4a4a','#a80f1a']:(l%2?['#6c9cff','#2a5fc4']:['#f1f4ff','#aab3d8']);
+  const drawNote=(o,sel,ghost)=>{
+    const x=EDX+o.lane*EDL+3,w=EDL-6,y0=edY(o.t),k=col(o.lane);if(y0<-20&&!(o.k=='hold'))return;
+    if(o.k=='hold'){const y1=edY(o.t+(o.len||0));if(y1>EDH||y0<-20)return;c.fillStyle=k[1]+(ghost?'55':'aa');c.fillRect(x+4,y1,w-8,y0-y1)}
+    if(y0>EDH+10)return;c.fillStyle=ghost?k[0]+'88':k[0];c.fillRect(x,y0-6,w,12);
+    c.strokeStyle=sel?'#ffd24d':'rgba(0,0,0,.6)';c.lineWidth=sel?2:1;c.strokeRect(x+.5,y0-5.5,w-1,11);c.lineWidth=1;
+    if(o.snd&&!ghost){c.fillStyle='rgba(0,0,0,.45)';c.fillRect(x+w-6,y0-3,3,6)}
+  };
+  c.save();c.beginPath();c.rect(EDX,0,N*EDL,EDH-30);c.clip();
+  for(const o of E.c.notes){if(o.lane>=N)continue;if(o.t>tmax+((o.len)||0)+50)break;drawNote(o,E.sel.has(o),false)}
+  if(E.drag&&E.drag.type=='new'){const a=Math.min(E.drag.t0,E.drag.t1),b=Math.max(E.drag.t0,E.drag.t1);drawNote({lane:E.drag.lane,t:a,k:b-a>edStep()*.5?'hold':'tap',len:b-a},false,true)}
+  else if(E.hover&&!E.drag)drawNote({lane:E.hover.lane,t:E.hover.t,k:'tap'},false,true);
+  c.restore();
+  // 判定区/底部
+  c.fillStyle='#161a33';c.fillRect(0,EDH-30,W,30);c.fillStyle='#8b92c4';c.textAlign='left';c.font='12px system-ui';
+  c.fillText(fmtMs(E.hover?E.hover.t:E.ph)+'  ·  音符 '+E.c.notes.length+'  ·  已选 '+E.sel.size+(E.play?'  ·  播放中':''),8,EDH-10);
+  // 播放头
+  const py=edY(E.ph);if(py>=0&&py<=EDH-30){c.strokeStyle='#ff4a5e';c.lineWidth=2;c.beginPath();c.moveTo(0,py);c.lineTo(EDX+N*EDL,py);c.stroke();c.lineWidth=1}
+}
+const fmtMs=t=>{t=Math.max(0,t);const m=Math.floor(t/60000),s=(t%60000)/1000;return m+':'+(s<10?'0':'')+s.toFixed(2)};
+function edPos(e){const r=$('edC').getBoundingClientRect();return{x:(e.clientX-r.left)*($('edC').width/r.width),y:(e.clientY-r.top)*(EDH/r.height)}}
+$('edC').addEventListener('mousedown',e=>{
+  if(!E)return;const p=edPos(e);if(p.y>EDH-30)return;
+  if(p.x<EDX){E.ph=Math.max(0,edT(p.y));if(E.play){edStop();edPlay()}return}
+  const l=Math.floor((p.x-EDX)/EDL);if(l<0||l>=E.N)return;
+  const hit=edHit(p.x,p.y);
+  if(e.button==2){if(hit){const b=edSnapshot();E.c.notes.splice(E.c.notes.indexOf(hit),1);E.sel.delete(hit);edPush(b)}return}
+  if(e.button!==0)return;
+  if(hit){
+    if(e.shiftKey){E.sel.has(hit)?E.sel.delete(hit):E.sel.add(hit)}else if(!E.sel.has(hit)){E.sel.clear();E.sel.add(hit)}
+    const t=edSnap(edT(p.y));E.drag={type:'move',before:edSnapshot(),l0:l,t0:t,orig:[...E.sel].map(o=>({o,t:o.t,lane:o.lane})),moved:false};
+  }else{E.sel.clear();const t=edSnap(edT(p.y));E.drag={type:'new',lane:l,t0:t,t1:t,before:edSnapshot()}}
+});
+addEventListener('mousemove',e=>{
+  if(!E||$('ed').hidden)return;const p=edPos(e),l=Math.floor((p.x-EDX)/EDL);
+  E.hover=(p.x>=EDX&&l>=0&&l<E.N&&p.y<EDH-30)?{lane:l,t:edSnap(edT(p.y))}:null;
+  const d=E.drag;if(!d)return;const t=edSnap(edT(p.y)),ln=Math.max(0,Math.min(E.N-1,l));
+  if(d.type=='new')d.t1=t;
+  else{const dt=t-d.t0,dl=ln-d.l0;if(dt||dl)d.moved=true;for(const r of d.orig){r.o.t=Math.max(0,Math.round((r.t+dt)*100)/100);r.o.lane=Math.max(0,Math.min(E.N-1,r.lane+dl))}}
+});
+addEventListener('mouseup',()=>{
+  if(!E||!E.drag)return;const d=E.drag;E.drag=null;
+  if(d.type=='new'){
+    const a=Math.min(d.t0,d.t1),b=Math.max(d.t0,d.t1),st=edStep();
+    if(E.c.notes.some(o=>o.lane===d.lane&&Math.abs(o.t-a)<1))return;
+    const o=b-a>st*.5?{t:Math.round(a*100)/100,k:'hold',lane:d.lane,len:Math.round((b-a)*100)/100}:{t:Math.round(a*100)/100,k:'tap',lane:d.lane};
+    E.c.notes.push(o);E.c.notes.sort((x,y)=>x.t-y.t);E.sel.clear();E.sel.add(o);edPush(d.before);
+  }else if(d.moved){E.c.notes.sort((x,y)=>x.t-y.t);edPush(d.before)}
+});
+$('edC').addEventListener('contextmenu',e=>e.preventDefault());
+$('edC').addEventListener('wheel',e=>{
+  if(!E)return;e.preventDefault();
+  if(e.ctrlKey){E.pps=Math.max(60,Math.min(700,E.pps*(e.deltaY<0?1.1:1/1.1)));$('edZ').value=E.pps}
+  else E.sc+=-e.deltaY*1000/E.pps*.9;
+  if(E.sc<-400)E.sc=-400;
+},{passive:false});
+addEventListener('keydown',e=>{
+  if(!E||$('ed').hidden)return;const tag=e.target.tagName;if(tag=='INPUT'||tag=='SELECT')return;
+  if(e.code=='Space'){e.preventDefault();E.play?edStop():edPlay()}
+  else if(e.code=='Delete'||e.code=='Backspace'){if(E.sel.size){e.preventDefault();const b=edSnapshot();E.c.notes=E.c.notes.filter(o=>!E.sel.has(o));E.sel.clear();edPush(b)}}
+  else if((e.ctrlKey||e.metaKey)&&e.code=='KeyZ'){e.preventDefault();e.shiftKey?edRedo():edUndo()}
+  else if((e.ctrlKey||e.metaKey)&&e.code=='KeyY'){e.preventDefault();edRedo()}
+  else if((e.ctrlKey||e.metaKey)&&e.code=='KeyA'){e.preventDefault();E.sel=new Set(E.c.notes)}
+  else if(e.code=='Escape'){closeEd()}
+  else if(e.code=='Home'){E.ph=0;E.sc=-200}
+});
+$('edK').onchange=()=>{const n=+$('edK').value,used=Math.max(0,...E.c.notes.map(o=>o.lane))+1;if(n<used){say('键数不能小于已用的轨道数 '+used+'（先删掉或移走多出来的音符）',1);$('edK').value=E.N;return}E.N=n;sizeEd()};
+$('edB').onchange=()=>{const v=+$('edB').value;if(v>0)E.bpm=v};
+$('edO').onchange=()=>{E.off=+$('edO').value||0};
+$('edD').onchange=()=>{E.div=+$('edD').value};
+$('edZ').oninput=()=>{E.pps=+$('edZ').value};
+$('edU').onclick=edUndo;$('edR').onclick=edRedo;
+async function edAudio(){
+  if(E.audioP)return E.audioP;
+  const e0=E;return E.audioP=(async()=>{
+    if(!edCtx)edCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const ids=new Set();for(const o of e0.c.notes)if(o.snd&&o.snd.s!==undefined)ids.add(o.snd.s);for(const o of e0.c.back||[])if(o.snd&&o.snd.s!==undefined)ids.add(o.snd.s);
+    let n=0;for(const id of ids){const en=e0.it.res.samples[id];if(!en)continue;try{e0.buf[id]=await edCtx.decodeAudioData((await en.ab()).slice(0))}catch(x){}if(++n%20==0)$('edM').textContent='解码音频 '+n+' / '+ids.size}
+    $('edM').textContent=ids.size?'音频已就绪（'+Object.keys(e0.buf).length+' / '+ids.size+'）':'这张谱面没有可试听的音频（如 VOS 使用 MIDI 发声，编辑器里暂不试听）';
+    // 波形包络（20ms 一格，伴奏 + 按键音）
+    let tmax=0;const ev=[];for(const o of e0.c.back||[])if(o.snd&&o.snd.s!==undefined)ev.push([o.t,o.snd.s]);for(const o of e0.c.notes)if(o.snd&&o.snd.s!==undefined)ev.push([o.t,o.snd.s]);
+    for(const [t,id] of ev){const b=e0.buf[id];if(b)tmax=Math.max(tmax,t+b.duration*1000)}
+    const env=new Float32Array(Math.ceil(tmax/20)+2);
+    for(const [t,id] of ev){const b=e0.buf[id];if(!b)continue;const d=b.getChannelData(0),st=Math.max(1,Math.floor(b.sampleRate*.02)),b0=Math.floor(t/20);
+      for(let k=0,bi=0;k<d.length&&b0+bi<env.length;k+=st,bi++){let m=0;for(let j=k;j<Math.min(d.length,k+st);j+=12){const a=d[j]<0?-d[j]:d[j];if(a>m)m=a}env[b0+bi]+=m}}
+    e0.env=env;
+  })();
+}
+async function edPlay(){
+  if(!E)return;await edAudio();if(!E)return;const ctx=edCtx;await ctx.resume();
+  const t0=E.ph,now=ctx.currentTime+.06,src=[];E.play={t0,now,src};$('edP').textContent='⏸ 暂停';
+  const sched=(id,t,g)=>{const b=E.buf[id];if(!b)return;const dt=(t-t0)/1000;if(dt+b.duration<0)return;const s=ctx.createBufferSource();s.buffer=b;const gn=ctx.createGain();gn.gain.value=g;s.connect(gn).connect(ctx.destination);if(dt>=0)s.start(now+dt);else s.start(now,-dt);src.push(s)};
+  for(const o of E.c.back||[])if(o.snd&&o.snd.s!==undefined)sched(o.snd.s,o.t,.7);
+  if($('edS').checked)for(const o of E.c.notes)if(o.snd&&o.snd.s!==undefined)sched(o.snd.s,o.t,.9);
+}
+function edStop(){if(!E||!E.play)return;for(const s of E.play.src)try{s.stop()}catch(x){}E.play=null;$('edP').textContent='▶ 播放'}
+$('edP').onclick=()=>E&&(E.play?edStop():edPlay());
+function closeEd(){edStop();E=null;cancelAnimationFrame(edRaf);$('ed').hidden=true;document.body.style.overflow='';render()}
+$('edX').onclick=closeEd;
+// 试玩：在游戏页打开当前谱面（同源页面之间用 postMessage 传 .rsm）
+$('edG').onclick=async()=>{
+  if(!E)return;const it=E.it;edStop();
+  const w=window.open('../index.html#studio','resonia-game');if(!w){say('浏览器拦截了新窗口，请允许弹出窗口后重试',1);return}
+  let ready=false,pack=null;const send=()=>{if(ready&&pack)w.postMessage({type:'resonia-rsm',blob:pack.blob,name:pack.nm},location.origin)};
+  const onMsg=ev=>{if(ev.origin===location.origin&&ev.data&&ev.data.type=='resonia-ready'){ready=true;send()}};
+  addEventListener('message',onMsg);setTimeout(()=>removeEventListener('message',onMsg),120000);
+  try{const was=it.on;it.on=true;pack=await buildRsm([it]);it.on=was;say('已准备试玩');send()}catch(x){say('试玩失败：'+x.message,1)}
+};
 </script></body></html>

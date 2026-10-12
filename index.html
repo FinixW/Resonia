@@ -564,8 +564,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.26';
+const VERSION='0.9.27';
 const CHANGELOG=[
+  ['0.9.27','2026-10-12','配合 Studio 谱面编辑器：游戏页可接收 Studio 的“在游戏里试玩”（同源窗口传入 .rsm）。'],
   ['0.9.26','2026-10-12','BMS 改用原生轨道：5 键谱面是 5 轨、7 键是 7 轨，不再居中塞进 7 条；1P 的转盘（16 通道）不再当作伴奏，而是放在最左的转盘轨道（带转盘时为 6 / 8 轨，8 轨可配 IIDX 皮肤）。'],
   ['0.9.25','2026-10-12','VOS 曲目补上小节线（按 MIDI 拍号与速度表）；没有小节信息的曲目（如 O2JAM）按首个 BPM 等间隔估算小节线；伴奏音量/按键音量默认值：VOS 为 0.5 / 1.3，其他格式为 1 / 1，手动调整后按类别记住。'],
   ['0.9.24','2026-10-12','“调试”卡片精简：“发声诊断”改名“诊断”，“测试模式”去掉括号说明，轨道数与它们排在同一行。'],
@@ -1213,6 +1214,11 @@ const touchish=()=>{let m=false;try{m=matchMedia('(pointer:coarse), (max-width:7
 {let sv=null;try{sv=localStorage.getItem('resonia-fs')}catch(x){}$('fs').checked=sv===null?touchish():sv==='1'}
 $('fs').onchange=()=>{try{localStorage.setItem('resonia-fs',$('fs').checked?'1':'0')}catch(x){}};
 $('go').onclick=start;
+// 从 Studio 的“在游戏里试玩”打开：同源窗口之间用 postMessage 传 .rsm
+if(window.opener&&location.hash=='#studio'){
+  addEventListener('message',e=>{if(e.origin!==location.origin)return;const d=e.data;if(d&&d.type=='resonia-rsm'&&d.blob)importFiles([new File([d.blob],(d.name||'studio')+'.rsm')])});
+  try{window.opener.postMessage({type:'resonia-ready'},location.origin)}catch(x){}
+}
 $('lanesel').onchange=()=>{laneOv=+$('lanesel').value;if(running)return;applyLaneMap(song);draw(song&&ctx?songMs():0)};
 
 async function start(){
