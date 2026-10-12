@@ -176,6 +176,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 const LANGS=[['zh','简体中文'],['zh-TW','繁體中文'],['en','English'],['ja','日本語'],['ko','한국어']];
 const LK={zh:'zh','zh-TW':'tw',en:'en',ja:'ja',ko:'ko'};
 const I18N={
+ "判定改按 O2Jam 的标准：COOL ±35ms、GOOD ±90ms、BAD ±150ms，超出即 MISS（不再有 PERFECT / GREAT；BAD 仍不断连击；空按不再判 BAD）。判定线统一为“两条线之间的区域”（所有皮肤一致），小节线紧贴音符底边（音符在小节线上方），判定文字和连击数按轨道区域居中。":{"en": "Judging now follows the O2Jam standard: COOL ±35 ms, GOOD ±90 ms, BAD ±150 ms, anything beyond is a MISS (PERFECT / GREAT are gone; BAD still does not break the combo; pressing a lane with no note no longer gives BAD). The judgment line is now the area between two lines on every skin, bar lines sit right on the bottom edge of notes (notes above the bar line), and the judgment text and combo are centered on the lane area.", "ja": "判定をO2Jamの基準に変更：COOL ±35ms、GOOD ±90ms、BAD ±150ms、それを超えるとMISS（PERFECT / GREATは廃止。BADは引き続きコンボを切りません。ノーツのないレーンの空打ちはBADになりません）。判定ラインは全スキンで「2本の線の間の領域」に統一し、小節線はノーツの下端にぴったり接し（ノーツは小節線の上）、判定文字とコンボ数はレーン領域の中央に揃えました。", "ko": "판정을 O2Jam 기준으로 변경: COOL ±35ms, GOOD ±90ms, BAD ±150ms이며 그 밖은 MISS (PERFECT / GREAT 폐지, BAD는 여전히 콤보를 끊지 않으며 노트가 없는 레인을 눌러도 BAD가 되지 않음). 판정선은 모든 스킨에서 “두 선 사이의 영역”으로 통일하고, 마디선은 노트 아래쪽 가장자리에 맞닿으며 (노트가 마디선 위에 위치), 판정 글자와 콤보 수는 레인 영역의 가운데에 정렬됩니다.", "tw": "判定改按 O2Jam 的標準：COOL ±35ms、GOOD ±90ms、BAD ±150ms，超出即 MISS（不再有 PERFECT / GREAT；BAD 仍不斷連擊；空按不再判 BAD）。判定線統一為“兩條線之間的區域”（所有皮膚一致），小節線緊貼音符底邊（音符在小節線上方），判定文字和連擊數按軌道區域居中。"},
  "新增多语言：简体中文 / 繁體中文 / English / 日本語 / 한국어（标题旁的下拉框切换，切换后自动刷新页面；首次打开按浏览器语言选择）。界面、提示信息和更新日志均已翻译。":{"en": "Added multilingual support: 简体中文 / 繁體中文 / English / 日本語 / 한국어 (switch with the dropdown next to the title; the page reloads automatically after switching; the browser language is used on first visit). The interface, messages and changelog are all translated.", "ja": "多言語対応を追加：簡体字中国語 / 繁体字中国語 / English / 日本語 / 한국어（タイトル横のドロップダウンで切替、切替後は自動でページを再読み込み。初回はブラウザの言語に合わせます）。画面、メッセージ、更新履歴をすべて翻訳しました。", "ko": "다국어 지원 추가: 简体中文 / 繁體中文 / English / 日本語 / 한국어 (제목 옆 드롭다운으로 전환하며 전환 후 페이지가 자동으로 새로고침됩니다. 처음 접속 시에는 브라우저 언어를 따릅니다). 화면, 안내 메시지, 업데이트 내역을 모두 번역했습니다.", "tw": "新增多語言：簡體中文 / 繁體中文 / English / 日本語 / 한국어（標題旁的下拉框切換，切換後自動重新整理頁面；首次開啟按瀏覽器語言選擇）。介面、提示資訊和更新日誌均已翻譯。"},
  "更新日志":{"en": "Changelog", "ja": "更新履歴", "ko": "업데이트 내역", "tw": "更新日誌"},
  "未载入歌曲":{"en": "No song loaded", "ja": "曲が読み込まれていません", "ko": "불러온 곡 없음", "tw": "未載入歌曲"},
@@ -818,8 +819,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.31';
+const VERSION='0.9.32';
 const CHANGELOG=[
+  ['0.9.32','2026-10-12','判定改按 O2Jam 的标准：COOL ±35ms、GOOD ±90ms、BAD ±150ms，超出即 MISS（不再有 PERFECT / GREAT；BAD 仍不断连击；空按不再判 BAD）。判定线统一为“两条线之间的区域”（所有皮肤一致），小节线紧贴音符底边（音符在小节线上方），判定文字和连击数按轨道区域居中。'],
   ['0.9.31','2026-10-12','新增多语言：简体中文 / 繁體中文 / English / 日本語 / 한국어（标题旁的下拉框切换，切换后自动刷新页面；首次打开按浏览器语言选择）。界面、提示信息和更新日志均已翻译。'],
   ['0.9.30','2026-10-12','新增“效果”（自选）：上隐、下隐、打乱（Random）、镜像（Mirror）、幻象（Phantom：音符先在原轨道下落，在轨道上 1/4 处飞到另一条没有音符遮挡的轨道，每个音符只变一次）。带转盘的 BMS 谱面，转盘轨道不参与打乱/镜像/幻象。'],
   ['0.9.29','2026-10-12','配合 Studio：支持隐藏窗口里的“编辑器试听”（自动演奏，VOS 的 MIDI 也能听）。'],
@@ -1527,7 +1529,7 @@ function sched(){
   if(midiOut&&!song.samples){const M=song.mout;while(mi<M.length&&M[mi].ms<now+300){const x=M[mi++];midiOut.send(x.b,PT(t0+(x.ms-startOff)/1000))}return}
   while(bi<song.back.length&&song.back[bi].t<now+300){const b=song.back[bi++];voice(b,t0+(b.t-startOff)/1000)}
 }
-const fx=[],FXC={PERFECT:'255,210,77',GREAT:'108,255,176',GOOD:'108,140,255'};
+const fx=[],FXC={COOL:'94,232,255',GOOD:'108,255,176',BAD:'199,139,255'};
 function addFx(l,j){
   const p=[];for(let i=0;i<12;i++)p.push({a:-Math.PI*(.08+.84*Math.random()),v:.12+Math.random()*.2});
   fx.push({l,s:performance.now(),c:FXC[j],p});
@@ -1575,7 +1577,7 @@ const II=()=>S.look=='iidx'&&LANES==8;
 function iiLine(){
   const x=LX[0],w=LX[LANES-1]+LD[LANES-1]-x;
   const g=c2.createLinearGradient(0,JY-50,0,JY-5);g.addColorStop(0,'rgba(0,190,230,0)');g.addColorStop(1,'rgba(0,205,240,.62)');c2.fillStyle=g;c2.fillRect(x,JY-50,w,45);
-  const r=c2.createLinearGradient(0,JY-6,0,JY+6);r.addColorStop(0,'#ff6a4a');r.addColorStop(.5,'#ff2410');r.addColorStop(1,'#a50a05');c2.fillStyle=r;c2.fillRect(x,JY-6,w,12);
+  const r=c2.createLinearGradient(0,JY-9,0,JY+6);r.addColorStop(0,'#ff6a4a');r.addColorStop(.5,'#ff2410');r.addColorStop(1,'#a50a05');c2.fillStyle=r;c2.fillRect(x,JY-9,w,15);
 }
 function steel(x,y,w,h,vert){ // 拉丝金属条：亮边 + 暗边
   const g=vert?c2.createLinearGradient(x,0,x+w,0):c2.createLinearGradient(0,y,0,y+h);
@@ -1626,8 +1628,8 @@ function iiKeys(){
   }
   c2.fillStyle='rgba(255,255,255,.55)';c2.fillText(label(bind[0]),LX[0]+LD[0]/2,y+h+11);
 }
-// 近似的“槽”：起始 22%，PERFECT/GREAT 增长，GOOD 少量，BAD/MISS 下降（仅作显示，不影响游玩）
-function iiGauge(){const c=cnt||{P:0,G:0,O:0,B:0,M:0};return Math.max(2,Math.min(100,22+(c.P+c.G)*.18+c.O*.06-c.B*1.5-c.M*3))}
+// 近似的“槽”：起始 22%，COOL 增长，GOOD 少量，BAD/MISS 下降（仅作显示，不影响游玩）
+function iiGauge(){const c=cnt||{P:0,G:0,O:0,B:0,M:0};return Math.max(2,Math.min(100,22+c.P*.18+c.O*.08-c.B*1.5-c.M*3))}
 const mono='ui-monospace,Menlo,Consolas,monospace';
 function iiLcd(x,y,txt,cells,cw,ch){ // 数码管格：前导 0 暗淡，有效数字亮青色
   const s=String(txt).padStart(cells,'0').slice(-cells),nz=s.search(/[1-9]/),k=nz<0?cells-1:nz;
@@ -1658,18 +1660,20 @@ function iiHud(now){
   rr(rx+5,py+4,rw-10,17,2);c2.fillStyle='#0a0b0e';c2.fill();
   c2.fillStyle='#f4f5f8';c2.font='bold 8px '+mono;c2.textAlign='left';c2.fillText('HI-SPEED',rx+9,py+16);
   c2.fillStyle='#ffa233';c2.font='bold 13px '+mono;c2.textAlign='right';c2.fillText((+$('spd').value).toFixed(2),rx+rw-9,py+17);
-  const c=cnt||{P:0,G:0,O:0,B:0,M:0},tot=c.P+c.G+c.O+c.B+c.M,rate=tot?(c.P+c.G*.7+c.O*.4)/tot*100:0;
+  const c=cnt||{P:0,G:0,O:0,B:0,M:0},tot=c.P+c.G+c.O+c.B+c.M,rate=tot?(c.P+c.O*.5)/tot*100:0;
   c2.fillStyle='#d8dde8';c2.font='bold 9px '+mono;c2.textAlign='left';
   c2.fillText('RATE '+rate.toFixed(1),rx+9,py+34);
   c2.fillStyle='#9aa3b8';c2.font='8px '+mono;c2.fillText('BPM '+(song?Math.round(song.bpm):'-')+'  '+fmtT(Math.min(now,song?Math.max(1,song.total||1):1)),rx+9,py+45);
-  if(ph>=56){c2.fillStyle='#9aa3b8';c2.fillText(c.P+'/'+c.G+'/'+c.O+'/'+c.B+'/'+c.M,rx+9,py+55)}
+  if(ph>=56){c2.fillStyle='#9aa3b8';c2.fillText(c.P+'/'+c.O+'/'+c.B+'/'+c.M,rx+9,py+55)}
 }
 function skLine(){
   if(II()){iiRails();return}
   if(imOK(SI.line)){const ih=Math.min(48,SI.line.naturalHeight*W/SI.line.naturalWidth);c2.drawImage(SI.line,0,JY-ih/2,W,ih);return}
   const gl=S.glow||'150,160,215',g=c2.createLinearGradient(0,JY-16,0,JY+16);
   g.addColorStop(0,'rgba('+gl+',0)');g.addColorStop(.5,'rgba('+gl+',.35)');g.addColorStop(1,'rgba('+gl+',0)');
-  c2.fillStyle=g;c2.fillRect(0,JY-16,W,32);c2.fillStyle=S.line||'rgba(150,160,215,.7)';c2.fillRect(0,JY-1,W,2);
+  c2.fillStyle=g;c2.fillRect(0,JY-16,W,32);
+  // 判定线是两条线之间的区域（所有皮肤一致）：上线 JY-9、下线 JY+6
+  const lc=S.line||'rgba(150,160,215,.7)';c2.fillStyle='rgba('+gl+',.22)';c2.fillRect(0,JY-9,W,15);c2.fillStyle=lc;c2.fillRect(0,JY-9,W,1.5);c2.fillRect(0,JY+5,W,1.5);
 }
 function skTT(x,y,w,h,on){ // IIDX 转盘：圆盘 + 红色刻线，按下时亮起
   const c=S.pal[2],cx=x+w/2,cy=y+h/2,r=Math.min(h/2+2,w/2-4);
@@ -1708,7 +1712,7 @@ function skHud(now){
   c2.fillStyle='#dfe4ff';c2.font='11px system-ui';c2.fillText(fmtT(Math.min(now,t)),x+w/2,y+34);
   if(h>=48){
     if(songInfo){c2.fillStyle='#9aa3d8';let fs=10;c2.font=fs+'px system-ui';while(fs>7&&c2.measureText(songInfo).width>w-20){fs--;c2.font=fs+'px system-ui'}c2.fillText(songInfo,x+w/2,y+56)}
-    const it=[['PERFECT',c.P,'#ffd24d'],['GREAT',c.G,'#6cffb0'],['GOOD',c.O,'#6c8cff'],['BAD',c.B,'#c78bff'],['MISS',c.M,'#ff6b7a']],cw=w/5;
+    const it=[['COOL',c.P,'#5ee8ff'],['GOOD',c.O,'#6cffb0'],['BAD',c.B,'#c78bff'],['MISS',c.M,'#ff6b7a']],cw=w/4;
     it.forEach((q,i)=>{c2.fillStyle=q[2];c2.font='bold 9px system-ui';c2.fillText(q[0],x+cw*i+cw/2,y+h-14);c2.fillStyle='#fff';c2.font='bold 12px system-ui';c2.fillText(String(q[1]),x+cw*i+cw/2,y+h-3)});
   }
 }
@@ -1742,6 +1746,7 @@ function applyEffects(sg){
 }
 // 幻象：每个单点音符最多变轨一次，判定在目标轨道；目标轨道（及飞行经过的轨道）在前后 MW 毫秒内不能有别的音符（长条按整段算）
 const MW=250;
+const FCX=()=>(LX[0]+LX[LANES-1]+LD[LANES-1])/2; // 轨道区域的水平中心（判定文字、连击数都以它居中）
 function maniac(sg,ks){
   const L=Array.from({length:LANES},()=>[]);
   for(const n of sg.notes)L[n.lane].push(n);                       // sg.notes 已按时间排序
@@ -1786,37 +1791,27 @@ function drawFx(){
     for(const p of e.p){const d=p.v*age;c2.fillRect(cx+Math.cos(p.a)*d*1.3-2,cy+Math.sin(p.a)*d+.0005*age*age-2,4,4)}
   }
 }
-const HIT=120,BADWIN=500;
+// 判定窗口（毫秒，按 O2Jam 的标准取中间值）：COOL ±35，GOOD ±90，BAD ±150，超出即 MISS；BAD 命中音符但不加连击也不断连击
+const W_COOL=35,W_GOOD=90,HIT=150;
 function judge(n,ad){
   n.done=true;n.hit=true;
-  let j,w;if(ad<=40){j='PERFECT';w=1000;cnt.P++}else if(ad<=80){j='GREAT';w=700;cnt.G++}else{j='GOOD';w=400;cnt.O++}
-  score+=w;combo++;maxCombo=Math.max(maxCombo,combo);lastJ=j;lastJT=performance.now();addFx(n.lane,j);
+  let j,w;if(ad<=W_COOL){j='COOL';w=1000;cnt.P++}else if(ad<=W_GOOD){j='GOOD';w=500;cnt.O++}else{j='BAD';w=0;cnt.B++}
+  score+=w;if(j!='BAD'){combo++;maxCombo=Math.max(maxCombo,combo)}lastJ=j;lastJT=performance.now();addFx(n.lane,j);
   hitSound(n);
   if(n.hold){n.holding=true;n.rel=null;holdN[n.lane]=n}
 }
 function miss(){cnt.M++;combo=0;lastJ='MISS';lastJT=performance.now()}
-function bad(){cnt.B++;lastJ='BAD';lastJT=performance.now()}
-function badOK(now){ // 第一个音符开始掉落之前、最后一个音符结束之后，按键不判 BAD
-  const a=song.notes[0],z=song.notes[song.notes.length-1];if(!a)return false;
-  if(holdN.some(Boolean))return false; // 长条按住期间，其他轨道没有音符时乱按不判 BAD
-  if(!(now>=a.t-JY/(+$('spd').value*(song.scroll||1))&&now<=z.end))return false;
-  // BAD 只在音符已经贴近判定线时才判：命中区之外再多一个音符高度（约16px）以内；更早之前乱按只发按键音，不判 BAD
-  const near=HIT+16/(+$('spd').value*(song.scroll||1));
-  for(let l=0;l<LANES;l++){const q=lanesQ[l];let i=lp[l];while(i<q.length&&q[i].done)i++;if(i<q.length){const d=q[i].t-now;if(d<=near&&d>=-HIT)return true}}
-  return false;
-}
 function press(l,quiet){
   if(keys[l])return;keys[l]=true;flash[l]=1;
   if(!running||holdN[l])return;
   const now=songMs()+offs(),q=lanesQ[l];
   while(lp[l]<q.length&&q[lp[l]].done)lp[l]++;
   const n=q[lp[l]];
-  if(!n){if(!quiet&&badOK(now))bad();return}             // nothing left in this lane
+  if(!n)return;                                           // nothing left in this lane
   const dt=n.t-now;
   if(dt<=HIT&&dt>=-HIT){judge(n,Math.abs(dt));return}
   if(quiet)return;                           // sweep / thumb-overlap lanes: only hit notes that are in range
   hitSound(n,true);                          // key sound: the next note of this lane sounds on press, hit or not
-  if(dt>HIT&&badOK(now))bad();                        // pressed a lane that has nothing coming up
 }
 function release(l){keys[l]=false}
 let spdT=0;
@@ -1887,11 +1882,11 @@ function frame(){
   const now=songMs(),jn=now+offs();
   for(const n of song.notes){
     if(n.t-jn>200)break;
-    if(!n.done&&jn-n.t>120){n.done=true;if(n.hold)n.dead=true;miss()}
+    if(!n.done&&jn-n.t>HIT){n.done=true;if(n.hold)n.dead=true;miss()}
     if(n.holding){
       const k=keys[n.lane];
       if(k)n.rel=null;else if(n.rel==null)n.rel=jn;
-      if(jn>=n.end){n.holding=false;holdN[n.lane]=null;if(k||n.end-n.rel<=100){const j=k?'PERFECT':'GREAT';score+=300;combo++;maxCombo=Math.max(maxCombo,combo);if(k)cnt.P++;else cnt.G++;lastJ=j;lastJT=performance.now();addFx(n.lane,j)}}
+      if(jn>=n.end){n.holding=false;holdN[n.lane]=null;if(k||n.end-n.rel<=100){const j=k?'COOL':'GOOD';score+=300;combo++;maxCombo=Math.max(maxCombo,combo);if(k)cnt.P++;else cnt.O++;lastJ=j;lastJT=performance.now();addFx(n.lane,j)}}
       else if(n.rel!=null&&jn-n.rel>150&&n.end-n.rel>100){n.holding=false;holdN[n.lane]=null;n.dead=true;miss()}
     }
   }
@@ -2006,7 +2001,7 @@ function draw(now){
     const fi=OPT.fi,fo=OPT.fo;if(fi||fo){c2.save();const y0=fi?JY*.38:0,y1=fo?JY*.62:H;c2.beginPath();c2.rect(0,y0,W,y1-y0);c2.clip()} // 上隐 / 下隐：只露出中间一段
     if(song.bars){
       c2.fillStyle='rgba(255,255,255,.6)';
-      for(const bt of song.bars){const d=bt-jn;if(d>vis)break;if(d<-100)continue;c2.fillRect(0,Math.round(JY-d*pps)-1,W,2)}
+      for(const bt of song.bars){const d=bt-jn;if(d>vis)break;if(d<-100)continue;c2.fillRect(0,Math.round(JY-d*pps)+6,W,3)} // 小节线紧贴音符底边（音符在小节线上方）
     }
     for(const n of song.notes){
       if(n.t-jn>vis)break;
@@ -2045,12 +2040,12 @@ function draw(now){
   if(S.hud=='panel')skHud(now);
   c2.textAlign='left';c2.fillStyle='#e8ebff';c2.font='bold 20px system-ui';if(S.hud!='panel')c2.fillText(String(score).padStart(7,'0'),10,28);
   const tot=cnt?cnt.P+cnt.G+cnt.O+cnt.B+cnt.M:0;
-  if(tot&&S.hud!='panel'){c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText(tt('准确率 {0}%',((cnt.P*1+cnt.G*.7+cnt.O*.4)/tot*100).toFixed(1)),10,48)}
+  if(tot&&S.hud!='panel'){c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText(tt('准确率 {0}%',((cnt.P*1+cnt.O*.5)/tot*100).toFixed(1)),10,48)}
   if($('dbg').checked&&running){c2.textAlign='left';c2.font='12px system-ui';c2.fillStyle='#8b92c4';c2.fillText(tt('FPS {0} · 发声 {1} · 丢音 {2}',fps,voices,drops)+(song&&song.bga&&song.bga.length?' · BGA '+bgaCur.map(e=>e?e.id:'-').join('/'):''),10,66);c2.fillText(dbgLast,10,82)}
   if(performance.now()-spdT<900){c2.textAlign='right';c2.font='bold 16px system-ui';c2.fillStyle='#ffd24d';c2.fillText(tt('速度 {0}',(+$('spd').value).toFixed(2)),W-10,60)}
   if(running&&document.body.classList.contains('playing')){c2.textAlign='center';c2.font='bold 22px system-ui';c2.fillStyle='rgba(255,255,255,.5)';c2.fillText('✕',W-28,32)}
-  if(combo>1){c2.textAlign='center';c2.font='bold 44px system-ui';c2.fillStyle='rgba(255,255,255,.85)';if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.55)';c2.strokeText(combo,W/2,220)}c2.fillText(combo,W/2,220);c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText('COMBO',W/2,240)}
-  if(lastJ&&performance.now()-lastJT<500){c2.textAlign='center';c2.font='bold 22px system-ui';c2.fillStyle=lastJ=='MISS'?'#ff6b7a':lastJ=='BAD'?'#c78bff':lastJ=='PERFECT'?'#ffd24d':lastJ=='GREAT'?'#6cffb0':'#6c8cff';if(II()&&lastJ!='MISS'){const tx=lastJ+(combo>1?' '+combo:''),cx=LX[1]+(LX[LANES-1]+LD[LANES-1]-LX[1])/2,gj=c2.createLinearGradient(0,276,0,306);gj.addColorStop(0,'#ffd0da');gj.addColorStop(.5,'#ff5f86');gj.addColorStop(1,'#d8123c');c2.font='italic 900 30px Impact,system-ui';c2.lineWidth=3;c2.lineJoin='round';c2.strokeStyle='rgba(255,255,255,.9)';c2.strokeText(tx,cx,300);c2.fillStyle=gj;c2.fillText(tx,cx,300)}else{if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.6)';c2.strokeText(lastJ,W/2,300)}c2.fillText(lastJ,W/2,300)}}
+  if(combo>1){c2.textAlign='center';c2.font='bold 44px system-ui';c2.fillStyle='rgba(255,255,255,.85)';if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.55)';c2.strokeText(combo,FCX(),220)}c2.fillText(combo,FCX(),220);c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText('COMBO',FCX(),240)}
+  if(lastJ&&performance.now()-lastJT<500){c2.textAlign='center';c2.font='bold 22px system-ui';c2.fillStyle=lastJ=='MISS'?'#ff6b7a':lastJ=='BAD'?'#c78bff':lastJ=='COOL'?'#5ee8ff':'#6cffb0';if(II()&&lastJ!='MISS'){const tx=lastJ+(combo>1?' '+combo:''),cx=FCX(),gj=c2.createLinearGradient(0,276,0,306);gj.addColorStop(0,'#ffd0da');gj.addColorStop(.5,'#ff5f86');gj.addColorStop(1,'#d8123c');c2.font='italic 900 30px Impact,system-ui';c2.lineWidth=3;c2.lineJoin='round';c2.strokeStyle='rgba(255,255,255,.9)';c2.strokeText(tx,cx,300);c2.fillStyle=gj;c2.fillText(tx,cx,300)}else{if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.6)';c2.strokeText(lastJ,FCX(),300)}c2.fillText(lastJ,FCX(),300)}}
   if(!running&&!ended){
     c2.fillStyle='rgba(8,10,22,.82)';c2.fillRect(0,0,W,H);c2.textAlign='center';
     c2.fillStyle='#fff';c2.font='bold 54px system-ui';c2.fillText('鸣域',W/2,250);
@@ -2060,7 +2055,7 @@ function draw(now){
   if(ended){
     c2.fillStyle='rgba(8,10,22,.88)';c2.fillRect(0,0,W,H);c2.textAlign='center';c2.fillStyle='#fff';c2.font='bold 30px system-ui';c2.fillText(tt('结算'),W/2,200);
     c2.font='18px system-ui';c2.fillText(tt('得分 {0}',score),W/2,250);c2.fillText(tt('最大连击 {0}',maxCombo),W/2,282);
-    c2.fillStyle='#8b92c4';c2.font='15px system-ui';c2.fillText(`P ${cnt.P}   G ${cnt.G}   O ${cnt.O}   B ${cnt.B}   M ${cnt.M}`,W/2,318);
+    c2.fillStyle='#8b92c4';c2.font='15px system-ui';c2.fillText(`COOL ${cnt.P}   GOOD ${cnt.O}   BAD ${cnt.B}   MISS ${cnt.M}`,W/2,318);
     if(document.body.classList.contains('playing'))c2.fillText(tt('点击屏幕返回'),W/2,360);
   }
 }
