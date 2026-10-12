@@ -142,7 +142,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 </section>
 <section class="card" id="cLib" hidden><h3>曲库</h3><div class="row"><span class="lb">曲目</span><select id="lib"></select></div></section>
 <section class="card" id="cKeys"><h3>按键<small class="hint">点击后按新键</small><button id="kreset">恢复默认</button></h3><div id="keys"><span id="kb"></span></div></section>
-<section class="card" id="cOpt"><h3>效果<small class="hint">自选，开始时生效</small></h3><div class="chk"><label><input type="checkbox" id="ofi">上隐</label><label><input type="checkbox" id="ofo">下隐</label><label><input type="checkbox" id="oran">打乱</label><label><input type="checkbox" id="omir">镜像</label><label><input type="checkbox" id="oman" title="音符先在原轨道下落，再快速飞到另一条没有音符遮挡的轨道上">乱窜</label></div></section>
+<section class="card" id="cOpt"><h3>效果<small class="hint">自选，开始时生效</small></h3><div class="chk"><label><input type="checkbox" id="ofi">上隐</label><label><input type="checkbox" id="ofo">下隐</label><label><input type="checkbox" id="oran">打乱</label><label><input type="checkbox" id="omir">镜像</label><label><input type="checkbox" id="oman" title="音符先在原轨道下落，再快速飞到另一条没有音符遮挡的轨道上">幻象</label></div></section>
 <section class="card" id="cSnd"><h3>声音</h3>
   <div class="sl"><span>游戏音量</span><input type="range" id="mv" min="0" max="1.5" step="0.1" value="1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
   <div id="sinkBox" class="row" hidden><span class="lb">声卡输出</span><select id="sink"><option value="">系统默认</option></select><button id="sinkNm" class="fbtn sm" style="border:0;cursor:pointer" title="浏览器要先获得一次麦克风授权才会提供设备名称（只用于读取名称，不会录音）">显示设备名</button></div>
@@ -567,7 +567,7 @@ function drum(e,when,g,vel,C,T,pn,done){
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
 const VERSION='0.9.30';
 const CHANGELOG=[
-  ['0.9.30','2026-10-12','新增“效果”（自选）：上隐、下隐、打乱（Random）、镜像（Mirror）、乱窜（Maniac：音符先在原轨道下落，在轨道上 1/4 处飞到另一条没有音符遮挡的轨道，每个音符只变一次）。带转盘的 BMS 谱面，转盘轨道不参与打乱/镜像/乱窜。'],
+  ['0.9.30','2026-10-12','新增“效果”（自选）：上隐、下隐、打乱（Random）、镜像（Mirror）、幻象（Phantom：音符先在原轨道下落，在轨道上 1/4 处飞到另一条没有音符遮挡的轨道，每个音符只变一次）。带转盘的 BMS 谱面，转盘轨道不参与打乱/镜像/幻象。'],
   ['0.9.29','2026-10-12','配合 Studio：支持隐藏窗口里的“编辑器试听”（自动演奏，VOS 的 MIDI 也能听）。'],
   ['0.9.28','2026-10-12','.rsc 谱面带节奏表（tempo）时，小节线按它画（变速曲目也准）。'],
   ['0.9.27','2026-10-12','配合 Studio 谱面编辑器：游戏页可接收 Studio 的“在游戏里试玩”（同源窗口传入 .rsm）。'],
@@ -1416,7 +1416,7 @@ function applyLaneMap(sg){
   if(sg)for(const n of sg.notes){if(n.l0===undefined)n.l0=n.lane;n.bl=n.lane=N==M?n.l0:Math.round(n.l0*(N-1)/(M-1))}
   setLanes(N);applyEffects(sg);
 }
-// ---- 自选效果：打乱 / 镜像 / 乱窜（上隐、下隐在绘制时处理）----
+// ---- 自选效果：打乱 / 镜像 / 幻象（上隐、下隐在绘制时处理）----
 function applyEffects(sg){
   if(!sg)return;const N=LANES,f0=sg.scratch&&N>1?1:0,ks=[];for(let l=f0;l<N;l++)ks.push(l); // 转盘轨道不参与
   const perm=Array.from({length:N},(_,l)=>l);
@@ -1425,7 +1425,7 @@ function applyEffects(sg){
   for(const n of sg.notes){n.lane=perm[n.bl===undefined?n.lane:n.bl];n.sl=undefined}
   if(OPT.man&&ks.length>1)maniac(sg,ks);
 }
-// 乱窜：每个单点音符最多变轨一次，判定在目标轨道；目标轨道（及飞行经过的轨道）在前后 MW 毫秒内不能有别的音符（长条按整段算）
+// 幻象：每个单点音符最多变轨一次，判定在目标轨道；目标轨道（及飞行经过的轨道）在前后 MW 毫秒内不能有别的音符（长条按整段算）
 const MW=250;
 function maniac(sg,ks){
   const L=Array.from({length:LANES},()=>[]);
@@ -1699,7 +1699,7 @@ function draw(now){
       if(n.done&&!n.hold)continue;
       if(n.done&&n.hold&&!n.holding&&!n.dead)continue; // 打断/漏掉的长条继续滚动（变暗），不再凭空消失
       const y=Math.round((JY-(n.t-jn)*pps)*dpr)/dpr;let lx=LX[n.lane],ld=LD[n.lane];
-      if(n.sl!==undefined){const k=smooth((y/JY-.06)/.19);lx=LX[n.sl]+(LX[n.lane]-LX[n.sl])*k;ld=LD[n.sl]+(LD[n.lane]-LD[n.sl])*k} // 乱窜：在上 1/4 处完成变轨
+      if(n.sl!==undefined){const k=smooth((y/JY-.06)/.19);lx=LX[n.sl]+(LX[n.lane]-LX[n.sl])*k;ld=LD[n.sl]+(LD[n.lane]-LD[n.sl])*k} // 幻象：在上 1/4 处完成变轨
       const x=lx+3,lwn=ld-6;
       c2.globalAlpha=n.done&&!n.holding?.3:1; // dead 长条：整条变暗
       if(n.hold){
