@@ -564,8 +564,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.28';
+const VERSION='0.9.29';
 const CHANGELOG=[
+  ['0.9.29','2026-10-12','配合 Studio：支持隐藏窗口里的“编辑器试听”（自动演奏，VOS 的 MIDI 也能听）。'],
   ['0.9.28','2026-10-12','.rsc 谱面带节奏表（tempo）时，小节线按它画（变速曲目也准）。'],
   ['0.9.27','2026-10-12','配合 Studio 谱面编辑器：游戏页可接收 Studio 的“在游戏里试玩”（同源窗口传入 .rsm）。'],
   ['0.9.26','2026-10-12','BMS 改用原生轨道：5 键谱面是 5 轨、7 键是 7 轨，不再居中塞进 7 条；1P 的转盘（16 通道）不再当作伴奏，而是放在最左的转盘轨道（带转盘时为 6 / 8 轨，8 轨可配 IIDX 皮肤）。'],
@@ -1218,6 +1219,17 @@ const touchish=()=>{let m=false;try{m=matchMedia('(pointer:coarse), (max-width:7
 $('fs').onchange=()=>{try{localStorage.setItem('resonia-fs',$('fs').checked?'1':'0')}catch(x){}};
 $('go').onclick=start;
 // 从 Studio 的“在游戏里试玩”打开：同源窗口之间用 postMessage 传 .rsm
+// Studio 编辑器里的试听（隐藏 iframe）：收谱面、从指定位置自动演奏（用游戏自带的音源，VOS 的 MIDI 也能听）
+if(window.parent!==window&&location.hash=='#preview'){
+  const up=m=>{try{window.parent.postMessage(m,location.origin)}catch(x){}};
+  addEventListener('message',async e=>{
+    if(e.origin!==location.origin)return;const d=e.data;if(!d)return;
+    if(d.type=='resonia-rsm'&&d.blob){const prev=song;await importFiles([new File([d.blob],(d.name||'studio')+'.rsm')]);for(let i=0;i<100&&song===prev;i++)await new Promise(r=>setTimeout(r,50));up({type:'resonia-pv-loaded',ok:song!==prev})}
+    else if(d.type=='resonia-pv-play'&&song){pvAuto=true;$('tm').checked=true;seekMs=d.ms;$('skip').checked=false;await start();pvi=0;while(pvi<song.notes.length&&song.notes[pvi].t<startOff)pvi++;up({type:'resonia-pv-started',startWall:Date.now()+100,ms:d.ms})}
+    else if(d.type=='resonia-pv-stop'){pvAuto=false;running=false;stopAll()}
+  });
+  up({type:'resonia-ready'});
+}
 if(window.opener&&location.hash=='#studio'){
   addEventListener('message',e=>{if(e.origin!==location.origin)return;const d=e.data;if(d&&d.type=='resonia-rsm'&&d.blob)importFiles([new File([d.blob],(d.name||'studio')+'.rsm')])});
   try{window.opener.postMessage({type:'resonia-ready'},location.origin)}catch(x){}
@@ -1247,8 +1259,10 @@ async function start(){
   $('go').textContent='重新开始';
   if(!wasRunning)requestAnimationFrame(frame);
 }
+let pvAuto=false,pvi=0;
 function sched(){
   if(!running)return;const now=songMs();
+  if(pvAuto){while(pvi<song.notes.length&&song.notes[pvi].t<now+300){const n=song.notes[pvi++];if(n.t>=startOff)voice({...n.snd,t:n.t,key:true},t0+(n.t-startOff)/1000)}} // Studio 试听：自动演奏，音符在自己的时间发声
   if(midiOut&&!song.samples){const M=song.mout;while(mi<M.length&&M[mi].ms<now+300){const x=M[mi++];midiOut.send(x.b,PT(t0+(x.ms-startOff)/1000))}return}
   while(bi<song.back.length&&song.back[bi].t<now+300){const b=song.back[bi++];voice(b,t0+(b.t-startOff)/1000)}
 }
