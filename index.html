@@ -561,8 +561,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.22';
+const VERSION='0.9.23';
 const CHANGELOG=[
+  ['0.9.23','2026-10-12','IIDX 1P 皮肤按参考图重做：黑色轨道、金属边框、转盘 + 黑白键（白键音符白色、黑键音符蓝色、转盘音符红色）、青色光晕加红色判定线、转盘中心红白贴纸（按下时旋转）、青色数码风分数、粉红斜体“GREAT 连击数”。'],
   ['0.9.22','2026-10-12','轨道数改为可变：由谱面决定（4/5/6/7/8/9/10 键），每种键数有各自的默认按键并分别保存；轨道几何、判定、触控都按实际轨道数计算。IIDX 1P 皮肤现在是真正的 8 键（转盘 + 7 键）。“调试”里新增“轨道数”，可把现有谱面折算成指定键数来测试。'],
   ['0.9.21','2026-10-12','新增“IIDX 1P”皮肤（转盘轨道在左、加宽并与键区拉开间隔，其余轨道收窄）；轨道几何改为每条轨道可单独设置；去掉从未生效的“触控范围”；“延迟校准”按钮并入“跳过前奏”一行'],
   ['0.9.20','2026-10-11','新增“延迟校准”：节拍器 + 点按，自动测出设备/个人延迟并设置“延迟”；“延迟”范围扩大到 ±400ms，并记住上次的值'],
@@ -1243,7 +1244,7 @@ const SK={
   meadow:{name:'糖果星球',layout:'left',hud:'panel',field:'glass',pal:K3,style:'pill',page:MEADOW+' center/cover fixed #2b1d4f',glow:'255,226,160',line:'rgba(255,255,255,.95)'},
   neon:{name:'霓虹',layout:'center',hud:'panel',field:'glass',pal:[['#eafcff','#7fd9ff'],['#25d9ff','#0a8ab0'],['#ff4fd8','#a01788']],style:'neon',
     page:'radial-gradient(ellipse at 50% 20%,#1b1650 0,transparent 60%),linear-gradient(rgba(37,217,255,.07) 1px,transparent 1px) 0 0/42px 42px,linear-gradient(90deg,rgba(37,217,255,.07) 1px,transparent 1px) 0 0/42px 42px,#05060f',glow:'37,217,255',line:'#25d9ff'},
-  iidx:{name:'IIDX 1P',layout:'center',hud:'panel',field:'glass',pal:[['#f4f6ff','#b9c2f2'],['#5fb4ff','#2a6fd0'],['#ff5a6a','#b3162a']],style:'pill',kind:[2,0,1,0,1,0,1,0],geo:{tt:104,gap:18},tt:true,page:'radial-gradient(ellipse at 50% 0,#2a1630 0,transparent 65%),linear-gradient(#0a0b14,#10101c)',glow:'255,90,106',line:'#ff4d5e'},
+  iidx:{name:'IIDX 1P',layout:'center',hud:'panel',field:'glass',pal:[['#f6f8ff','#c4cae0'],['#4aa0ff','#1f5fc4'],['#ff4a4a','#a80f1a']],style:'pill',look:'iidx',kind:[2,0,1,0,1,0,1,0],geo:{x0:6,w:[84,49.5,42,49.5,42,49.5,42,49.5]},tt:true,page:'radial-gradient(ellipse at 50% 0,#27303c 0,transparent 62%),linear-gradient(#08090c,#0e1015)',glow:'110,210,255',line:'#ff3a2a'},
   custom:{name:'自定义',layout:'center',hud:'classic',pal:K3,style:'pill',field:''}
 };
 let S=SK.classic,SI={};const CI={},CIfile={};
@@ -1271,7 +1272,44 @@ function skHold(x,yt,w,h,l,y0,h0){
   c2.fillStyle=g;c2.globalAlpha*=.9;c2.fillRect(x,yt,w,h);c2.globalAlpha/=.9;
   c2.fillStyle='rgba(0,0,0,.25)';c2.fillRect(x,yt,1,h);c2.fillRect(x+w-1,yt,1,h);
 }
+const II=()=>S.look=='iidx'&&LANES==8;
+// ---- IIDX 1P 外观：金属边框、黑色轨道、青色光晕 + 红色判定线、黑白键、转盘 ----
+function iiLine(){
+  const x=LX[0],w=LX[LANES-1]+LD[LANES-1]-x;
+  const g=c2.createLinearGradient(0,JY-50,0,JY-5);g.addColorStop(0,'rgba(0,190,230,0)');g.addColorStop(1,'rgba(0,205,240,.62)');c2.fillStyle=g;c2.fillRect(x,JY-50,w,45);
+  const r=c2.createLinearGradient(0,JY-6,0,JY+6);r.addColorStop(0,'#ff6a4a');r.addColorStop(.5,'#ff2410');r.addColorStop(1,'#a50a05');c2.fillStyle=r;c2.fillRect(x,JY-6,w,12);
+}
+function iiRails(){
+  const x1=LX[LANES-1]+LD[LANES-1];
+  for(const [a,b] of [[0,LX[0]],[x1,W]]){const g=c2.createLinearGradient(a,0,b,0);g.addColorStop(0,'#9aa0ab');g.addColorStop(.5,'#5d626d');g.addColorStop(1,'#3a3e47');c2.fillStyle=g;c2.fillRect(a,0,b-a,H)}
+  c2.fillStyle='rgba(225,230,240,.85)';c2.fillRect(LX[0]-1,0,1,JY+7);c2.fillRect(x1,0,1,JY+7);
+}
+let iiAng=0;
+function iiKeys(){
+  const y=JY+12,h=44,g0=c2.createLinearGradient(0,JY+7,0,JY+h+22);g0.addColorStop(0,'#3d424d');g0.addColorStop(1,'#15171c');
+  c2.fillStyle=g0;c2.fillRect(0,JY+7,W,h+15);c2.fillStyle='rgba(255,255,255,.18)';c2.fillRect(0,JY+7,W,1);
+  c2.textAlign='center';c2.font='bold 10px system-ui';
+  for(let l=0;l<LANES;l++){
+    const on=keys[l];
+    if(l==0){
+      const cx=LX[0]+LD[0]/2,cy=y+h/2,r=Math.min(h/2+1,LD[0]/2-8);
+      rr(LX[0]+3,y-2,LD[0]-6,h+4,8);c2.fillStyle='#1b1d23';c2.fill();c2.strokeStyle=on?'#ff7a6a':'#4a4f5a';c2.lineWidth=on?2:1;c2.stroke();
+      const rg=c2.createRadialGradient(cx,cy,r*.3,cx,cy,r);rg.addColorStop(0,'#2b2d34');rg.addColorStop(.8,'#17181d');rg.addColorStop(1,on?'#d8dce6':'#7d828d');
+      c2.beginPath();c2.arc(cx,cy,r,0,Math.PI*2);c2.fillStyle=rg;c2.fill();c2.strokeStyle='#0a0a0c';c2.lineWidth=1;c2.stroke();
+      if(on)iiAng=performance.now()/110;
+      c2.save();c2.translate(cx,cy);c2.rotate(iiAng);c2.beginPath();c2.ellipse(0,0,r*.5,r*.32,0,0,Math.PI*2);c2.fillStyle='#f4f4f6';c2.fill();c2.fillStyle='#e0202c';c2.fillRect(-r*.5,-r*.1,r,r*.2);c2.restore();
+      c2.fillStyle='rgba(255,255,255,.6)';c2.fillText(label(bind[0]),cx,y+h+9);
+      continue;
+    }
+    const x=LX[l]+1.5,w=LD[l]-3,white=KIND[l]==0,gr=c2.createLinearGradient(0,y,0,y+h);
+    if(white){gr.addColorStop(0,on?'#f0fcff':'#ffffff');gr.addColorStop(1,on?'#79d4ff':'#a3a8b4')}else{gr.addColorStop(0,on?'#9bb4cc':'#50555f');gr.addColorStop(1,on?'#3f5066':'#14161b')}
+    rr(x,y,w,h,3);c2.fillStyle=gr;c2.fill();c2.strokeStyle='#050506';c2.lineWidth=1.2;c2.stroke();
+    c2.fillStyle=white?'rgba(255,255,255,.7)':'rgba(255,255,255,.18)';c2.fillRect(x+2,y+2,w-4,2);
+    c2.fillStyle=white?'rgba(40,44,56,.75)':'rgba(220,226,240,.7)';c2.fillText(label(bind[l]),LX[l]+LD[l]/2,y+h-6);
+  }
+}
 function skLine(){
+  if(II()){iiRails();return}
   if(imOK(SI.line)){const ih=Math.min(48,SI.line.naturalHeight*W/SI.line.naturalWidth);c2.drawImage(SI.line,0,JY-ih/2,W,ih);return}
   const gl=S.glow||'150,160,215',g=c2.createLinearGradient(0,JY-16,0,JY+16);
   g.addColorStop(0,'rgba('+gl+',0)');g.addColorStop(.5,'rgba('+gl+',.35)');g.addColorStop(1,'rgba('+gl+',0)');
@@ -1285,6 +1323,7 @@ function skTT(x,y,w,h,on){ // IIDX 转盘：圆盘 + 红色刻线，按下时亮
   c2.fillStyle='rgba(255,255,255,.85)';c2.font='bold 11px system-ui';c2.fillText(label(bind[0]),cx,cy+4);c2.font='bold 15px system-ui';
 }
 function skKeys(){
+  if(II()){iiKeys();return}
   c2.font='bold 15px system-ui';c2.textAlign='center';
   for(let l=0;l<LANES;l++){
     const x=LX[l]+3,y=JY+12,w=LD[l]-6,h=38,k=KIND[l],on=keys[l],im=on?SI.key1:SI.key0;
@@ -1302,11 +1341,11 @@ function skKeys(){
 let songInfo='';
 function skHud(now){
   const x=8,y=JY+56,w=W-16,h=H-y-6;if(h<30)return;
-  rr(x,y,w,h,8);c2.fillStyle=S.style=='neon'?'rgba(10,12,34,.92)':'rgba(30,22,60,.88)';c2.fill();c2.strokeStyle=S.style=='neon'?'#25d9ff':'rgba(255,200,140,.6)';c2.lineWidth=1;c2.stroke();
+  const ii=II();rr(x,y,w,h,8);c2.fillStyle=ii?'rgba(12,14,19,.94)':S.style=='neon'?'rgba(10,12,34,.92)':'rgba(30,22,60,.88)';c2.fill();c2.strokeStyle=ii?'#707683':S.style=='neon'?'#25d9ff':'rgba(255,200,140,.6)';c2.lineWidth=ii?2:1;c2.stroke();
   c2.textAlign='left';c2.fillStyle='#ffb347';c2.font='bold 11px system-ui';c2.fillText('SCORE',x+10,y+15);
-  c2.fillStyle='#fff';c2.font='bold 19px system-ui';c2.fillText(String(score).padStart(7,'0'),x+10,y+36);
+  c2.fillStyle=ii?'#38e8ff':'#fff';c2.font=ii?'bold 20px ui-monospace,Menlo,Consolas,monospace':'bold 19px system-ui';c2.fillText(String(score).padStart(7,'0'),x+10,y+36);
   c2.textAlign='right';c2.fillStyle='#ffb347';c2.font='bold 11px system-ui';c2.fillText('MAX COMBO',x+w-10,y+15);
-  c2.fillStyle='#fff';c2.font='bold 19px system-ui';c2.fillText(String(maxCombo),x+w-10,y+36);
+  c2.fillStyle=ii?'#38e8ff':'#fff';c2.font=ii?'bold 20px ui-monospace,Menlo,Consolas,monospace':'bold 19px system-ui';c2.fillText(String(maxCombo),x+w-10,y+36);
   c2.textAlign='center';c2.fillStyle='#ffb347';c2.font='bold 11px system-ui';c2.fillText('BPM '+(song?Math.round(song.bpm):'-'),x+w/2,y+15);
   const c=cnt||{P:0,G:0,O:0,B:0,M:0},t=song?Math.max(1,song.total||1):1;
   c2.fillStyle='#dfe4ff';c2.font='11px system-ui';c2.fillText(fmtT(Math.min(now,t)),x+w/2,y+34);
@@ -1319,6 +1358,7 @@ function skHud(now){
 function setGeo(g){ // 每条轨道的横向位置与宽度；默认等宽，IIDX（8 轨）：第 0 条（转盘）加宽，并与键区拉开间隔，其余变窄
   LX.length=LD.length=LANES;
   if(!g){const w=W/LANES;for(let l=0;l<LANES;l++){LX[l]=l*w;LD[l]=w}return}
+  if(g.w){let x=g.x0||0;for(let l=0;l<LANES;l++){LX[l]=x;LD[l]=g.w[l];x+=g.w[l]}return}
   const n=LANES,kw=(W-g.tt-g.gap)/(n-1);LX[0]=0;LD[0]=g.tt;for(let l=1;l<n;l++){LX[l]=g.tt+g.gap+(l-1)*kw;LD[l]=kw}
 }
 // ---- 轨道数：由歌曲决定（song.lanes，默认 7）；“调试”里可强制折算成别的键数来测试 ----
@@ -1568,13 +1608,15 @@ function draw(now){
   const pr=progress(now);
   const gl=S.glow||'108,140,255';
   if(imOK(SI.field))c2.drawImage(SI.field,0,0,W,H);
+  else if(II()){c2.fillStyle=bgaOn?'rgba(0,0,0,.72)':'#000';c2.fillRect(LX[0],0,LX[LANES-1]+LD[LANES-1]-LX[0],JY+7)}
   else if(S.field=='glass'){c2.fillStyle='rgba(6,8,22,.84)';c2.fillRect(0,0,W,H)}
   for(let l=0;l<LANES;l++){
     if(!imOK(SI.field)&&!bgaOn){if(S.field=='glass'){if(l%2){c2.fillStyle='rgba(255,255,255,.035)';c2.fillRect(LX[l],0,LD[l],H)}}else{c2.fillStyle=l%2?'#10142a':'#0b0e20';c2.fillRect(LX[l],0,LD[l],H)}}
     if(flash[l]>0||keys[l]){const g=c2.createLinearGradient(0,JY-160,0,JY);g.addColorStop(0,'rgba('+gl+',0)');g.addColorStop(1,'rgba('+gl+','+(keys[l]?.45:flash[l]*.3)+')');c2.fillStyle=g;c2.fillRect(LX[l],JY-160,LD[l],160);flash[l]=Math.max(0,flash[l]-.08)}
   }
-  c2.strokeStyle=S.field=='glass'||imOK(SI.field)?'rgba(255,255,255,.1)':'#232a52';c2.lineWidth=1;
+  c2.strokeStyle=II()?'#6b717d':S.field=='glass'||imOK(SI.field)?'rgba(255,255,255,.1)':'#232a52';c2.lineWidth=1;
   for(let l=1;l<LANES;l++){const gx=LX[l]-(LX[l]-LX[l-1]-LD[l-1])/2;c2.beginPath();c2.moveTo(gx,0);c2.lineTo(gx,H);c2.stroke()}
+  if(II())iiLine();
   if(song){
     const pps=+$('spd').value*(song.scroll||1),jn=now+offs(),vis=JY/pps+200;
     if(song.bars){
@@ -1620,7 +1662,7 @@ function draw(now){
   if(performance.now()-spdT<900){c2.textAlign='right';c2.font='bold 16px system-ui';c2.fillStyle='#ffd24d';c2.fillText('速度 '+(+$('spd').value).toFixed(2),W-10,60)}
   if(running&&document.body.classList.contains('playing')){c2.textAlign='center';c2.font='bold 22px system-ui';c2.fillStyle='rgba(255,255,255,.5)';c2.fillText('✕',W-28,32)}
   if(combo>1){c2.textAlign='center';c2.font='bold 44px system-ui';c2.fillStyle='rgba(255,255,255,.85)';if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.55)';c2.strokeText(combo,W/2,220)}c2.fillText(combo,W/2,220);c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText('COMBO',W/2,240)}
-  if(lastJ&&performance.now()-lastJT<500){c2.textAlign='center';c2.font='bold 22px system-ui';c2.fillStyle=lastJ=='MISS'?'#ff6b7a':lastJ=='BAD'?'#c78bff':lastJ=='PERFECT'?'#ffd24d':lastJ=='GREAT'?'#6cffb0':'#6c8cff';if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.6)';c2.strokeText(lastJ,W/2,300)}c2.fillText(lastJ,W/2,300)}
+  if(lastJ&&performance.now()-lastJT<500){c2.textAlign='center';c2.font='bold 22px system-ui';c2.fillStyle=lastJ=='MISS'?'#ff6b7a':lastJ=='BAD'?'#c78bff':lastJ=='PERFECT'?'#ffd24d':lastJ=='GREAT'?'#6cffb0':'#6c8cff';if(II()&&lastJ!='MISS'){const tx=lastJ+(combo>1?' '+combo:''),cx=LX[1]+(LX[LANES-1]+LD[LANES-1]-LX[1])/2,gj=c2.createLinearGradient(0,276,0,306);gj.addColorStop(0,'#ffd0da');gj.addColorStop(.5,'#ff5f86');gj.addColorStop(1,'#d8123c');c2.font='italic 900 30px Impact,system-ui';c2.lineWidth=3;c2.lineJoin='round';c2.strokeStyle='rgba(255,255,255,.9)';c2.strokeText(tx,cx,300);c2.fillStyle=gj;c2.fillText(tx,cx,300)}else{if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.6)';c2.strokeText(lastJ,W/2,300)}c2.fillText(lastJ,W/2,300)}}
   if(!running&&!ended){
     c2.fillStyle='rgba(8,10,22,.82)';c2.fillRect(0,0,W,H);c2.textAlign='center';
     c2.fillStyle='#fff';c2.font='bold 54px system-ui';c2.fillText('鸣域',W/2,250);
