@@ -30,6 +30,8 @@ body.playing canvas{flex:1 1 0;min-height:0;width:min(100%,420px)}
 #snd{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;justify-content:center;font-size:13px;color:var(--mut);max-width:420px}
 #midiBtn,#midiMsg{display:none}
 #snd select{background:var(--panel);color:var(--fg);border:1px solid #2c3366;border-radius:6px;padding:5px;max-width:200px}
+html:not([lang^=zh]) .sl{grid-template-columns:96px 1fr 44px}
+#langSel{background:none;border:1px solid #2c3366;color:var(--mut);font-size:12px;padding:2px 4px;border-radius:999px;vertical-align:middle;margin-left:6px;max-width:92px}
 #vbtn{background:none;border:1px solid #2c3366;color:var(--mut);font-size:12px;font-weight:500;padding:2px 10px;border-radius:999px;vertical-align:middle;margin-left:6px;letter-spacing:0}
 #vlog{font-size:12px;color:var(--mut);max-width:420px;width:100%;text-align:left;margin:0;padding:10px 12px 10px 28px;background:var(--panel);border-radius:10px;line-height:1.6}
 #vlog[hidden]{display:none}
@@ -128,7 +130,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 </head>
 <body>
 <canvas id="bgac" style="position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:-1;display:none"></canvas>
-<h1 style="margin:4px 0 0;font-size:26px;letter-spacing:.08em">鸣域 <span style="color:var(--acc);font-weight:500">Resonia</span><button id="vbtn" title="更新日志"></button></h1>
+<h1 style="margin:4px 0 0;font-size:26px;letter-spacing:.08em">鸣域 <span style="color:var(--acc);font-weight:500">Resonia</span><button id="vbtn" title="更新日志"></button><select id="langSel" title="Language"></select></h1>
 <ul id="vlog" hidden></ul>
 <div id="prog"><div id="pr1"><span id="pt">未载入歌曲</span><span id="pn">0:00 / 0:00</span></div><div id="pb"><i id="pf"></i></div></div>
 <div id="panel">
@@ -169,6 +171,257 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 <small><a href="studio/" target="_blank" style="color:#8ea6ff">谱面工具 Studio</a>（转换 / 导出 .rsm，之后还有谱面编辑）· 默认按键 S D F 空格 J K L，可在上方自定义（手机可直接点按轨道，可滑动扫音符；一指可同时按多条轨道）。按 1/↓ 减速，2/↑ 加速。Esc 结束（手机上开局后会隐藏设置，点右上角 ✕ 退出）。伴奏为内置简易合成音色，音质不代表最终效果。</small>
 <div id="cal" hidden><div class="calbox"><h3>延迟校准</h3><p id="calt">戴上平时玩游戏用的耳机/音箱。听到“嘀”声（或看到圆点闪烁）就按任意键、点击或触摸；先 4 拍预备，再测 16 拍。</p><div id="caldot"></div><div id="calp">准备中…</div><div style="display:flex;justify-content:center;gap:12px"><button id="calgo" class="fbtn sm" style="border:0">开始</button><button id="calx" class="fbtn sm" style="border:0;background:#3a3f66">关闭</button></div></div></div>
 <script>
+// ---------- i18n ----------
+// 文字以简体中文原文为键；其它语言在 I18N 里补充（缺失时回退为简体中文）。{0}{1} 为占位符。
+const LANGS=[['zh','简体中文'],['zh-TW','繁體中文'],['en','English'],['ja','日本語'],['ko','한국어']];
+const LK={zh:'zh','zh-TW':'tw',en:'en',ja:'ja',ko:'ko'};
+const I18N={
+ "新增多语言：简体中文 / 繁體中文 / English / 日本語 / 한국어（标题旁的下拉框切换，切换后自动刷新页面；首次打开按浏览器语言选择）。界面、提示信息和更新日志均已翻译。":{"en": "Added multilingual support: 简体中文 / 繁體中文 / English / 日本語 / 한국어 (switch with the dropdown next to the title; the page reloads automatically after switching; the browser language is used on first visit). The interface, messages and changelog are all translated.", "ja": "多言語対応を追加：簡体字中国語 / 繁体字中国語 / English / 日本語 / 한국어（タイトル横のドロップダウンで切替、切替後は自動でページを再読み込み。初回はブラウザの言語に合わせます）。画面、メッセージ、更新履歴をすべて翻訳しました。", "ko": "다국어 지원 추가: 简体中文 / 繁體中文 / English / 日本語 / 한국어 (제목 옆 드롭다운으로 전환하며 전환 후 페이지가 자동으로 새로고침됩니다. 처음 접속 시에는 브라우저 언어를 따릅니다). 화면, 안내 메시지, 업데이트 내역을 모두 번역했습니다.", "tw": "新增多語言：簡體中文 / 繁體中文 / English / 日本語 / 한국어（標題旁的下拉框切換，切換後自動重新整理頁面；首次開啟按瀏覽器語言選擇）。介面、提示資訊和更新日誌均已翻譯。"},
+ "更新日志":{"en": "Changelog", "ja": "更新履歴", "ko": "업데이트 내역", "tw": "更新日誌"},
+ "未载入歌曲":{"en": "No song loaded", "ja": "曲が読み込まれていません", "ko": "불러온 곡 없음", "tw": "未載入歌曲"},
+ "演奏":{"en": "Play", "ja": "プレイ", "ko": "플레이"},
+ "打开歌曲":{"en": "Open song", "ja": "曲を開く", "ko": "곡 열기", "tw": "開啟歌曲"},
+ "打开整个歌曲文件夹（BMS 等带有音频和 BGA 的歌曲，或一次载入多首）":{"en": "Open a whole song folder (BMS etc. with audio and BGA, or load several songs at once)", "ja": "曲フォルダごと開く（音声やBGAを含むBMSなど、または複数曲を一度に読み込み）", "ko": "곡 폴더 전체 열기 (오디오와 BGA가 있는 BMS 등, 또는 여러 곡을 한 번에 불러오기)", "tw": "開啟整個歌曲資料夾（BMS 等帶有音訊和 BGA 的歌曲，或一次載入多首）"},
+ "打开文件夹":{"en": "Open folder", "ja": "フォルダを開く", "ko": "폴더 열기", "tw": "開啟資料夾"},
+ "未打开歌曲":{"en": "No song opened", "ja": "曲が開かれていません", "ko": "열린 곡 없음", "tw": "未開啟歌曲"},
+ "开始":{"en": "Start", "ja": "スタート", "ko": "시작", "tw": "開始"},
+ "选择":{"en": "Choose", "ja": "選択", "ko": "선택", "tw": "選擇"},
+ "选一次歌曲所在的文件夹，之后选 OJM 就会自动找同名 OJN（仅 Chrome / Edge）":{"en": "Pick the song folder once; afterwards choosing an OJM will automatically find the OJN with the same name (Chrome / Edge only)", "ja": "曲のフォルダを一度選ぶと、以降はOJMを選ぶだけで同名のOJNを自動で探します（Chrome / Edgeのみ）", "ko": "곡이 있는 폴더를 한 번 선택하면 이후 OJM만 골라도 같은 이름의 OJN을 자동으로 찾습니다 (Chrome / Edge 전용)", "tw": "選一次歌曲所在的資料夾，之後選 OJM 就會自動找同名 OJN（僅 Chrome / Edge）"},
+ "在文件夹中自动查找":{"en": "Find automatically in folder", "ja": "フォルダから自動検索", "ko": "폴더에서 자동 찾기", "tw": "在資料夾中自動查詢"},
+ "速度":{"en": "Speed", "ja": "速度", "ko": "속도"},
+ "延迟":{"en": "Offset", "ja": "オフセット", "ko": "오프셋", "tw": "延遲"},
+ "跳过前奏":{"en": "Skip intro", "ja": "イントロをスキップ", "ko": "인트로 건너뛰기", "tw": "跳過前奏"},
+ "开局隐藏设置":{"en": "Hide settings on start", "ja": "開始時に設定を隠す", "ko": "시작 시 설정 숨김", "tw": "開局隱藏設定"},
+ "跟着节拍点按，自动测出你的设备延迟并设置“延迟”":{"en": "Tap along with the beat; your device latency is measured and applied to “Offset”", "ja": "拍に合わせてタップすると端末の遅延を自動で測定し「オフセット」に設定します", "ko": "박자에 맞춰 누르면 기기 지연을 자동으로 측정해 “오프셋”에 설정합니다", "tw": "跟著節拍點按，自動測出你的裝置延遲並設定“延遲”"},
+ "延迟校准":{"en": "Calibrate", "ja": "遅延補正", "ko": "지연 보정", "tw": "延遲校準"},
+ "曲库":{"en": "Library", "ja": "ライブラリ", "ko": "라이브러리", "tw": "曲庫"},
+ "曲目":{"en": "Song", "ja": "曲", "ko": "곡"},
+ "按键":{"en": "Keys", "ja": "キー", "ko": "키", "tw": "按鍵"},
+ "点击后按新键":{"en": "Click, then press a new key", "ja": "クリックして新しいキーを押す", "ko": "클릭 후 새 키 입력", "tw": "點選後按新鍵"},
+ "恢复默认":{"en": "Reset", "ja": "初期化", "ko": "기본값", "tw": "恢復預設"},
+ "效果":{"en": "Modifiers", "ja": "オプション", "ko": "효과"},
+ "自选，开始时生效":{"en": "Optional, applied at start", "ja": "任意・開始時に適用", "ko": "선택 사항, 시작 시 적용", "tw": "自選，開始時生效"},
+ "上隐":{"en": "Fade In", "ja": "上隠し", "ko": "상단 숨김", "tw": "上隱"},
+ "下隐":{"en": "Fade Out", "ja": "下隠し", "ko": "하단 숨김", "tw": "下隱"},
+ "打乱":{"en": "Random", "ja": "ランダム", "ko": "랜덤", "tw": "打亂"},
+ "镜像":{"en": "Mirror", "ja": "ミラー", "ko": "미러", "tw": "映象"},
+ "幻象":{"en": "Phantom", "ja": "ファントム", "ko": "팬텀"},
+ "音符先在原轨道下落，再快速飞到另一条没有音符遮挡的轨道上":{"en": "Notes first fall in their original lane, then quickly fly to another lane that has no notes in the way", "ja": "ノーツは元のレーンを落下してから、ノーツのない別のレーンへ素早く飛び移ります", "ko": "노트가 원래 레인으로 떨어지다가 노트가 없는 다른 레인으로 빠르게 날아갑니다", "tw": "音符先在原軌道下落，再快速飛到另一條沒有音符遮擋的軌道上"},
+ "声音":{"en": "Sound", "ja": "サウンド", "ko": "사운드", "tw": "聲音"},
+ "游戏音量":{"en": "Master volume", "ja": "全体音量", "ko": "전체 볼륨", "tw": "遊戲音量"},
+ "声卡输出":{"en": "Audio output", "ja": "オーディオ出力", "ko": "오디오 출력", "tw": "音效卡輸出"},
+ "系统默认":{"en": "System default", "ja": "システム既定", "ko": "시스템 기본", "tw": "系統預設"},
+ "浏览器要先获得一次麦克风授权才会提供设备名称（只用于读取名称，不会录音）":{"en": "The browser only reveals device names after a one-time microphone permission (used only to read names; nothing is recorded)", "ja": "ブラウザはマイクの許可を一度得るまでデバイス名を提供しません（名前の取得のみで録音はしません）", "ko": "브라우저는 마이크 권한을 한 번 허용해야 장치 이름을 제공합니다 (이름 확인용이며 녹음하지 않습니다)", "tw": "瀏覽器要先獲得一次麥克風授權才會提供裝置名稱（只用於讀取名稱，不會錄音）"},
+ "显示设备名":{"en": "Show device names", "ja": "デバイス名を表示", "ko": "장치 이름 표시", "tw": "顯示裝置名"},
+ "MIDI 输出":{"en": "MIDI output", "ja": "MIDI出力", "ko": "MIDI 출력", "tw": "MIDI 輸出"},
+ "内部合成器":{"en": "Built-in synth", "ja": "内蔵シンセ", "ko": "내장 신시사이저", "tw": "內部合成器"},
+ "外部合成器":{"en": "External synth", "ja": "外部シンセ", "ko": "외부 신시사이저"},
+ "音色库":{"en": "Soundfont", "ja": "音色ライブラリ", "ko": "음색 라이브러리", "tw": "音色庫"},
+ "载入…":{"en": "Load…", "ja": "読み込み…", "ko": "불러오기…", "tw": "載入…"},
+ "增益":{"en": "Gain", "ja": "ゲイン", "ko": "게인"},
+ "启用 MIDI 输出":{"en": "Enable MIDI output", "ja": "MIDI出力を有効化", "ko": "MIDI 출력 켜기", "tw": "啟用 MIDI 輸出"},
+ "伴奏音量":{"en": "Backing volume", "ja": "伴奏音量", "ko": "반주 볼륨"},
+ "按键音量":{"en": "Key volume", "ja": "キー音量", "ko": "키 볼륨", "tw": "按鍵音量"},
+ "皮肤":{"en": "Skin", "ja": "スキン", "ko": "스킨", "tw": "皮膚"},
+ "主题":{"en": "Theme", "ja": "テーマ", "ko": "테마", "tw": "主題"},
+ "经典":{"en": "Classic", "ja": "クラシック", "ko": "클래식", "tw": "經典"},
+ "糖果星球":{"en": "Candy Planet", "ja": "キャンディプラネット", "ko": "캔디 플래닛"},
+ "霓虹":{"en": "Neon", "ja": "ネオン", "ko": "네온"},
+ "自定义…":{"en": "Custom…", "ja": "カスタム…", "ko": "사용자 지정…", "tw": "自定義…"},
+ "自定义":{"en": "Custom", "ja": "カスタム", "ko": "사용자 지정", "tw": "自定義"},
+ "版式":{"en": "Layout", "ja": "レイアウト", "ko": "레이아웃"},
+ "默认":{"en": "Default", "ja": "既定", "ko": "기본", "tw": "預設"},
+ "居中":{"en": "Center", "ja": "中央", "ko": "가운데"},
+ "靠左":{"en": "Left", "ja": "左寄せ", "ko": "왼쪽"},
+ "信息面板":{"en": "Info panel", "ja": "情報パネル", "ko": "정보 패널", "tw": "資訊面板"},
+ "自定义素材（图片只保存在你的浏览器里，不会上传）":{"en": "Custom assets (images are stored only in your browser and never uploaded)", "ja": "カスタム素材（画像はブラウザ内にのみ保存され、アップロードされません）", "ko": "사용자 지정 소재 (이미지는 브라우저에만 저장되며 업로드되지 않습니다)", "tw": "自定義素材（圖片只儲存在你的瀏覽器裡，不會上傳）"},
+ "清除全部素材":{"en": "Clear all assets", "ja": "素材をすべて消去", "ko": "모든 소재 지우기"},
+ "第三方":{"en": "Third-party", "ja": "サードパーティ", "ko": "서드파티"},
+ "格式插件":{"en": "format plugins", "ja": "フォーマットプラグイン", "ko": "포맷 플러그인", "tw": "格式外掛"},
+ "载入插件…":{"en": "Load plugin…", "ja": "プラグインを読み込み…", "ko": "플러그인 불러오기…", "tw": "載入外掛…"},
+ "未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器":{"en": "No plugins loaded. Plugins let the game read more formats (such as OJN/OJM, PAK/PT); files stay only in this browser", "ja": "プラグインは読み込まれていません。プラグインで対応形式（OJN/OJM、PAK/PTなど）を増やせます。ファイルはこのブラウザ内にのみ保存されます", "ko": "불러온 플러그인이 없습니다. 플러그인으로 더 많은 포맷(OJN/OJM, PAK/PT 등)을 읽을 수 있으며, 파일은 이 브라우저에만 저장됩니다", "tw": "未載入外掛。外掛可讓遊戲讀取更多格式（如 OJN/OJM、PAK/PT），檔案只儲存在本機瀏覽器"},
+ "调试":{"en": "Debug", "ja": "デバッグ", "ko": "디버그", "tw": "除錯"},
+ "诊断":{"en": "Diagnostics", "ja": "診断", "ko": "진단", "tw": "診斷"},
+ "测试模式":{"en": "Test mode", "ja": "テストモード", "ko": "테스트 모드", "tw": "測試模式"},
+ "轨道数":{"en": "Lanes", "ja": "レーン数", "ko": "레인 수", "tw": "軌道數"},
+ "按谱面":{"en": "By chart", "ja": "譜面どおり", "ko": "채보대로", "tw": "按譜面"},
+ "谱面工具 Studio":{"en": "Chart tool Studio", "ja": "譜面ツール Studio", "ko": "채보 도구 Studio", "tw": "譜面工具 Studio"},
+ "（转换 / 导出 .rsm，之后还有谱面编辑）· 默认按键 S D F 空格 J K L，可在上方自定义（手机可直接点按轨道，可滑动扫音符；一指可同时按多条轨道）。按 1/↓ 减速，2/↑ 加速。Esc 结束（手机上开局后会隐藏设置，点右上角 ✕ 退出）。伴奏为内置简易合成音色，音质不代表最终效果。":{"en": " (convert / export .rsm, chart editing too) · Default keys S D F Space J K L, customizable above (on phones tap the lanes directly, swipe across notes; one finger can cover several lanes). Press 1/↓ to slow down, 2/↑ to speed up. Esc to quit (on phones the settings hide after start; tap ✕ at the top right to exit). The backing track uses a simple built-in synth, so sound quality is not final.", "ja": "（変換 / .rsm 書き出し、譜面編集も可）· 既定キーは S D F スペース J K L、上で変更できます（スマホはレーンを直接タップ、スワイプでノーツをなぞれます。1本の指で複数レーンも押せます）。1/↓ で減速、2/↑ で加速。Esc で終了（スマホでは開始後に設定が隠れ、右上の ✕ で終了）。伴奏は簡易内蔵音源のため、音質は最終的なものではありません。", "ko": "（변환 / .rsm 내보내기, 채보 편집도 가능）· 기본 키는 S D F 스페이스 J K L이며 위에서 변경할 수 있습니다 (모바일은 레인을 직접 터치, 쓸어서 노트를 칠 수 있고 손가락 하나로 여러 레인도 누를 수 있습니다). 1/↓ 감속, 2/↑ 가속. Esc로 종료 (모바일은 시작 후 설정이 숨겨지며 오른쪽 위 ✕로 종료). 반주는 간이 내장 음색이라 음질이 최종 결과를 대표하지 않습니다.", "tw": "（轉換 / 匯出 .rsm，之後還有譜面編輯）· 預設按鍵 S D F 空格 J K L，可在上方自定義（手機可直接點按軌道，可滑動掃音符；一指可同時按多條軌道）。按 1/↓ 減速，2/↑ 加速。Esc 結束（手機上開局後會隱藏設定，點右上角 ✕ 退出）。伴奏為內建簡易合成音色，音質不代表最終效果。"},
+ "戴上平时玩游戏用的耳机/音箱。听到“嘀”声（或看到圆点闪烁）就按任意键、点击或触摸；先 4 拍预备，再测 16 拍。":{"en": "Use the headphones/speakers you normally play with. When you hear a “beep” (or see the dot flash), press any key, click or touch; 4 warm-up beats, then 16 measured beats.", "ja": "普段ゲームで使うヘッドホン/スピーカーを使ってください。「ピッ」と鳴る（または点が光る）たびに、任意のキー・クリック・タッチで反応します。4拍の準備のあと16拍を測定します。", "ko": "평소 게임할 때 쓰는 헤드폰/스피커를 사용하세요. “삑” 소리가 나거나 점이 깜박일 때 아무 키나 누르거나 클릭/터치하세요. 4박 준비 후 16박을 측정합니다.", "tw": "戴上平時玩遊戲用的耳機/音箱。聽到“嘀”聲（或看到圓點閃爍）就按任意鍵、點選或觸控；先 4 拍預備，再測 16 拍。"},
+ "准备中…":{"en": "Getting ready…", "ja": "準備中…", "ko": "준비 중…", "tw": "準備中…"},
+ "关闭":{"en": "Close", "ja": "閉じる", "ko": "닫기", "tw": "關閉"},
+ "不支持的文件（可能是 VOS1/rank 格式）":{"en": "Unsupported file (possibly the VOS1/rank format)", "ja": "非対応のファイルです（VOS1/rank形式の可能性があります）", "ko": "지원하지 않는 파일입니다 (VOS1/rank 형식일 수 있음)", "tw": "不支援的檔案（可能是 VOS1/rank 格式）"},
+ "音色库 (.sf2)":{"en": "Soundfont (.sf2)", "ja": "音色ライブラリ (.sf2)", "ko": "음색 라이브러리 (.sf2)", "tw": "音色庫 (.sf2)"},
+ "音色库 (.dls · Windows GS)":{"en": "Soundfont (.dls · Windows GS)", "ja": "音色ライブラリ (.dls · Windows GS)", "ko": "음색 라이브러리 (.dls · Windows GS)", "tw": "音色庫 (.dls · Windows GS)"},
+ "不是有效的 SF2 文件":{"en": "Not a valid SF2 file", "ja": "有効なSF2ファイルではありません", "ko": "올바른 SF2 파일이 아닙니다", "tw": "不是有效的 SF2 檔案"},
+ "音色库缺少必要数据":{"en": "The soundfont is missing required data", "ja": "音色ライブラリに必要なデータがありません", "ko": "음색 라이브러리에 필요한 데이터가 없습니다", "tw": "音色庫缺少必要資料"},
+ "不是有效的 DLS 文件":{"en": "Not a valid DLS file", "ja": "有効なDLSファイルではありません", "ko": "올바른 DLS 파일이 아닙니다", "tw": "不是有效的 DLS 檔案"},
+ "DLS 缺少必要数据":{"en": "The DLS file is missing required data", "ja": "DLSに必要なデータがありません", "ko": "DLS에 필요한 데이터가 없습니다", "tw": "DLS 缺少必要資料"},
+ "准备音色 {0}/{1}":{"en": "Preparing instruments {0}/{1}", "ja": "音色を準備中 {0}/{1}", "ko": "음색 준비 중 {0}/{1}", "tw": "準備音色 {0}/{1}"},
+ "预热音色 {0}/{1}":{"en": "Warming up instruments {0}/{1}", "ja": "音色をウォームアップ中 {0}/{1}", "ko": "음색 예열 중 {0}/{1}", "tw": "預熱音色 {0}/{1}"},
+ "本曲采样 {0} 个，解码成功 {1}，失败 {2}，循环点异常 {3}":{"en": "{0} samples in this song, {1} decoded, {2} failed, {3} with bad loop points", "ja": "この曲のサンプル {0} 個、デコード成功 {1}、失敗 {2}、ループ点異常 {3}", "ko": "이 곡의 샘플 {0}개, 디코딩 성공 {1}, 실패 {2}, 루프 지점 이상 {3}", "tw": "本曲取樣 {0} 個，解碼成功 {1}，失敗 {2}，迴圈點異常 {3}"},
+ "有效点按太少（{0} / {1}），请重试：听到声音再按，不要连按。":{"en": "Too few valid taps ({0} / {1}). Please retry: press after you hear the sound, and don’t mash.", "ja": "有効なタップが少なすぎます（{0} / {1}）。もう一度お試しください：音が聞こえてから押し、連打しないでください。", "ko": "유효한 입력이 너무 적습니다 ({0} / {1}). 다시 시도하세요: 소리를 들은 뒤에 누르고 연타하지 마세요.", "tw": "有效點按太少（{0} / {1}），請重試：聽到聲音再按，不要連按。"},
+ "已设置“延迟”为 <b>{0} ms</b>":{"en": "“Offset” set to <b>{0} ms</b>", "ja": "「オフセット」を <b>{0} ms</b> に設定しました", "ko": "“오프셋”을 <b>{0} ms</b>로 설정했습니다", "tw": "已設定“延遲”為 <b>{0} ms</b>"},
+ "{0} 次有效 · 平均 {1} ms · 抖动 ±{2} ms":{"en": "{0} valid taps · mean {1} ms · jitter ±{2} ms", "ja": "有効 {0} 回 · 平均 {1} ms · ばらつき ±{2} ms", "ko": "유효 {0}회 · 평균 {1} ms · 편차 ±{2} ms", "tw": "{0} 次有效 · 平均 {1} ms · 抖動 ±{2} ms"},
+ " · 抖动偏大，建议重测":{"en": " · high jitter, retest recommended", "ja": " · ばらつきが大きいため再測定を推奨", "ko": " · 편차가 커서 재측정을 권장합니다", "tw": " · 抖動偏大，建議重測"},
+ " · 已到上限":{"en": " · limit reached", "ja": " · 上限に到達", "ko": " · 상한 도달"},
+ "重测":{"en": "Retest", "ja": "再測定", "ko": "재측정", "tw": "重測"},
+ "已取消":{"en": "Cancelled", "ja": "キャンセルしました", "ko": "취소됨"},
+ "测量中…":{"en": "Measuring…", "ja": "測定中…", "ko": "측정 중…", "tw": "測量中…"},
+ "预备… {0} / {1}":{"en": "Get ready… {0} / {1}", "ja": "準備… {0} / {1}", "ko": "준비… {0} / {1}", "tw": "預備… {0} / {1}"},
+ "测量 {0} / {1}":{"en": "Measuring {0} / {1}", "ja": "測定 {0} / {1}", "ko": "측정 {0} / {1}", "tw": "測量 {0} / {1}"},
+ "请先退出当前演奏再校准":{"en": "Please exit the current play before calibrating", "ja": "校正する前に現在のプレイを終了してください", "ko": "보정하기 전에 현재 플레이를 종료하세요", "tw": "請先退出當前演奏再校準"},
+ "ch{0} 音色{1}{2} 音高{3}{4}":{"en": "ch{0} program {1}{2} pitch {3}{4}", "ja": "ch{0} 音色{1}{2} 音高{3}{4}", "ko": "ch{0} 음색{1}{2} 음높이{3}{4}"},
+ "(鼓)":{"en": " (drum)", "ja": "(ドラム)", "ko": "(드럼)"},
+ "无法使用 Web MIDI（{0}）。可把页面保存到本地，用 Chrome 或 Edge 打开再试。":{"en": "Web MIDI is unavailable ({0}). Try saving the page locally and opening it in Chrome or Edge.", "ja": "Web MIDIを使用できません（{0}）。ページをローカルに保存し、ChromeまたはEdgeで開いてお試しください。", "ko": "Web MIDI를 사용할 수 없습니다 ({0}). 페이지를 로컬에 저장해 Chrome 또는 Edge로 열어 보세요.", "tw": "無法使用 Web MIDI（{0}）。可把頁面儲存到本地，用 Chrome 或 Edge 開啟再試。"},
+ "内置合成器":{"en": "Built-in synth", "ja": "内蔵シンセ", "ko": "내장 신시사이저", "tw": "內建合成器"},
+ "找到 {0} 个输出设备，请在左侧选择":{"en": "Found {0} output device(s); choose one on the left", "ja": "出力デバイスが {0} 個見つかりました。左で選択してください", "ko": "출력 장치 {0}개를 찾았습니다. 왼쪽에서 선택하세요", "tw": "找到 {0} 個輸出裝置，請在左側選擇"},
+ "没有找到 MIDI 输出设备":{"en": "No MIDI output devices found", "ja": "MIDI出力デバイスが見つかりません", "ko": "MIDI 출력 장치를 찾을 수 없습니다", "tw": "沒有找到 MIDI 輸出裝置"},
+ "尚未载入音色库，暂时使用内部合成器":{"en": "No soundfont loaded yet; using the built-in synth for now", "ja": "音色ライブラリが未読み込みのため、当面は内蔵シンセを使用します", "ko": "음색 라이브러리가 없어 일단 내장 신시사이저를 사용합니다", "tw": "尚未載入音色庫，暫時使用內部合成器"},
+ "读取中…":{"en": "Loading…", "ja": "読み込み中…", "ko": "읽는 중…", "tw": "讀取中…"},
+ "已加载 {0}（{1} 个{2}{3}{4}）":{"en": "Loaded {0} ({1} {2}{3}{4})", "ja": "{0} を読み込みました（{1} 個の{2}{3}{4}）", "ko": "{0} 불러옴 ({1}개 {2}{3}{4})", "tw": "已載入 {0}（{1} 個{2}{3}{4}）"},
+ "音色":{"en": "instruments", "ja": "音色", "ko": "음색"},
+ "预设":{"en": "presets", "ja": "プリセット", "ko": "프리셋", "tw": "預設"},
+ "；文件较大(>64MB)，不会记住，下次需重新选择，也建议改用更小的库":{"en": "; large file (>64MB), will not be remembered — re-select next time, or consider a smaller bank", "ja": "；ファイルが大きい（64MB超）ため記憶されません。次回は選び直しが必要で、より小さいライブラリの使用も推奨します", "ko": "；파일이 커서(>64MB) 기억되지 않으며 다음에 다시 선택해야 합니다. 더 작은 라이브러리 사용을 권장합니다", "tw": "；檔案較大(>64MB)，不會記住，下次需重新選擇，也建議改用更小的庫"},
+ "，已记住，下次自动恢复":{"en": ", remembered and restored automatically next time", "ja": "。記憶済みで、次回自動的に復元されます", "ko": "，기억되어 다음에 자동으로 복원됩니다", "tw": "，已記住，下次自動恢復"},
+ "；压缩格式，开始时会先解码":{"en": "; compressed format, decoded at start", "ja": "；圧縮形式のため、開始時に先にデコードします", "ko": "；압축 형식이라 시작 시 먼저 디코딩합니다", "tw": "；壓縮格式，開始時會先解碼"},
+ "音色库加载失败：{0}":{"en": "Failed to load soundfont: {0}", "ja": "音色ライブラリの読み込みに失敗：{0}", "ko": "음색 라이브러리 불러오기 실패: {0}", "tw": "音色庫載入失敗：{0}"},
+ "已恢复：{0}":{"en": "Restored: {0}", "ja": "復元しました：{0}", "ko": "복원됨: {0}", "tw": "已恢復：{0}"},
+ "不是有效的 ZIP 文件":{"en": "Not a valid ZIP file", "ja": "有効なZIPファイルではありません", "ko": "올바른 ZIP 파일이 아닙니다", "tw": "不是有效的 ZIP 檔案"},
+ "不支持的压缩方式 {0}":{"en": "Unsupported compression method {0}", "ja": "非対応の圧縮方式 {0}", "ko": "지원하지 않는 압축 방식 {0}", "tw": "不支援的壓縮方式 {0}"},
+ "解码音频 {0} / {1}":{"en": "Decoding audio {0} / {1}", "ja": "音声をデコード中 {0} / {1}", "ko": "오디오 디코딩 {0} / {1}", "tw": "解碼音訊 {0} / {1}"},
+ "（缺少 {0} 个、无法解码 {1} 个音频）":{"en": " ({0} missing, {1} undecodable audio files)", "ja": "（音声 {0} 個が不足、{1} 個がデコード不可）", "ko": "(오디오 {0}개 누락, {1}개 디코딩 불가)", "tw": "（缺少 {0} 個、無法解碼 {1} 個音訊）"},
+ " · BGA {0} 个素材":{"en": " · BGA {0} assets", "ja": " · BGA 素材 {0} 個", "ko": " · BGA 소재 {0}개", "tw": " · BGA {0} 個素材"},
+ "（{0} 个无法显示，如 mpg/avi）":{"en": " ({0} cannot be shown, e.g. mpg/avi)", "ja": "（{0} 個は表示不可、mpg/avi など）", "ko": "({0}개 표시 불가, 예: mpg/avi)", "tw": "（{0} 個無法顯示，如 mpg/avi）"},
+ "{0} · 可玩音符 {1} · 伴奏事件 {2}":{"en": "{0} · {1} playable notes · {2} backing events", "ja": "{0} · プレイ可能ノーツ {1} · 伴奏イベント {2}", "ko": "{0} · 플레이 가능 노트 {1} · 반주 이벤트 {2}"},
+ " · MIDI 轨道 {0}":{"en": " · {0} MIDI tracks", "ja": " · MIDIトラック {0}", "ko": " · MIDI 트랙 {0}", "tw": " · MIDI 軌道 {0}"},
+ "浏览器不支持切换（使用系统默认）":{"en": "This browser cannot switch outputs (using system default)", "ja": "このブラウザでは切り替えできません（システム既定を使用）", "ko": "이 브라우저는 전환을 지원하지 않습니다 (시스템 기본 사용)", "tw": "瀏覽器不支援切換（使用系統預設）"},
+ "输出设备 {0}（名称未授权）":{"en": "Output device {0} (name not permitted)", "ja": "出力デバイス {0}（名前は未許可）", "ko": "출력 장치 {0} (이름 권한 없음)", "tw": "輸出裝置 {0}（名稱未授權）"},
+ "未获得授权，无法显示设备名称":{"en": "Permission not granted; device names cannot be shown", "ja": "許可が得られないため、デバイス名を表示できません", "ko": "권한이 없어 장치 이름을 표시할 수 없습니다", "tw": "未獲得授權，無法顯示裝置名稱"},
+ "解析失败：{0}":{"en": "Parse failed: {0}", "ja": "解析に失敗：{0}", "ko": "분석 실패: {0}", "tw": "解析失敗：{0}"},
+ "正在读取谱面…":{"en": "Reading chart…", "ja": "譜面を読み込み中…", "ko": "채보를 읽는 중…", "tw": "正在讀取譜面…"},
+ "谱面读取失败：{0}":{"en": "Failed to read chart: {0}", "ja": "譜面の読み込みに失敗：{0}", "ko": "채보 읽기 실패: {0}", "tw": "譜面讀取失敗：{0}"},
+ "插件缺少 id / exts / open":{"en": "The plugin is missing id / exts / open", "ja": "プラグインに id / exts / open がありません", "ko": "플러그인에 id / exts / open이 없습니다", "tw": "外掛缺少 id / exts / open"},
+ "移除":{"en": "Remove", "ja": "削除", "ko": "제거"},
+ "已载入 {0} 个插件":{"en": "{0} plugin(s) loaded", "ja": "プラグインを {0} 個読み込みました", "ko": "플러그인 {0}개 불러옴", "tw": "已載入 {0} 個外掛"},
+ "脚本无法运行":{"en": "The script could not run", "ja": "スクリプトを実行できません", "ko": "스크립트를 실행할 수 없습니다", "tw": "指令碼無法執行"},
+ "插件是会在本页运行的程序，能读取你选择的文件。只载入你信任的插件文件。\n\n继续载入 {0}？":{"en": "A plugin is a program that runs on this page and can read the files you choose. Only load plugins you trust.\n\nContinue loading {0}?", "ja": "プラグインはこのページ上で動作するプログラムで、選択したファイルを読み取れます。信頼できるプラグインのみ読み込んでください。\n\n{0} を読み込みますか？", "ko": "플러그인은 이 페이지에서 실행되는 프로그램이며 선택한 파일을 읽을 수 있습니다. 신뢰하는 플러그인만 불러오세요.\n\n{0}을(를) 불러올까요?", "tw": "外掛是會在本頁執行的程式，能讀取你選擇的檔案。只載入你信任的外掛檔案。\n\n繼續載入 {0}？"},
+ "、":{"en": ", ", "ja": ", ", "ko": ", "},
+ "；":{"en": "; ", "ja": "；", "ko": "; "},
+ "已载入 {0}":{"en": "Loaded {0}", "ja": "{0} を読み込みました", "ko": "{0} 불러옴", "tw": "已載入 {0}"},
+ "插件 {0} 载入失败：{1}":{"en": "Plugin {0} failed to load: {1}", "ja": "プラグイン {0} の読み込みに失敗：{1}", "ko": "플러그인 {0} 불러오기 실패: {1}", "tw": "外掛 {0} 載入失敗：{1}"},
+ "这个文件夹里没找到 {0}，换一个文件夹或手动选择":{"en": "{0} was not found in this folder; try another folder or pick it manually", "ja": "このフォルダに {0} が見つかりません。別のフォルダを選ぶか手動で選択してください", "ko": "이 폴더에서 {0}을(를) 찾지 못했습니다. 다른 폴더를 고르거나 직접 선택하세요", "tw": "這個資料夾裡沒找到 {0}，換一個資料夾或手動選擇"},
+ "正在读取压缩包…":{"en": "Reading archive…", "ja": "アーカイブを読み込み中…", "ko": "압축 파일을 읽는 중…", "tw": "正在讀取壓縮包…"},
+ "正在查找 {0}…":{"en": "Looking for {0}…", "ja": "{0} を検索中…", "ko": "{0} 찾는 중…", "tw": "正在查詢 {0}…"},
+ "已选 {0}，还需要对应的 {1}":{"en": "{0} selected; the matching {1} is also needed", "ja": "{0} を選択済み。対応する {1} も必要です", "ko": "{0} 선택됨, 대응하는 {1}도 필요합니다", "tw": "已選 {0}，還需要對應的 {1}"},
+ "选择 {0}":{"en": "Choose {0}", "ja": "{0} を選択", "ko": "{0} 선택", "tw": "選擇 {0}"},
+ "插件 {0}：{1}":{"en": "Plugin {0}: {1}", "ja": "プラグイン {0}：{1}", "ko": "플러그인 {0}: {1}", "tw": "外掛 {0}：{1}"},
+ "没有找到可用的谱面（支持 .vos .vow .bms .bme .bml .rsc / .rsm，或包含它们的 .zip / 文件夹）":{"en": "No usable chart found (supports .vos .vow .bms .bme .bml .rsc / .rsm, or a .zip / folder containing them)", "ja": "使用可能な譜面が見つかりません（.vos .vow .bms .bme .bml .rsc / .rsm、またはそれらを含む .zip / フォルダに対応）", "ko": "사용할 수 있는 채보를 찾지 못했습니다 (.vos .vow .bms .bme .bml .rsc / .rsm 또는 이를 포함한 .zip / 폴더 지원)", "tw": "沒有找到可用的譜面（支援 .vos .vow .bms .bme .bml .rsc / .rsm，或包含它們的 .zip / 資料夾）"},
+ "导入失败：{0}":{"en": "Import failed: {0}", "ja": "インポートに失敗：{0}", "ko": "가져오기 실패: {0}", "tw": "匯入失敗：{0}"},
+ "— 选择曲目（共 {0} 首）—":{"en": "— Choose a song ({0} total) —", "ja": "— 曲を選択（全 {0} 曲）—", "ko": "— 곡 선택 (총 {0}곡) —", "tw": "— 選擇曲目（共 {0} 首）—"},
+ "正在下载曲目…":{"en": "Downloading song…", "ja": "曲をダウンロード中…", "ko": "곡을 다운로드하는 중…", "tw": "正在下載曲目…"},
+ "曲目下载失败：{0}":{"en": "Song download failed: {0}", "ja": "曲のダウンロードに失敗：{0}", "ko": "곡 다운로드 실패: {0}", "tw": "曲目下載失敗：{0}"},
+ "重新开始":{"en": "Restart", "ja": "リスタート", "ko": "다시 시작", "tw": "重新開始"},
+ "页面背景":{"en": "Page background", "ja": "ページ背景", "ko": "페이지 배경", "tw": "頁面背景"},
+ "轨道背景":{"en": "Lane background", "ja": "レーン背景", "ko": "레인 배경", "tw": "軌道背景"},
+ "白键音符":{"en": "White-key note", "ja": "白鍵ノーツ", "ko": "흰 건반 노트", "tw": "白鍵音符"},
+ "蓝键音符":{"en": "Blue-key note", "ja": "青鍵ノーツ", "ko": "파랑 건반 노트", "tw": "藍鍵音符"},
+ "黄键音符":{"en": "Yellow-key note", "ja": "黄鍵ノーツ", "ko": "노랑 건반 노트", "tw": "黃鍵音符"},
+ "长条":{"en": "Hold note", "ja": "ロングノーツ", "ko": "롱노트", "tw": "長條"},
+ "判定线":{"en": "Judgment line", "ja": "判定ライン", "ko": "판정선", "tw": "判定線"},
+ "按键（松开）":{"en": "Key (released)", "ja": "キー（離す）", "ko": "키 (뗌)", "tw": "按鍵（鬆開）"},
+ "按键（按下）":{"en": "Key (pressed)", "ja": "キー（押す）", "ko": "키 (누름)", "tw": "按鍵（按下）"},
+ "打击特效":{"en": "Hit effect", "ja": "ヒットエフェクト", "ko": "타격 이펙트", "tw": "打擊特效"},
+ "硬件加速":{"en": "Hardware accelerated", "ja": "ハードウェアアクセラレーション", "ko": "하드웨어 가속", "tw": "硬體加速"},
+ "软件渲染":{"en": "Software rendering", "ja": "ソフトウェアレンダリング", "ko": "소프트웨어 렌더링", "tw": "軟體渲染"},
+ "浏览器正在使用显卡渲染：{0}":{"en": "The browser is rendering on the GPU: {0}", "ja": "ブラウザはGPUでレンダリングしています：{0}", "ko": "브라우저가 GPU로 렌더링하고 있습니다: {0}", "tw": "瀏覽器正在使用顯示卡渲染：{0}"},
+ "浏览器没有使用显卡渲染（{0}），画面可能卡顿、撕裂。请在浏览器设置里开启“使用图形加速功能”后重启浏览器；Chrome 可打开 chrome://gpu 查看状态。":{"en": "The browser is not using the GPU ({0}); the picture may stutter or tear. Enable “Use graphics acceleration” in the browser settings and restart it; in Chrome you can open chrome://gpu to check.", "ja": "ブラウザがGPUを使用していません（{0}）。映像がカクついたりティアリングが起きる可能性があります。ブラウザ設定で「グラフィックアクセラレーションを使用」を有効にして再起動してください。Chromeでは chrome://gpu で状態を確認できます。", "ko": "브라우저가 GPU를 사용하지 않습니다 ({0}). 화면이 끊기거나 찢어질 수 있습니다. 브라우저 설정에서 “그래픽 가속 사용”을 켜고 재시작하세요. Chrome은 chrome://gpu에서 상태를 확인할 수 있습니다.", "tw": "瀏覽器沒有使用顯示卡渲染（{0}），畫面可能卡頓、撕裂。請在瀏覽器設定裡開啟“使用圖形加速功能”後重啟瀏覽器；Chrome 可開啟 chrome://gpu 檢視狀態。"},
+ "WebGL 不可用":{"en": "WebGL unavailable", "ja": "WebGLが利用できません", "ko": "WebGL 사용 불가"},
+ "测试模式默认使用 gm.dls：请在“声音 → 外部合成器”里载入一次 C:\\Windows\\System32\\drivers\\gm.dls，之后会自动记住":{"en": "Test mode uses gm.dls by default: load C:\\Windows\\System32\\drivers\\gm.dls once under “Sound → External synth”; it will be remembered", "ja": "テストモードは既定で gm.dls を使用します：「サウンド → 外部シンセ」で C:\\Windows\\System32\\drivers\\gm.dls を一度読み込めば、以後記憶されます", "ko": "테스트 모드는 기본적으로 gm.dls를 사용합니다. “사운드 → 외부 신시사이저”에서 C:\\Windows\\System32\\drivers\\gm.dls를 한 번 불러오면 이후 기억됩니다", "tw": "測試模式預設使用 gm.dls：請在“聲音 → 外部合成器”裡載入一次 C:\\Windows\\System32\\drivers\\gm.dls，之後會自動記住"},
+ "准确率 {0}%":{"en": "Accuracy {0}%", "ja": "精度 {0}%", "ko": "정확도 {0}%", "tw": "準確率 {0}%"},
+ "FPS {0} · 发声 {1} · 丢音 {2}":{"en": "FPS {0} · voices {1} · dropped {2}", "ja": "FPS {0} · 発音 {1} · 欠落 {2}", "ko": "FPS {0} · 발음 {1} · 누락 {2}", "tw": "FPS {0} · 發聲 {1} · 丟音 {2}"},
+ "速度 {0}":{"en": "Speed {0}", "ja": "速度 {0}", "ko": "속도 {0}"},
+ "点击上方“开始”":{"en": "Click “Start” above", "ja": "上の「スタート」を押してください", "ko": "위의 “시작”을 누르세요", "tw": "點選上方“開始”"},
+ "请先打开一首歌曲":{"en": "Please open a song first", "ja": "まず曲を開いてください", "ko": "먼저 곡을 여세요", "tw": "請先開啟一首歌曲"},
+ "结算":{"en": "Results", "ja": "リザルト", "ko": "결과", "tw": "結算"},
+ "得分 {0}":{"en": "Score {0}", "ja": "スコア {0}", "ko": "점수 {0}"},
+ "最大连击 {0}":{"en": "Max combo {0}", "ja": "最大コンボ {0}", "ko": "최대 콤보 {0}", "tw": "最大連擊 {0}"},
+ "点击屏幕返回":{"en": "Tap the screen to return", "ja": "画面をタップして戻る", "ko": "화면을 눌러 돌아가기", "tw": "點選螢幕返回"},
+ "新增“效果”（自选）：上隐、下隐、打乱（Random）、镜像（Mirror）、幻象（Phantom：音符先在原轨道下落，在轨道上 1/4 处飞到另一条没有音符遮挡的轨道，每个音符只变一次）。带转盘的 BMS 谱面，转盘轨道不参与打乱/镜像/幻象。":{"en": "Added “Modifiers” (optional): Fade In, Fade Out, Random, Mirror, and Phantom (notes first fall in their original lane, then at the upper quarter of the lane fly to another lane with no notes in the way; each note changes lane only once). On BMS charts with a scratch lane, the scratch lane is excluded from Random / Mirror / Phantom.", "ja": "「オプション」（任意）を追加：上隠し、下隠し、ランダム、ミラー、ファントム（ノーツは元のレーンを落下し、レーン上1/4でノーツのない別のレーンへ飛び移ります。各ノーツの移動は1回のみ）。スクラッチ付きBMS譜面では、スクラッチレーンはランダム/ミラー/ファントムの対象外です。", "ko": "“효과”(선택 사항) 추가: 상단 숨김, 하단 숨김, 랜덤, 미러, 팬텀 (노트가 원래 레인으로 떨어지다가 레인 위쪽 1/4 지점에서 노트가 없는 다른 레인으로 날아가며, 각 노트는 한 번만 레인을 바꿉니다). 스크래치가 있는 BMS 채보에서는 스크래치 레인이 랜덤/미러/팬텀에서 제외됩니다.", "tw": "新增“效果”（自選）：上隱、下隱、打亂（Random）、映象（Mirror）、幻象（Phantom：音符先在原軌道下落，在軌道上 1/4 處飛到另一條沒有音符遮擋的軌道，每個音符只變一次）。帶轉盤的 BMS 譜面，轉盤軌道不參與打亂/映象/幻象。"},
+ "配合 Studio：支持隐藏窗口里的“编辑器试听”（自动演奏，VOS 的 MIDI 也能听）。":{"en": "Works with Studio: supports “editor preview” in the hidden window (auto-play; MIDI of VOS can be heard too).", "ja": "Studio連携：非表示ウィンドウでの「エディタ試聴」（自動演奏、VOSのMIDIも聴けます）に対応。", "ko": "Studio 연동: 숨겨진 창에서의 “편집기 미리듣기”(자동 연주, VOS의 MIDI도 들을 수 있음)를 지원합니다.", "tw": "配合 Studio：支援隱藏視窗裡的“編輯器試聽”（自動演奏，VOS 的 MIDI 也能聽）。"},
+ ".rsc 谱面带节奏表（tempo）时，小节线按它画（变速曲目也准）。":{"en": "When an .rsc chart has a tempo map, bar lines follow it (accurate for variable-speed songs too).", "ja": ".rsc譜面にテンポ表がある場合、小節線をそれに従って描画（変速曲も正確）。", "ko": ".rsc 채보에 템포 표가 있으면 마디선이 그에 따라 그려집니다 (변속 곡도 정확).", "tw": ".rsc 譜面帶節奏表（tempo）時，小節線按它畫（變速曲目也準）。"},
+ "配合 Studio 谱面编辑器：游戏页可接收 Studio 的“在游戏里试玩”（同源窗口传入 .rsm）。":{"en": "Works with the Studio chart editor: the game page can receive “Play in game” from Studio (a same-origin window passes in an .rsm).", "ja": "Studio譜面エディタ連携：ゲームページがStudioの「ゲーム内でテストプレイ」を受信可能に（同一オリジンのウィンドウから.rsmを渡します）。", "ko": "Studio 채보 편집기 연동: 게임 페이지가 Studio의 “게임에서 테스트 플레이”를 받을 수 있습니다 (같은 출처의 창이 .rsm을 전달).", "tw": "配合 Studio 譜面編輯器：遊戲頁可接收 Studio 的“在遊戲裡試玩”（同源視窗傳入 .rsm）。"},
+ "BMS 改用原生轨道：5 键谱面是 5 轨、7 键是 7 轨，不再居中塞进 7 条；1P 的转盘（16 通道）不再当作伴奏，而是放在最左的转盘轨道（带转盘时为 6 / 8 轨，8 轨可配 IIDX 皮肤）。":{"en": "BMS now uses native lanes: 5-key charts have 5 lanes and 7-key charts 7, no longer squeezed into 7 centered lanes; the 1P scratch (channel 16) is no longer treated as backing but placed in a leftmost scratch lane (6 / 8 lanes with scratch; 8 lanes can use the IIDX skin).", "ja": "BMSをネイティブレーンに変更：5鍵譜面は5レーン、7鍵は7レーン。中央寄せで7レーンに詰め込むことはなくなりました。1Pのスクラッチ（16ch）は伴奏扱いをやめ、最左のスクラッチレーンに配置（スクラッチ付きは6 / 8レーン、8レーンはIIDXスキンが使用可能）。", "ko": "BMS를 네이티브 레인으로 변경: 5키 채보는 5레인, 7키는 7레인이며 더 이상 가운데 정렬된 7레인에 끼워 넣지 않습니다. 1P 스크래치(16번 채널)는 반주로 취급하지 않고 맨 왼쪽 스크래치 레인에 배치합니다 (스크래치 포함 시 6 / 8레인, 8레인은 IIDX 스킨 사용 가능).", "tw": "BMS 改用原生軌道：5 鍵譜面是 5 軌、7 鍵是 7 軌，不再居中塞進 7 條；1P 的轉盤（16 通道）不再當作伴奏，而是放在最左的轉盤軌道（帶轉盤時為 6 / 8 軌，8 軌可配 IIDX 皮膚）。"},
+ "VOS 曲目补上小节线（按 MIDI 拍号与速度表）；没有小节信息的曲目（如 O2JAM）按首个 BPM 等间隔估算小节线；伴奏音量/按键音量默认值：VOS 为 0.5 / 1.3，其他格式为 1 / 1，手动调整后按类别记住。":{"en": "Bar lines added for VOS songs (from MIDI time signatures and tempo); songs without bar info (e.g. O2JAM) get estimated bar lines at even intervals of the first BPM. Default backing/key volumes: VOS 0.5 / 1.3, other formats 1 / 1; manual changes are remembered per category.", "ja": "VOS曲に小節線を追加（MIDIの拍子記号とテンポ表から）。小節情報のない曲（O2JAMなど）は最初のBPMで等間隔に推定。伴奏/キー音量の既定値：VOSは0.5 / 1.3、その他は1 / 1。手動調整はカテゴリ別に記憶します。", "ko": "VOS 곡에 마디선 추가 (MIDI 박자표와 템포표 기준). 마디 정보가 없는 곡(O2JAM 등)은 첫 BPM 기준 등간격으로 추정합니다. 반주/키 볼륨 기본값: VOS 0.5 / 1.3, 그 외 1 / 1이며 수동 조정은 분류별로 기억됩니다.", "tw": "VOS 曲目補上小節線（按 MIDI 拍號與速度表）；沒有小節資訊的曲目（如 O2JAM）按首個 BPM 等間隔估算小節線；伴奏音量/按鍵音量預設值：VOS 為 0.5 / 1.3，其他格式為 1 / 1，手動調整後按類別記住。"},
+ "“调试”卡片精简：“发声诊断”改名“诊断”，“测试模式”去掉括号说明，轨道数与它们排在同一行。":{"en": "“Debug” card slimmed down: “Sound diagnostics” renamed “Diagnostics”, the parenthetical removed from “Test mode”, and Lanes moved onto the same row.", "ja": "「デバッグ」カードを簡素化：「発音診断」を「診断」に改名、「テストモード」の括弧説明を削除、レーン数を同じ行に配置。", "ko": "“디버그” 카드 정리: “발음 진단”을 “진단”으로 변경, “테스트 모드”의 괄호 설명 삭제, 레인 수를 같은 줄로 이동.", "tw": "“除錯”卡片精簡：“發聲診斷”改名“診斷”，“測試模式”去掉括號說明，軌道數與它們排在同一行。"},
+ "IIDX 1P 皮肤按参考图重做：黑色轨道、金属边框、转盘 + 黑白键（白键音符白色、黑键音符蓝色、转盘音符红色）、青色光晕加红色判定线、转盘中心红白贴纸（按下时旋转）、青色数码风分数、粉红斜体“GREAT 连击数”。":{"en": "IIDX 1P skin redone from a reference image: black lanes, metal frame, turntable + black/white keys (white notes white, black-key notes blue, scratch notes red), cyan glow with a red judgment line, a red-and-white turntable sticker (spins when pressed), cyan digital-style score, and a pink italic “GREAT combo”.", "ja": "IIDX 1Pスキンを参考画像に合わせて作り直し：黒いレーン、金属フレーム、ターンテーブル＋白黒鍵（白鍵ノーツは白、黒鍵ノーツは青、スクラッチノーツは赤）、シアンの光彩と赤い判定ライン、赤白のターンテーブルステッカー（押すと回転）、シアンのデジタル風スコア、ピンクの斜体「GREAT コンボ数」。", "ko": "IIDX 1P 스킨을 참고 이미지에 맞춰 다시 제작: 검은 레인, 금속 프레임, 턴테이블 + 흑백 건반 (흰 건반 노트는 흰색, 검은 건반 노트는 파랑, 턴테이블 노트는 빨강), 시안 빛 번짐과 빨간 판정선, 빨강·흰색 턴테이블 스티커 (누르면 회전), 시안 디지털 느낌의 점수, 분홍 이탤릭 “GREAT 콤보 수”.", "tw": "IIDX 1P 皮膚按參考圖重做：黑色軌道、金屬邊框、轉盤 + 黑白鍵（白鍵音符白色、黑鍵音符藍色、轉盤音符紅色）、青色光暈加紅色判定線、轉盤中心紅白貼紙（按下時旋轉）、青色數碼風分數、粉紅斜體“GREAT 連擊數”。"},
+ "轨道数改为可变：由谱面决定（4/5/6/7/8/9/10 键），每种键数有各自的默认按键并分别保存；轨道几何、判定、触控都按实际轨道数计算。IIDX 1P 皮肤现在是真正的 8 键（转盘 + 7 键）。“调试”里新增“轨道数”，可把现有谱面折算成指定键数来测试。":{"en": "Lane count is now variable: determined by the chart (4/5/6/7/8/9/10 keys), each with its own default keys saved separately; lane geometry, judging and touch all follow the actual lane count. The IIDX 1P skin is now a true 8-key layout (turntable + 7 keys). A new “Lanes” option under “Debug” converts the current chart to a chosen key count for testing.", "ja": "レーン数を可変に：譜面に応じて決定（4/5/6/7/8/9/10鍵）、鍵数ごとに既定キーを持ち別々に保存。レーンの配置・判定・タッチは実際のレーン数で計算します。IIDX 1Pスキンは本物の8鍵（ターンテーブル＋7鍵）に。「デバッグ」に「レーン数」を追加し、現在の譜面を指定の鍵数に換算してテストできます。", "ko": "레인 수를 가변으로 변경: 채보에 따라 결정되며 (4/5/6/7/8/9/10키) 키 수마다 기본 키를 따로 저장합니다. 레인 배치, 판정, 터치는 실제 레인 수로 계산합니다. IIDX 1P 스킨은 진짜 8키(턴테이블 + 7키)가 되었습니다. “디버그”에 “레인 수”를 추가해 현재 채보를 지정한 키 수로 환산해 테스트할 수 있습니다.", "tw": "軌道數改為可變：由譜面決定（4/5/6/7/8/9/10 鍵），每種鍵數有各自的預設按鍵並分別儲存；軌道幾何、判定、觸控都按實際軌道數計算。IIDX 1P 皮膚現在是真正的 8 鍵（轉盤 + 7 鍵）。“除錯”裡新增“軌道數”，可把現有譜面折算成指定鍵數來測試。"},
+ "新增“IIDX 1P”皮肤（转盘轨道在左、加宽并与键区拉开间隔，其余轨道收窄）；轨道几何改为每条轨道可单独设置；去掉从未生效的“触控范围”；“延迟校准”按钮并入“跳过前奏”一行":{"en": "Added the “IIDX 1P” skin (turntable lane on the left, widened and spaced from the keys, other lanes narrowed); lane geometry can now be set per lane; removed the never-effective “Touch range”; the “Calibrate” button moved into the “Skip intro” row.", "ja": "「IIDX 1P」スキンを追加（ターンテーブルレーンを左に配置し、幅を広げて鍵盤と間隔を空け、他のレーンは細く）。レーン配置をレーンごとに設定可能に。効果のなかった「タッチ範囲」を削除。「遅延補正」ボタンを「イントロをスキップ」の行に統合。", "ko": "“IIDX 1P” 스킨 추가 (턴테이블 레인을 왼쪽에 넓게 두고 건반과 간격을 띄우며 나머지 레인은 좁게). 레인 배치를 레인별로 설정할 수 있게 변경. 효과가 없던 “터치 범위” 제거. “지연 보정” 버튼을 “인트로 건너뛰기” 줄로 이동.", "tw": "新增“IIDX 1P”皮膚（轉盤軌道在左、加寬並與鍵區拉開間隔，其餘軌道收窄）；軌道幾何改為每條軌道可單獨設定；去掉從未生效的“觸控範圍”；“延遲校準”按鈕併入“跳過前奏”一行"},
+ "新增“延迟校准”：节拍器 + 点按，自动测出设备/个人延迟并设置“延迟”；“延迟”范围扩大到 ±400ms，并记住上次的值":{"en": "Added “Calibrate”: metronome + tapping measures your device/personal latency and sets “Offset”; the “Offset” range is widened to ±400 ms and the last value is remembered.", "ja": "「遅延補正」を追加：メトロノーム＋タップで端末/個人の遅延を自動測定し「オフセット」に設定。「オフセット」範囲を±400msに拡大し、前回の値を記憶。", "ko": "“지연 보정” 추가: 메트로놈 + 탭으로 기기/개인 지연을 자동 측정해 “오프셋”에 설정합니다. “오프셋” 범위를 ±400ms로 넓히고 마지막 값을 기억합니다.", "tw": "新增“延遲校準”：節拍器 + 點按，自動測出裝置/個人延遲並設定“延遲”；“延遲”範圍擴大到 ±400ms，並記住上次的值"},
+ "插件可提供“场景式 BGA”（bgaScene.render）：每帧由插件把动画画到背景画布上；用于 DJMAX 的 VCQ/VCE 多层动画 BGA":{"en": "Plugins can now provide “scene-style BGA” (bgaScene.render): the plugin draws animation onto the background canvas every frame; used for DJMAX VCQ/VCE multi-layer animated BGA.", "ja": "プラグインが「シーン型BGA」（bgaScene.render）を提供可能に：毎フレーム、プラグインが背景キャンバスにアニメーションを描画します。DJMAXのVCQ/VCE多層アニメBGAに使用。", "ko": "플러그인이 “장면형 BGA”(bgaScene.render)를 제공할 수 있습니다: 매 프레임 플러그인이 배경 캔버스에 애니메이션을 그립니다. DJMAX의 VCQ/VCE 다층 애니메이션 BGA에 사용됩니다.", "tw": "外掛可提供“場景式 BGA”（bgaScene.render）：每幀由外掛把動畫畫到背景畫布上；用於 DJMAX 的 VCQ/VCE 多層動畫 BGA"},
+ "小节线改为固定显示且更亮（去掉开关）；曲目可带“下落缩放”（DJMAX 的 MeasureScale，音符间距按倍数拉开）；歌曲时间扣除声卡输出延迟（outputLatency），画面与听到的声音对齐":{"en": "Bar lines are now always shown and brighter (toggle removed); songs can carry a “fall scale” (DJMAX MeasureScale; note spacing stretched by the factor); song time subtracts the audio output latency (outputLatency) so visuals line up with what you hear.", "ja": "小節線を常時表示で明るく（切替を廃止）。曲に「落下スケール」（DJMAXのMeasureScale、ノーツ間隔を倍率で拡大）を持たせられるように。曲の時間からオーディオ出力遅延（outputLatency）を差し引き、映像と聞こえる音を一致させます。", "ko": "마디선을 항상 표시하고 더 밝게 변경 (끄기 옵션 제거). 곡이 “낙하 배율”(DJMAX의 MeasureScale, 노트 간격을 배율만큼 확대)을 가질 수 있습니다. 곡 시간에서 오디오 출력 지연(outputLatency)을 빼 화면과 들리는 소리를 맞춥니다.", "tw": "小節線改為固定顯示且更亮（去掉開關）；曲目可帶“下落縮放”（DJMAX 的 MeasureScale，音符間距按倍數拉開）；歌曲時間扣除音效卡輸出延遲（outputLatency），畫面與聽到的聲音對齊"},
+ "新增小节线（设置里可开关，默认开）：BMS 与插件曲目显示小节线，便于检查声音与 Note 是否同步；修复“跳过前奏”后 BGM/伴奏被丢掉或从头播放造成的声音与 Note 不同步（采样现在会按已过去的时间从中途接着播放）；插件可提供 bars / 每小节拍数":{"en": "Added bar lines (toggle in settings, on by default): shown for BMS and plugin songs to help check that sound and notes are in sync. Fixed BGM/backing being dropped or restarting from the beginning after “Skip intro”, which desynced sound and notes (samples now resume mid-way based on elapsed time). Plugins can provide bars / beats per bar.", "ja": "小節線を追加（設定で切替可、既定オン）：BMSとプラグイン曲で表示され、音とノーツの同期確認に役立ちます。「イントロをスキップ」後にBGM/伴奏が欠落したり最初から再生されて音とノーツがずれる問題を修正（サンプルは経過時間に応じて途中から再生）。プラグインがbars / 小節ごとの拍数を提供可能に。", "ko": "마디선 추가 (설정에서 켜고 끌 수 있으며 기본 켜짐): BMS와 플러그인 곡에 표시되어 소리와 노트의 싱크를 확인하기 쉽습니다. “인트로 건너뛰기” 후 BGM/반주가 누락되거나 처음부터 재생되어 소리와 노트가 어긋나던 문제를 수정했습니다 (샘플이 경과 시간에 맞춰 중간부터 재생됨). 플러그인이 bars / 마디당 박자 수를 제공할 수 있습니다.", "tw": "新增小節線（設定裡可開關，預設開）：BMS 與外掛曲目顯示小節線，便於檢查聲音與 Note 是否同步；修復“跳過前奏”後 BGM/伴奏被丟掉或從頭播放造成的聲音與 Note 不同步（取樣現在會按已過去的時間從中途接著播放）；外掛可提供 bars / 每小節拍數"},
+ "插件接口：配对支持“一对多”（选 PAK 自动找同名前缀的全部 PT/INI，选 PT 自动找 PAK）、辅助扩展名 hide、插件本地存储 api.kv；补选提示改为通用；提示类消息不再显示“导入失败”":{"en": "Plugin API: pairing now supports “one-to-many” (picking a PAK finds all PT/INI with the same prefix; picking a PT finds the PAK), auxiliary extension “hide”, plugin local storage api.kv; the missing-file prompt is now generic; notice-type messages no longer show “Import failed”.", "ja": "プラグインAPI：ペアリングが「一対多」に対応（PAKを選ぶと同じ接頭辞のPT/INIをすべて自動検索、PTを選ぶとPAKを検索）、補助拡張子 hide、プラグイン用ローカルストレージ api.kv。追加選択の案内を汎用化し、通知系メッセージに「インポート失敗」を表示しないように。", "ko": "플러그인 API: 짝 지정이 “일대다”를 지원 (PAK을 고르면 같은 접두사의 모든 PT/INI를, PT를 고르면 PAK을 자동으로 찾음), 보조 확장자 hide, 플러그인 로컬 저장소 api.kv. 추가 선택 안내를 범용으로 바꾸고 알림형 메시지에는 “가져오기 실패”를 표시하지 않습니다.", "tw": "外掛介面：配對支援“一對多”（選 PAK 自動找同名字首的全部 PT/INI，選 PT 自動找 PAK）、輔助副檔名 hide、外掛本地儲存 api.kv；補選提示改為通用；提示類訊息不再顯示“匯入失敗”"},
+ "修复长条：漏掉/中途松开后不再凭空消失，而是变暗继续滚动到结束；第三方配对（如 .ojm → .ojn）支持“在文件夹中自动查找”：授权一次歌曲文件夹后，只选 .ojm 就会自动找到同名 .ojn（需 Chrome / Edge）":{"en": "Fixed hold notes: after a miss/early release they no longer vanish but dim and keep scrolling to the end. Third-party pairs (e.g. .ojm → .ojn) now support “Find automatically in folder”: grant the song folder once, then picking only the .ojm finds the same-named .ojn (Chrome / Edge).", "ja": "ロングノーツの修正：ミスや途中で離した場合に消えず、暗くなってそのまま最後までスクロールします。サードパーティのペア（.ojm → .ojn など）で「フォルダから自動検索」に対応：曲フォルダを一度許可すれば、.ojmを選ぶだけで同名の.ojnが自動で見つかります（Chrome / Edge）。", "ko": "롱노트 수정: 놓치거나 중간에 떼도 사라지지 않고 어두워진 채 끝까지 스크롤됩니다. 서드파티 짝 지정(.ojm → .ojn 등)에서 “폴더에서 자동 찾기” 지원: 곡 폴더를 한 번 허용하면 .ojm만 선택해도 같은 이름의 .ojn을 자동으로 찾습니다 (Chrome / Edge).", "tw": "修復長條：漏掉/中途鬆開後不再憑空消失，而是變暗繼續滾動到結束；第三方配對（如 .ojm → .ojn）支援“在資料夾中自動查詢”：授權一次歌曲資料夾後，只選 .ojm 就會自動找到同名 .ojn（需 Chrome / Edge）"},
+ "界面更直观：“选择谱面”改为“打开歌曲”，“文件夹”改为“打开文件夹”，去掉 .vos/.vow 的提示文字；插件可声明配对格式（如 .ojn + .ojm），只选其中一个时会提示并一键补选另一个，同一文件夹里的会自动配对，读取列表里显示歌名和难度而不是文件名":{"en": "Clearer UI: “Choose chart” became “Open song”, “Folder” became “Open folder”, and the .vos/.vow hint text was removed. Plugins can declare paired formats (e.g. .ojn + .ojm): picking only one prompts you and lets you add the other in one click, files in the same folder pair up automatically, and the load list shows song title and difficulty instead of file names.", "ja": "UIを分かりやすく：「譜面を選択」を「曲を開く」、「フォルダ」を「フォルダを開く」に変更し、.vos/.vowの案内文を削除。プラグインがペア形式（.ojn + .ojmなど）を宣言可能に：片方だけ選ぶと案内が出てワンクリックでもう片方を追加でき、同じフォルダ内は自動でペアリング。読み込み一覧にはファイル名ではなく曲名と難易度を表示します。", "ko": "더 직관적인 UI: “채보 선택”을 “곡 열기”로, “폴더”를 “폴더 열기”로 변경하고 .vos/.vow 안내 문구를 삭제했습니다. 플러그인이 짝 포맷(.ojn + .ojm 등)을 선언할 수 있으며, 하나만 고르면 안내가 나타나 한 번에 나머지를 추가할 수 있고 같은 폴더의 파일은 자동으로 짝지어집니다. 불러오기 목록에는 파일명 대신 곡명과 난이도가 표시됩니다.", "tw": "介面更直觀：“選擇譜面”改為“開啟歌曲”，“資料夾”改為“開啟資料夾”，去掉 .vos/.vow 的提示文字；外掛可宣告配對格式（如 .ojn + .ojm），只選其中一個時會提示並一鍵補選另一個，同一資料夾裡的會自動配對，讀取列表裡顯示歌名和難度而不是檔名"},
+ "导入失败不再清掉当前歌曲（游玩中导入失败不会再报错）；插件读取失败时显示插件给出的具体原因":{"en": "A failed import no longer clears the current song (no error when an import fails during play); when a plugin fails to read, the plugin’s specific reason is shown.", "ja": "インポートに失敗しても現在の曲を消さないように（プレイ中のインポート失敗でもエラーになりません）。プラグインの読み込み失敗時は、プラグインが示す具体的な原因を表示します。", "ko": "가져오기에 실패해도 현재 곡이 지워지지 않습니다 (플레이 중 가져오기 실패 시에도 오류가 나지 않음). 플러그인 읽기 실패 시 플러그인이 제공한 구체적인 원인을 표시합니다.", "tw": "匯入失敗不再清掉當前歌曲（遊玩中匯入失敗不會再報錯）；外掛讀取失敗時顯示外掛給出的具體原因"},
+ "载入 .rsm / .rsc 时，多谱面下拉框优先显示谱面名（如 [7key Another]）；配套 Studio 0.1.1：谱面表格显示 BMS 的谱面名（#SUBTITLE）并另列文件名":{"en": "When loading .rsm / .rsc, the multi-chart dropdown now shows chart names first (e.g. [7key Another]); companion Studio 0.1.1: the chart table shows the BMS chart name (#SUBTITLE) with the file name in a separate column.", "ja": ".rsm / .rsc読み込み時、複数譜面のドロップダウンで譜面名（例：[7key Another]）を優先表示。対応するStudio 0.1.1：譜面表にBMSの譜面名（#SUBTITLE）を表示し、ファイル名は別列に。", "ko": ".rsm / .rsc를 불러올 때 다중 채보 드롭다운에 채보 이름(예: [7key Another])을 우선 표시합니다. 함께 나온 Studio 0.1.1: 채보 표에 BMS 채보 이름(#SUBTITLE)을 표시하고 파일명은 별도 열로 분리했습니다.", "tw": "載入 .rsm / .rsc 時，多譜面下拉框優先顯示譜面名（如 [7key Another]）；配套 Studio 0.1.1：譜面表格顯示 BMS 的譜面名（#SUBTITLE）並另列檔名"},
+ "谱面转换/导出功能移出游戏页，改为独立的 Studio 工具页（studio/，一次导出文件夹里所有谱面到一个 .rsm）；游戏页新增“第三方”插件接口：可在本机载入格式插件（.js）来读取 OJN/OJM、PAK/PT 等格式，插件只保存在本机浏览器；.rsc 支持谱面级 VOS 信息":{"en": "Chart conversion/export moved out of the game into a standalone Studio tool page (studio/, exports all charts in a folder into one .rsm at once). The game gains a “Third-party” plugin interface: load format plugins (.js) locally to read OJN/OJM, PAK/PT and more; plugins are stored only in this browser. .rsc supports chart-level VOS info.", "ja": "譜面の変換/書き出し機能をゲームページから独立したStudioツールページ（studio/、フォルダ内の全譜面を1つの.rsmにまとめて書き出し）へ移動。ゲームに「サードパーティ」プラグインIF（.js）を追加し、OJN/OJM、PAK/PTなどの形式をローカルで読み込み可能に。プラグインはこのブラウザ内にのみ保存。.rscは譜面単位のVOS情報に対応。", "ko": "채보 변환/내보내기 기능을 게임 페이지에서 독립된 Studio 도구 페이지(studio/, 폴더 안의 모든 채보를 하나의 .rsm으로 한 번에 내보냄)로 옮겼습니다. 게임에는 “서드파티” 플러그인 인터페이스가 추가되어 포맷 플러그인(.js)을 로컬에서 불러와 OJN/OJM, PAK/PT 등을 읽을 수 있으며, 플러그인은 이 브라우저에만 저장됩니다. .rsc는 채보 단위의 VOS 정보를 지원합니다.", "tw": "譜面轉換/匯出功能移出遊戲頁，改為獨立的 Studio 工具頁（studio/，一次匯出資料夾裡所有譜面到一個 .rsm）；遊戲頁新增“第三方”外掛介面：可在本機載入格式外掛（.js）來讀取 OJN/OJM、PAK/PT 等格式，外掛只儲存在本機瀏覽器；.rsc 支援譜面級 VOS 資訊"},
+ "新增 .rsc 谱面（JSON）与 .rsm 曲包（ZIP：manifest.json + 谱面 + 采样/BGA）的读取与导出；VOS、BMS 都可一键转成 .rsm / .rsc 并再次载入；新增“转换”栏；导入时一个包里的多个谱面（含 .rsc 里的多难度）可下拉选择":{"en": "Added reading and exporting of .rsc charts (JSON) and .rsm song packs (ZIP: manifest.json + charts + samples/BGA); VOS and BMS can be converted to .rsm / .rsc in one click and loaded again; new “Convert” section; when a pack contains several charts (including multiple difficulties in an .rsc) you can pick from a dropdown on import.", "ja": ".rsc譜面（JSON）と.rsm曲パック（ZIP：manifest.json＋譜面＋サンプル/BGA）の読み込み・書き出しを追加。VOS、BMSはワンクリックで.rsm / .rscに変換して再読み込み可能。「変換」欄を追加。パック内に複数譜面（.rsc内の複数難易度を含む）がある場合、インポート時にドロップダウンで選択できます。", "ko": ".rsc 채보(JSON)와 .rsm 곡 팩(ZIP: manifest.json + 채보 + 샘플/BGA)의 읽기/내보내기를 추가했습니다. VOS와 BMS는 한 번에 .rsm / .rsc로 변환해 다시 불러올 수 있으며 “변환” 영역이 추가되었습니다. 한 팩에 여러 채보(.rsc 안의 여러 난이도 포함)가 있으면 가져올 때 드롭다운에서 고를 수 있습니다.", "tw": "新增 .rsc 譜面（JSON）與 .rsm 曲包（ZIP：manifest.json + 譜面 + 取樣/BGA）的讀取與匯出；VOS、BMS 都可一鍵轉成 .rsm / .rsc 並再次載入；新增“轉換”欄；匯入時一個包裡的多個譜面（含 .rsc 裡的多難度）可下拉選擇"},
+ "BGA 修正（樱华月）：底层（04）遇到未定义的素材编号（如 #BMP7C）时保持上一帧，不再当成“清空”造成每秒十几次的黑屏闪烁；叠加层（07/0A）遇到未定义编号（如 #BMPFF）仍按清空处理，用来结束白闪":{"en": "BGA fix (Sakura Tsuki): when the base layer (04) hits an undefined asset id (e.g. #BMP7C) it keeps the previous frame instead of clearing, ending the black flicker dozens of times per second; the overlay layers (07/0A) still clear on undefined ids (e.g. #BMPFF), which is used to end white flashes.", "ja": "BGA修正（桜華月）：下層（04）が未定義の素材番号（#BMP7Cなど）に当たった場合は前のフレームを維持し、「消去」扱いにしないように。毎秒十数回の黒いチラつきを解消。オーバーレイ層（07/0A）は未定義番号（#BMPFFなど）で従来どおり消去し、白フラッシュの終了に使います。", "ko": "BGA 수정 (사쿠라 츠키): 기본 레이어(04)가 정의되지 않은 소재 번호(예: #BMP7C)를 만나면 “지우기”가 아니라 이전 프레임을 유지하여 초당 십수 번 깜박이던 검은 화면을 없앴습니다. 오버레이 레이어(07/0A)는 정의되지 않은 번호(예: #BMPFF)에서 계속 지우기로 처리하며 흰 번쩍임을 끝내는 데 쓰입니다.", "tw": "BGA 修正（櫻華月）：底層（04）遇到未定義的素材編號（如 #BMP7C）時保持上一幀，不再當成“清空”造成每秒十幾次的黑屏閃爍；疊加層（07/0A）遇到未定義編號（如 #BMPFF）仍按清空處理，用來結束白閃"},
+ "BGA 修正：第一个 BGA 事件出现后背景不再在“BGA / 主题背景”之间来回切换（某一刻所有层都为空时按黑底显示），修复闪屏；发声诊断里增加当前三层 BGA 编号，便于排查":{"en": "BGA fix: after the first BGA event the background no longer flips between “BGA / theme background” (when all layers are empty at some moment it shows black), fixing the flicker; Diagnostics now shows the three current BGA layer ids for troubleshooting.", "ja": "BGA修正：最初のBGAイベント以降、背景が「BGA / テーマ背景」の間で切り替わらないように（全レイヤーが空の瞬間は黒地表示）、ちらつきを修正。診断に現在の3レイヤーのBGA番号を表示し、調査しやすくしました。", "ko": "BGA 수정: 첫 BGA 이벤트 이후 배경이 “BGA / 테마 배경” 사이를 오가지 않도록 했고 (모든 레이어가 비는 순간에는 검은 배경), 화면 깜박임을 고쳤습니다. 진단에 현재 세 레이어의 BGA 번호를 표시해 원인 파악을 쉽게 했습니다.", "tw": "BGA 修正：第一個 BGA 事件出現後背景不再在“BGA / 主題背景”之間來回切換（某一刻所有層都為空時按黑底顯示），修復閃屏；發聲診斷裡增加當前三層 BGA 編號，便於排查"},
+ "BGA 修正：无法加载的素材（如 mpg/avi 或缺失文件）不再丢弃事件，而是按“清空该层”处理，避免上一张图（如白色闪光）一直停留造成白屏；该时刻没有任何可显示画面时恢复显示主题背景":{"en": "BGA fix: assets that fail to load (e.g. mpg/avi or missing files) no longer discard the event but are treated as “clear that layer”, avoiding a stuck previous image (such as a white flash) causing a white screen; when nothing can be displayed at a moment, the theme background is restored.", "ja": "BGA修正：読み込めない素材（mpg/aviや欠損ファイルなど）はイベントを捨てずに「そのレイヤーを消去」として扱い、前の画像（白フラッシュなど）が残って真っ白になるのを防止。表示できる映像がない瞬間はテーマ背景に戻します。", "ko": "BGA 수정: 불러올 수 없는 소재(mpg/avi 또는 누락된 파일 등)는 이벤트를 버리지 않고 “해당 레이어 지우기”로 처리하여 이전 이미지(흰 번쩍임 등)가 남아 흰 화면이 되는 것을 막았습니다. 표시할 화면이 없는 순간에는 테마 배경으로 돌아갑니다.", "tw": "BGA 修正：無法載入的素材（如 mpg/avi 或缺失檔案）不再丟棄事件，而是按“清空該層”處理，避免上一張圖（如白色閃光）一直停留造成白屏；該時刻沒有任何可顯示畫面時恢復顯示主題背景"},
+ "声卡输出：新增“显示设备名”按钮（浏览器需一次授权才提供设备名称，仅读取名称不录音），并过滤掉系统重复的“默认/通信”条目":{"en": "Audio output: added a “Show device names” button (the browser needs a one-time permission to provide device names; only names are read, nothing is recorded), and duplicate system “default/communications” entries are filtered out.", "ja": "オーディオ出力：「デバイス名を表示」ボタンを追加（ブラウザがデバイス名を提供するには一度の許可が必要で、名前の取得のみ・録音なし）。システムが重複して出す「既定/通信」項目を除外。", "ko": "오디오 출력: “장치 이름 표시” 버튼 추가 (브라우저가 장치 이름을 제공하려면 한 번의 권한이 필요하며 이름만 읽고 녹음하지 않습니다). 시스템이 중복으로 내놓는 “기본/통신” 항목을 걸러냅니다.", "tw": "音效卡輸出：新增“顯示裝置名”按鈕（瀏覽器需一次授權才提供裝置名稱，僅讀取名稱不錄音），並過濾掉系統重複的“預設/通訊”條目"},
+ "修复：切换歌曲后 BGA 状态残留导致 BMS 解析失败（Cannot read properties of undefined (reading 'v')）；声卡输出与 MIDI 输出不再同时显示（hidden 被样式覆盖的问题），声卡输出下拉框默认带“系统默认”":{"en": "Fixed: stale BGA state after switching songs caused BMS parsing to fail (Cannot read properties of undefined (reading 'v')); audio output and MIDI output no longer show at the same time (hidden was overridden by a style), and the audio output dropdown now includes “System default”.", "ja": "修正：曲を切り替えた後にBGA状態が残りBMSの解析が失敗する問題（Cannot read properties of undefined (reading 'v')）。オーディオ出力とMIDI出力が同時に表示されなくなりました（hiddenがスタイルで上書きされていた問題）。オーディオ出力のドロップダウンに「システム既定」を追加。", "ko": "수정: 곡을 바꾼 뒤 BGA 상태가 남아 BMS 분석이 실패하던 문제 (Cannot read properties of undefined (reading 'v')). 오디오 출력과 MIDI 출력이 동시에 표시되지 않습니다 (hidden이 스타일에 덮어씌워지던 문제). 오디오 출력 드롭다운에 “시스템 기본”이 기본으로 들어갑니다.", "tw": "修復：切換歌曲後 BGA 狀態殘留導致 BMS 解析失敗（Cannot read properties of undefined (reading 'v')）；音效卡輸出與 MIDI 輸出不再同時顯示（hidden 被樣式覆蓋的問題），音效卡輸出下拉框預設帶“系統預設”"},
+ "BGA 修正：叠加层（07 / 0A 通道）按 BMS 约定把纯黑当作透明，不再用黑底图片盖住底层动画；叠加层视频改用加亮混合":{"en": "BGA fix: overlay layers (channels 07 / 0A) treat pure black as transparent per BMS convention, so black-backed images no longer cover the base animation; overlay video now uses additive blending.", "ja": "BGA修正：オーバーレイ層（07 / 0Aチャンネル）はBMSの慣例どおり純黒を透明として扱い、黒地の画像が下層アニメを覆わないように。オーバーレイ動画は加算ブレンドを使用。", "ko": "BGA 수정: 오버레이 레이어(07 / 0A 채널)는 BMS 관례에 따라 순수한 검정을 투명으로 취급해 검은 배경 이미지가 아래 애니메이션을 가리지 않습니다. 오버레이 영상은 가산 혼합을 사용합니다.", "tw": "BGA 修正：疊加層（07 / 0A 通道）按 BMS 約定把純黑當作透明，不再用黑底圖片蓋住底層動畫；疊加層影片改用加亮混合"},
+ "BGA 改为显示在整个页面背景（取代主题背景图，随浏览器窗口大小铺满），Delete 键或勾选 BGA 可开关；新增“游戏音量”总音量滑杆（始终显示）；声音设置按歌曲类型切换：MIDI 类歌曲（VOS 等）显示 MIDI 输出与音色库，音频类歌曲（BMS 等）显示声卡输出选择":{"en": "BGA is now shown as the whole page background (replacing the theme background, filling the browser window); toggle with the Delete key or the BGA checkbox. Added a “Master volume” slider (always visible). Sound settings now depend on song type: MIDI songs (VOS etc.) show MIDI output and soundfont, audio songs (BMS etc.) show audio output selection.", "ja": "BGAをページ全体の背景として表示（テーマ背景に代わり、ブラウザのウィンドウいっぱいに表示）。DeleteキーまたはBGAチェックでオン/オフ。「全体音量」スライダーを追加（常時表示）。サウンド設定は曲の種類で切り替え：MIDI系（VOSなど）はMIDI出力と音色ライブラリ、音声系（BMSなど）はオーディオ出力の選択を表示。", "ko": "BGA를 페이지 전체 배경으로 표시합니다 (테마 배경을 대체하며 브라우저 창에 가득 채움). Delete 키나 BGA 체크로 켜고 끕니다. “전체 볼륨” 슬라이더 추가 (항상 표시). 사운드 설정은 곡 종류에 따라 전환됩니다: MIDI 곡(VOS 등)은 MIDI 출력과 음색 라이브러리, 오디오 곡(BMS 등)은 오디오 출력 선택을 표시합니다.", "tw": "BGA 改為顯示在整個頁面背景（取代主題背景圖，隨瀏覽器視窗大小鋪滿），Delete 鍵或勾選 BGA 可開關；新增“遊戲音量”總音量滑桿（始終顯示）；聲音設定按歌曲型別切換：MIDI 類歌曲（VOS 等）顯示 MIDI 輸出與音色庫，音訊類歌曲（BMS 等）顯示音效卡輸出選擇"},
+ "BMS 支持 BGA：读取 #BMP 图片/视频素材与 04/07/0A 通道事件，在轨道背后显示（图片 png/jpg/bmp/gif，视频 mp4/webm；mpg/avi 浏览器无法播放，暂时跳过）；皮肤栏新增 BGA 开关":{"en": "BMS now supports BGA: reads #BMP image/video assets and channel 04/07/0A events and shows them behind the lanes (png/jpg/bmp/gif images, mp4/webm video; browsers cannot play mpg/avi so these are skipped for now); a BGA toggle was added to the skin section.", "ja": "BMSがBGAに対応：#BMPの画像/動画素材と04/07/0Aチャンネルのイベントを読み込み、レーンの背後に表示（画像はpng/jpg/bmp/gif、動画はmp4/webm。mpg/aviはブラウザで再生できないため当面スキップ）。スキン欄にBGAの切替を追加。", "ko": "BMS가 BGA를 지원합니다: #BMP 이미지/영상 소재와 04/07/0A 채널 이벤트를 읽어 레인 뒤에 표시합니다 (이미지는 png/jpg/bmp/gif, 영상은 mp4/webm이며 mpg/avi는 브라우저에서 재생할 수 없어 일단 건너뜁니다). 스킨 영역에 BGA 켜기/끄기가 추가되었습니다.", "tw": "BMS 支援 BGA：讀取 #BMP 圖片/影片素材與 04/07/0A 通道事件，在軌道背後顯示（圖片 png/jpg/bmp/gif，影片 mp4/webm；mpg/avi 瀏覽器無法播放，暫時跳過）；皮膚欄新增 BGA 開關"},
+ "新歌曲体系第一步：引擎支持采样音频（音频文件）播放与 BGM 轨；新增 BMS / BME / BML 导入（BPM 变速、STOP、小节缩放、长条 LN / LNOBJ、#RANDOM）；支持多文件、文件夹、ZIP 压缩包导入，一个包含多张谱面时可下拉选择；VOS 仍然兼容":{"en": "First step of the new song system: the engine supports sampled audio (audio file) playback and a BGM track; added BMS / BME / BML import (BPM changes, STOP, measure scaling, long notes LN / LNOBJ, #RANDOM); multiple files, folders and ZIP archives can be imported, with a dropdown when a pack holds several charts; VOS remains compatible.", "ja": "新曲システムの第一歩：エンジンがサンプル音声（音声ファイル）の再生とBGMトラックに対応。BMS / BME / BMLのインポートを追加（BPM変化、STOP、小節倍率、ロングノーツ LN / LNOBJ、#RANDOM）。複数ファイル、フォルダ、ZIPアーカイブのインポートに対応し、1つのパックに複数譜面がある場合はドロップダウンで選択。VOSは引き続き互換。", "ko": "새 곡 체계의 첫걸음: 엔진이 샘플 오디오(오디오 파일) 재생과 BGM 트랙을 지원합니다. BMS / BME / BML 가져오기 추가 (BPM 변속, STOP, 마디 배율, 롱노트 LN / LNOBJ, #RANDOM). 여러 파일, 폴더, ZIP 압축 파일 가져오기를 지원하며 한 팩에 채보가 여러 개면 드롭다운에서 고릅니다. VOS는 계속 호환됩니다.", "tw": "新歌曲體系第一步：引擎支援取樣音訊（音訊檔案）播放與 BGM 軌；新增 BMS / BME / BML 匯入（BPM 變速、STOP、小節縮放、長條 LN / LNOBJ、#RANDOM）；支援多檔案、資料夾、ZIP 壓縮包匯入，一個包含多張譜面時可下拉選擇；VOS 仍然相容"},
+ "进入 0.9 测试阶段（版本号 0.9.0 ～ 0.9.99，用于联网版本和更多歌曲数据的测试）；确认开启浏览器硬件加速后 240 帧满帧流畅":{"en": "Entering the 0.9 testing phase (versions 0.9.0 – 0.9.99, for testing the online version and more song data); with browser hardware acceleration on, 240 fps runs smoothly.", "ja": "0.9テスト段階に突入（バージョン0.9.0～0.9.99、オンライン版とより多くの曲データのテスト用）。ブラウザのハードウェアアクセラレーションを有効にすると240fpsで滑らかに動作することを確認。", "ko": "0.9 테스트 단계에 진입 (버전 0.9.0 ~ 0.9.99, 온라인 버전과 더 많은 곡 데이터 테스트용). 브라우저 하드웨어 가속을 켜면 240프레임이 부드럽게 동작함을 확인했습니다.", "tw": "進入 0.9 測試階段（版本號 0.9.0 ～ 0.9.99，用於聯網版本和更多歌曲資料的測試）；確認開啟瀏覽器硬體加速後 240 幀滿幀流暢"},
+ "“调试”标题右侧显示渲染方式（硬件加速 / 软件渲染）；检测到软件渲染时显示橙色提示，鼠标悬停可看到原因和开启硬件加速的办法":{"en": "The renderer type (hardware accelerated / software rendering) is shown to the right of the “Debug” heading; when software rendering is detected an orange notice appears, and hovering shows the reason and how to enable hardware acceleration.", "ja": "「デバッグ」見出しの右にレンダリング方式（ハードウェアアクセラレーション / ソフトウェアレンダリング）を表示。ソフトウェアレンダリングを検出するとオレンジの注意が出て、マウスを重ねると理由とハードウェアアクセラレーションの有効化方法を確認できます。", "ko": "“디버그” 제목 오른쪽에 렌더링 방식(하드웨어 가속 / 소프트웨어 렌더링)을 표시합니다. 소프트웨어 렌더링이 감지되면 주황색 안내가 나타나며 마우스를 올리면 원인과 하드웨어 가속을 켜는 방법을 볼 수 있습니다.", "tw": "“除錯”標題右側顯示渲染方式（硬體加速 / 軟體渲染）；檢測到軟體渲染時顯示橙色提示，滑鼠懸停可看到原因和開啟硬體加速的辦法"},
+ "针对长条下落时的黑色横条/撕裂：长条只绘制可见部分（不再提交超大矩形）、音符位置对齐到物理像素、画布单独成合成层、渐变对象缓存减少垃圾回收":{"en": "Targeting black bars/tearing while hold notes fall: holds draw only their visible part (no more oversized rectangles), note positions snap to physical pixels, the canvas gets its own compositing layer, and gradient objects are cached to reduce garbage collection.", "ja": "ロングノーツ落下時の黒い横線/ティアリング対策：ロングノーツは見える部分だけを描画（巨大な矩形を送らない）、ノーツ位置を物理ピクセルに揃え、キャンバスを独立した合成レイヤーに、グラデーションオブジェクトをキャッシュしてGCを削減。", "ko": "롱노트가 떨어질 때의 검은 가로 줄/찢어짐 대응: 롱노트는 보이는 부분만 그리고 (초대형 사각형을 더 이상 제출하지 않음), 노트 위치를 물리 픽셀에 맞추고, 캔버스를 별도 합성 레이어로 분리하며, 그라디언트 객체를 캐시해 가비지 컬렉션을 줄였습니다.", "tw": "針對長條下落時的黑色橫條/撕裂：長條只繪製可見部分（不再提交超大矩形）、音符位置對齊到物理畫素、畫布單獨成合成層、漸變物件快取減少垃圾回收"},
+ "画面更顺滑：音符位置改用平滑时钟（音频时钟每次跳 3~10ms，直接用来画会让音符抖动、像掉帧；实测每帧抖动从 4.7ms 降到 0.3ms）；勾选“发声诊断”会显示 FPS":{"en": "Smoother visuals: note positions now use a smoothed clock (the audio clock jumps 3–10 ms at a time, which made notes jitter like dropped frames if used directly; measured per-frame jitter fell from 4.7 ms to 0.3 ms); ticking “Sound diagnostics” shows FPS.", "ja": "映像がより滑らかに：ノーツ位置を平滑化したクロックで計算（オーディオクロックは一度に3～10msずつ跳ぶため、そのまま描画するとノーツが震えてコマ落ちのように見えます。実測でフレームごとのばらつきは4.7msから0.3msに低下）。「発音診断」にチェックするとFPSを表示します。", "ko": "화면이 더 부드러워졌습니다: 노트 위치를 평활화한 시계로 계산합니다 (오디오 시계는 한 번에 3~10ms씩 점프하므로 그대로 그리면 노트가 떨려 프레임이 빠진 것처럼 보임. 실측 프레임별 편차가 4.7ms에서 0.3ms로 감소). “발음 진단”을 체크하면 FPS가 표시됩니다.", "tw": "畫面更順滑：音符位置改用平滑時鐘（音訊時鐘每次跳 3~10ms，直接用來畫會讓音符抖動、像掉幀；實測每幀抖動從 4.7ms 降到 0.3ms）；勾選“發聲診斷”會顯示 FPS"},
+ "兼容带 VOS1 标记块的 VOS 变体（如 V - ANOTHER.VOS，之前报“Offset is outside the bounds of the DataView”）":{"en": "Compatible with VOS variants carrying a VOS1 marker block (such as V - ANOTHER.VOS, which previously reported “Offset is outside the bounds of the DataView”).", "ja": "VOS1マーカーブロックを持つVOSの変種に対応（V - ANOTHER.VOSなど。以前は「Offset is outside the bounds of the DataView」と表示されていました）。", "ko": "VOS1 표식 블록이 있는 VOS 변종과 호환됩니다 (V - ANOTHER.VOS 등. 이전에는 “Offset is outside the bounds of the DataView” 오류가 났음).", "tw": "相容帶 VOS1 標記塊的 VOS 變體（如 V - ANOTHER.VOS，之前報“Offset is outside the bounds of the DataView”）"},
+ "设置界面更紧凑：卡片间距缩小约 2/3，滑杆行距减半，按键设置收成一行（标题行带“恢复默认”）":{"en": "More compact settings: card spacing reduced by about two thirds, slider row spacing halved, and key settings collapsed into one row (the title row carries “Reset”).", "ja": "設定画面をよりコンパクトに：カード間隔を約2/3に縮小、スライダーの行間を半分に、キー設定を1行にまとめ（見出し行に「初期化」）。", "ko": "설정 화면을 더 컴팩트하게: 카드 간격을 약 2/3로 줄이고 슬라이더 행 간격을 절반으로, 키 설정을 한 줄로 합쳤습니다 (제목 줄에 “기본값”이 있음).", "tw": "設定介面更緊湊：卡片間距縮小約 2/3，滑桿行距減半，按鍵設定收成一行（標題行帶“恢復預設”）"},
+ "修复 sf3 音色库中锯齿波（Saw Wave）等短循环合成音色怪异：改为按采样原始采样率解码，不再重采样；皮肤设置合并成紧凑的一行":{"en": "Fixed odd short-loop synth sounds such as Saw Wave in sf3 soundfonts: samples are now decoded at their original sample rate instead of being resampled; skin settings merged into one compact row.", "ja": "sf3音色ライブラリでのSaw Waveなど短ループ合成音色の異常を修正：サンプルを元のサンプルレートでデコードし、リサンプルしないように。スキン設定をコンパクトな1行に統合。", "ko": "sf3 음색 라이브러리에서 톱니파(Saw Wave) 등 짧은 루프 합성 음색이 이상하게 들리던 문제 수정: 샘플을 원래 샘플레이트로 디코딩하고 리샘플링하지 않습니다. 스킨 설정을 컴팩트한 한 줄로 합쳤습니다.", "tw": "修復 sf3 音色庫中鋸齒波（Saw Wave）等短迴圈合成音色怪異：改為按取樣原始取樣率解碼，不再重取樣；皮膚設定合併成緊湊的一行"},
+ "SF3：解码失败的采样自动重试，循环点超出采样范围时关闭循环而不是在错误位置循环；音色库图标的提示里显示本曲采样解码统计，便于排查 sf3 音色怪异":{"en": "SF3: samples that fail to decode are retried automatically, and loops that fall outside the sample are turned off instead of looping at the wrong place; the soundfont icon tooltip shows decode statistics for this song to help diagnose odd sf3 sounds.", "ja": "SF3：デコードに失敗したサンプルを自動で再試行し、ループ点がサンプル範囲外の場合は誤った位置でループせずループを無効化。音色ライブラリのアイコンのツールチップに、この曲のサンプルのデコード統計を表示し、sf3の音色異常を調べやすくしました。", "ko": "SF3: 디코딩에 실패한 샘플을 자동으로 재시도하고, 루프 지점이 샘플 범위를 벗어나면 엉뚱한 위치에서 반복하지 않고 루프를 끕니다. 음색 라이브러리 아이콘 툴팁에 이 곡의 샘플 디코딩 통계를 표시해 sf3 음색 이상을 확인하기 쉽습니다.", "tw": "SF3：解碼失敗的取樣自動重試，迴圈點超出取樣範圍時關閉迴圈而不是在錯誤位置迴圈；音色庫圖示的提示裡顯示本曲取樣解碼統計，便於排查 sf3 音色怪異"},
+ "曲库支持子文件夹（如 Lv03、Lv04…），选曲列表按文件夹分组显示":{"en": "The library supports subfolders (such as Lv03, Lv04…); the song list is grouped by folder.", "ja": "ライブラリがサブフォルダ（Lv03、Lv04…など）に対応。曲リストはフォルダごとにグループ表示されます。", "ko": "라이브러리가 하위 폴더(Lv03, Lv04… 등)를 지원합니다. 곡 목록은 폴더별로 묶여 표시됩니다.", "tw": "曲庫支援子資料夾（如 Lv03、Lv04…），選曲列表按資料夾分組顯示"},
+ "新增在线曲库：与页面同目录的 songs/index.json 里列出的曲目会出现在“曲库”卡片中，选一下就能开始；没有清单时该卡片不显示，原来的“选择谱面”照常可用":{"en": "Added an online library: songs listed in songs/index.json next to the page appear in the “Library” card and can be started with one pick; without a manifest the card is hidden and the original “Choose chart” still works.", "ja": "オンラインライブラリを追加：ページと同じ階層のsongs/index.jsonに載っている曲が「ライブラリ」カードに表示され、選ぶだけで開始できます。リストがない場合はカードは表示されず、従来の「譜面を選択」もそのまま使えます。", "ko": "온라인 라이브러리 추가: 페이지와 같은 폴더의 songs/index.json에 나열된 곡이 “라이브러리” 카드에 나타나며 선택만 하면 시작할 수 있습니다. 목록이 없으면 카드는 표시되지 않고 기존 “채보 선택”도 그대로 사용할 수 있습니다.", "tw": "新增線上曲庫：與頁面同目錄的 songs/index.json 裡列出的曲目會出現在“曲庫”卡片中，選一下就能開始；沒有清單時該卡片不顯示，原來的“選擇譜面”照常可用"},
+ "修复首次游玩时大采样（如吉他）第一次发声卡顿、失真：开始前除了解码，还会预热每个采样（浏览器首次使用大采样时会在主线程复制数据）":{"en": "Fixed stutter and distortion the first time large samples (such as guitar) sound on first play: besides decoding, each sample is now warmed up before starting (the browser copies data on the main thread when a large sample is first used).", "ja": "初回プレイ時に大きなサンプル（ギターなど）の最初の発音でカクつきや音割れが起きる問題を修正：開始前にデコードに加えて各サンプルをウォームアップ（ブラウザは大きなサンプルの初使用時にメインスレッドでデータをコピーします）。", "ko": "처음 플레이할 때 큰 샘플(기타 등)이 처음 울릴 때 끊기고 왜곡되던 문제 수정: 시작 전에 디코딩뿐 아니라 각 샘플을 예열합니다 (브라우저는 큰 샘플을 처음 쓸 때 메인 스레드에서 데이터를 복사합니다).", "tw": "修復首次遊玩時大采樣（如吉他）第一次發音效卡頓、失真：開始前除了解碼，還會預熱每個取樣（瀏覽器首次使用大采樣時會在主執行緒複製資料）"},
+ "设置界面重做：分为演奏/按键/声音/皮肤/调试几个卡片，宽度与游玩区一致；所有滑杆带刻度和数值读数，音量改为分档；声音输出只分内部/外部合成器，音色库行只在外部合成器时显示，文件名右侧用图标显示读取中/成功/失败；谱面信息移到分数面板中间；修复从内存缓存读取音色库后第一遍播放仍可能卡顿的预加载遗漏":{"en": "Settings redesigned: split into Play / Keys / Sound / Skin / Debug cards matching the play area width; all sliders have ticks and value readouts, and volume uses steps; sound output is just built-in/external synth, the soundfont row only shows for external synth, with an icon for loading/success/failure beside the file name; chart info moved to the middle of the score panel; fixed a missed preload so the first playback could still stutter when the soundfont was read from the memory cache.", "ja": "設定画面を刷新：演奏/キー/サウンド/スキン/デバッグのカードに分け、幅をプレイ領域に合わせました。すべてのスライダーに目盛りと数値表示、音量は段階式に。サウンド出力は内蔵/外部シンセの2択のみで、音色ライブラリ行は外部シンセ選択時のみ表示、ファイル名の右のアイコンで読み込み中/成功/失敗を表示。譜面情報をスコアパネルの中央に移動。音色ライブラリをメモリキャッシュから読んだ場合に最初の再生でまだカクつく可能性があったプリロード漏れを修正。", "ko": "설정 화면 개편: 플레이/키/사운드/스킨/디버그 카드로 나누고 폭을 플레이 영역에 맞췄습니다. 모든 슬라이더에 눈금과 값 표시가 있고 볼륨은 단계식입니다. 사운드 출력은 내장/외부 신시사이저 두 가지뿐이며 음색 라이브러리 줄은 외부 신시사이저일 때만 표시되고, 파일명 오른쪽 아이콘으로 읽는 중/성공/실패를 표시합니다. 채보 정보는 점수 패널 가운데로 옮겼습니다. 음색 라이브러리를 메모리 캐시에서 읽을 때 첫 재생이 여전히 끊길 수 있던 프리로드 누락을 수정했습니다.", "tw": "設定介面重做：分為演奏/按鍵/聲音/皮膚/除錯幾個卡片，寬度與遊玩區一致；所有滑桿帶刻度和數值讀數，音量改為分檔；聲音輸出只分內部/外部合成器，音色庫行只在外部合成器時顯示，檔名右側用圖示顯示讀取中/成功/失敗；譜面資訊移到分數面板中間；修復從記憶體快取讀取音色庫後第一遍播放仍可能卡頓的預載入遺漏"},
+ "BAD 不再打断连击；开始前预解码/预转换本曲用到的全部采样（sf3 与 sf2 都适用，且不再按力度分组漏采样），避免首次游玩时吉他等音色卡顿、爆音":{"en": "BAD no longer breaks combo; all samples used by the song are pre-decoded/pre-converted before starting (for both sf3 and sf2, no longer skipping samples grouped by velocity), avoiding stutter and pops on instruments like guitar on first play.", "ja": "BADでコンボが途切れなくなりました。開始前に曲で使うすべてのサンプルを事前デコード/事前変換（sf3・sf2とも対応、ベロシティ別グループによるサンプル漏れもなし）し、初回プレイ時のギターなどのカクつきやポップノイズを回避。", "ko": "BAD가 더 이상 콤보를 끊지 않습니다. 시작 전에 곡에서 쓰는 모든 샘플을 미리 디코딩/변환하여 (sf3와 sf2 모두 해당, 벨로시티별 그룹으로 샘플이 빠지지 않음) 처음 플레이할 때 기타 등 음색의 끊김과 팝 노이즈를 막았습니다.", "tw": "BAD 不再打斷連擊；開始前預解碼/預轉換本曲用到的全部取樣（sf3 與 sf2 都適用，且不再按力度分組漏取樣），避免首次遊玩時吉他等音色卡頓、爆音"},
+ "支持压缩音色库 .sf3（如 MuseScore_General.sf3，约 36MB，音质与 208MB 的 sf2 相同），开始游玩前会先解码本曲用到的采样；超过 64MB 的音色库不再写入浏览器记忆，避免拖慢启动":{"en": "Supports the compressed soundfont .sf3 (such as MuseScore_General.sf3, about 36 MB, with the same quality as the 208 MB sf2); the samples used by the song are decoded before play begins; soundfonts over 64 MB are no longer stored in browser memory to avoid slowing startup.", "ja": "圧縮音色ライブラリ .sf3（MuseScore_General.sf3など、約36MBで208MBのsf2と同じ音質）に対応。プレイ開始前に曲で使うサンプルをデコードします。64MBを超える音色ライブラリはブラウザに記憶せず、起動の遅延を防ぎます。", "ko": "압축 음색 라이브러리 .sf3 지원 (MuseScore_General.sf3 등, 약 36MB로 208MB sf2와 같은 음질). 플레이 시작 전에 곡에서 쓰는 샘플을 디코딩합니다. 64MB를 넘는 음색 라이브러리는 브라우저에 기억하지 않아 시작이 느려지는 것을 막습니다.", "tw": "支援壓縮音色庫 .sf3（如 MuseScore_General.sf3，約 36MB，音質與 208MB 的 sf2 相同），開始遊玩前會先解碼本曲用到的取樣；超過 64MB 的音色庫不再寫入瀏覽器記憶，避免拖慢啟動"},
+ "BAD 判定范围收窄：只有音符贴近判定线（命中区外再多约一个音符高度）时按错/按早才判 BAD，提前很久按键只发按键音，不再判 BAD":{"en": "Narrower BAD window: pressing wrong/early only counts as BAD when a note is close to the judgment line (about one more note height outside the hit zone); pressing far too early just plays the key sound and is no longer BAD.", "ja": "BAD判定の範囲を縮小：ノーツが判定ラインに近い（ヒットゾーンの外側さらにノーツ約1個分）ときだけ、押し間違い/早押しをBADにします。かなり早く押した場合はキー音のみ鳴り、BADにはなりません。", "ko": "BAD 판정 범위 축소: 노트가 판정선에 가까울 때(히트 존 바깥으로 노트 높이 하나 정도 더)만 잘못 누르거나 일찍 누른 것을 BAD로 판정합니다. 한참 일찍 누르면 키 소리만 나고 BAD가 되지 않습니다.", "tw": "BAD 判定範圍收窄：只有音符貼近判定線（命中區外再多約一個音符高度）時按錯/按早才判 BAD，提前很久按鍵只發按鍵音，不再判 BAD"},
+ "谱面中间出现没有音符的空档（所有轨道 500ms 内都没有音符）时，随便按键不再判 BAD":{"en": "When a chart has a gap with no notes (no notes in any lane within 500 ms), pressing keys no longer counts as BAD.", "ja": "譜面の途中にノーツのない空白（全レーンで500ms以内にノーツがない区間）があるとき、キーを押してもBADになりません。", "ko": "채보 중간에 노트가 없는 구간(모든 레인에서 500ms 안에 노트가 없음)이 있을 때 키를 눌러도 BAD가 되지 않습니다.", "tw": "譜面中間出現沒有音符的空檔（所有軌道 500ms 內都沒有音符）時，隨便按鍵不再判 BAD"},
+ "新增皮肤系统：内置“糖果星球”“霓虹”两套原创主题（靠左窄轨道+右侧大背景版式、音符/判定线/按键/打击特效/信息面板），并支持自定义载入本地图片素材（背景、轨道、白蓝黄音符、长条、判定线、按键、打击特效），素材只存在本机浏览器；版式和信息面板可单独开关":{"en": "Added a skin system: two original built-in themes, “Candy Planet” and “Neon” (narrow left-aligned lanes with a large right-hand background layout; notes/judgment line/keys/hit effects/info panel), and custom local image assets (background, lanes, white/blue/yellow notes, hold notes, judgment line, keys, hit effects) stored only in this browser; layout and info panel can be toggled separately.", "ja": "スキンシステムを追加：オリジナルの内蔵テーマ「キャンディプラネット」「ネオン」の2種（左寄せの細いレーン＋右側に大きな背景のレイアウト、ノーツ/判定ライン/キー/ヒットエフェクト/情報パネル）に加え、ローカル画像素材（背景、レーン、白/青/黄ノーツ、ロングノーツ、判定ライン、キー、ヒットエフェクト）のカスタム読み込みに対応。素材はこのブラウザ内にのみ保存。レイアウトと情報パネルは個別に切替可能。", "ko": "스킨 시스템 추가: 자체 제작 내장 테마 “캔디 플래닛”, “네온” 두 가지 (왼쪽 정렬 좁은 레인 + 오른쪽 큰 배경 레이아웃, 노트/판정선/키/타격 이펙트/정보 패널)와 로컬 이미지 소재(배경, 레인, 흰/파랑/노랑 노트, 롱노트, 판정선, 키, 타격 이펙트) 사용자 지정 불러오기를 지원하며 소재는 이 브라우저에만 저장됩니다. 레이아웃과 정보 패널은 따로 켜고 끌 수 있습니다.", "tw": "新增皮膚系統：內建“糖果星球”“霓虹”兩套原創主題（靠左窄軌道+右側大背景版式、音符/判定線/按鍵/打擊特效/資訊面板），並支援自定義載入本地圖片素材（背景、軌道、白藍黃音符、長條、判定線、按鍵、打擊特效），素材只存在本機瀏覽器；版式和資訊面板可單獨開關"},
+ "测试模式自动切换到 gm.dls（Microsoft GS 音色库），关闭后恢复原输出；载入过的 .sf2/.dls 会记在浏览器里，下次打开自动恢复；.sf2（XG）整体音量提高，并新增“音色库增益”滑块":{"en": "Test mode switches to gm.dls (the Microsoft GS soundfont) automatically and restores the previous output when turned off; loaded .sf2/.dls files are remembered in the browser and restored on next open; overall .sf2 (XG) volume raised, and a new “Soundfont gain” slider.", "ja": "テストモードは自動的に gm.dls（Microsoft GS音色ライブラリ）に切り替わり、オフにすると元の出力に戻ります。読み込んだ.sf2/.dlsはブラウザに記憶され、次回起動時に自動復元。.sf2（XG）の全体音量を引き上げ、「音色ライブラリのゲイン」スライダーを追加。", "ko": "테스트 모드는 자동으로 gm.dls(Microsoft GS 음색 라이브러리)로 전환되며 끄면 원래 출력으로 돌아갑니다. 불러온 .sf2/.dls는 브라우저에 기억되어 다음 실행 시 자동 복원됩니다. .sf2(XG) 전체 볼륨을 높였고 “음색 라이브러리 게인” 슬라이더를 추가했습니다.", "tw": "測試模式自動切換到 gm.dls（Microsoft GS 音色庫），關閉後恢復原輸出；載入過的 .sf2/.dls 會記在瀏覽器裡，下次開啟自動恢復；.sf2（XG）整體音量提高，並新增“音色庫增益”滑塊"},
+ "新增“发声诊断”开关：游玩时在画面左上角显示最近一次按键音的通道、音色号、预设名、音高，以及当前发声数和被丢弃的音数，便于排查声音不对的段落；新增“测试模式”：可拖动进度条定位，并从当前位置开始游玩（游玩中松手即从该处重新开始）":{"en": "Added a “Sound diagnostics” toggle: during play, the top-left shows the channel, program number, preset name and pitch of the latest key sound, plus the current voice count and dropped voices, to help locate wrong-sounding passages; added “Test mode”: drag the progress bar to seek and play from the current position (releasing during play restarts from there).", "ja": "「発音診断」を追加：プレイ中、画面左上に直近のキー音のチャンネル、音色番号、プリセット名、音高と、現在の発音数・破棄された音数を表示し、音がおかしい箇所の調査に役立ちます。「テストモード」を追加：プログレスバーをドラッグして位置を指定し、その位置からプレイできます（プレイ中に離すとその位置から再スタート）。", "ko": "“발음 진단” 토글 추가: 플레이 중 화면 왼쪽 위에 최근 키 소리의 채널, 음색 번호, 프리셋 이름, 음높이와 현재 발음 수·버려진 음 수를 표시해 소리가 이상한 구간을 찾기 쉽습니다. “테스트 모드” 추가: 진행 바를 드래그해 위치를 지정하고 그 위치부터 플레이할 수 있습니다 (플레이 중 놓으면 그 위치에서 다시 시작).", "tw": "新增“發聲診斷”開關：遊玩時在畫面左上角顯示最近一次按鍵音的通道、音色號、預設名、音高，以及當前發聲數和被丟棄的音數，便於排查聲音不對的段落；新增“測試模式”：可拖動進度條定位，並從當前位置開始遊玩（遊玩中鬆手即從該處重新開始）"},
+ "长条按住期间，按其他没有音符的轨道不再判 BAD；放宽同时发声数上限，密集段落（如 Visual Dream 后半段）不再丢音":{"en": "While a hold note is held, pressing other lanes without notes no longer counts as BAD; the simultaneous-voice cap is raised so dense passages (such as the second half of Visual Dream) no longer drop notes.", "ja": "ロングノーツを押さえている間、ノーツのない他のレーンを押してもBADにならなくなりました。同時発音数の上限を引き上げ、密集区間（Visual Dream後半など）で音が欠落しなくなりました。", "ko": "롱노트를 누르고 있는 동안 노트가 없는 다른 레인을 눌러도 BAD가 되지 않습니다. 동시 발음 수 상한을 늘려 밀집 구간(Visual Dream 후반 등)에서 소리가 빠지지 않습니다.", "tw": "長條按住期間，按其他沒有音符的軌道不再判 BAD；放寬同時發聲數上限，密集段落（如 Visual Dream 後半段）不再丟音"},
+ "隐藏设置后保留标题、版本号和歌名进度条；游玩区域高度随浏览器高度自适应（宽度不变，音符落点区被拉长）":{"en": "After hiding settings, the title, version and the song/progress bar are kept; the play area height adapts to the browser height (width unchanged, the note fall zone is lengthened).", "ja": "設定を隠してもタイトル、バージョン、曲名/進行バーは残します。プレイ領域の高さはブラウザの高さに合わせて自動調整（幅はそのままで、ノーツの落下区間が長くなります）。", "ko": "설정을 숨겨도 제목, 버전, 곡명/진행 바는 남습니다. 플레이 영역 높이는 브라우저 높이에 맞춰 자동 조정됩니다 (폭은 그대로이며 노트가 떨어지는 구간이 길어짐).", "tw": "隱藏設定後保留標題、版本號和歌名進度條；遊玩區域高度隨瀏覽器高度自適應（寬度不變，音符落點區被拉長）"},
+ "修复“开局隐藏设置”失效（设置区没隐藏、标题和进度条反被隐藏）；第一个音符开始掉落之前和最后一个音符结束之后按键不再判 BAD":{"en": "Fixed “Hide settings on start” not working (the settings area stayed visible while the title and progress bar were hidden instead); pressing keys before the first note starts to fall or after the last note ends no longer counts as BAD.", "ja": "「開始時に設定を隠す」が効かない問題を修正（設定エリアが隠れず、代わりにタイトルと進行バーが隠れていました）。最初のノーツが落ち始める前と最後のノーツが終わった後にキーを押してもBADにならなくなりました。", "ko": "“시작 시 설정 숨김”이 동작하지 않던 문제 수정 (설정 영역은 숨겨지지 않고 제목과 진행 바가 대신 숨겨졌음). 첫 노트가 떨어지기 전과 마지막 노트가 끝난 뒤에는 키를 눌러도 BAD가 되지 않습니다.", "tw": "修復“開局隱藏設定”失效（設定區沒隱藏、標題和進度條反被隱藏）；第一個音符開始掉落之前和最後一個音符結束之後按鍵不再判 BAD"},
+ "版本号移到标题旁（点击展开更新日志）；原版本位置改为含歌名与进度的进度条（全屏游玩时在画面顶部显示细进度条）；隐藏设置时整块设置区一起隐藏，游玩区域宽度不再变化":{"en": "The version number moved next to the title (click to expand the changelog); the old version spot is now a progress bar with song name and progress (a thin progress bar at the top of the screen in fullscreen play); when settings are hidden the whole settings block hides together, so the play area width no longer changes.", "ja": "バージョン番号をタイトルの横に移動（クリックで更新履歴を展開）。元のバージョン位置は曲名と進行を表示するバーに（全画面プレイ時は画面上部に細い進行バー）。設定を隠すと設定エリア全体が一緒に隠れ、プレイ領域の幅は変わりません。", "ko": "버전 번호를 제목 옆으로 옮겼습니다 (클릭하면 업데이트 내역이 펼쳐짐). 기존 버전 위치는 곡명과 진행도를 보여주는 바가 되었습니다 (전체 화면 플레이 시 화면 위쪽의 얇은 진행 바). 설정을 숨기면 설정 영역 전체가 함께 숨겨지며 플레이 영역 폭이 더 이상 변하지 않습니다.", "tw": "版本號移到標題旁（點選展開更新日誌）；原版本位置改為含歌名與進度的進度條（全屏遊玩時在畫面頂部顯示細進度條）；隱藏設定時整塊設定區一起隱藏，遊玩區域寬度不再變化"},
+ "新增载入 Windows 自带的 gm.dls（Microsoft GS Wavetable 同款音色库）：选择 C:\\Windows\\System32\\drivers\\gm.dls 即可，与 .sf2 共用同一播放引擎":{"en": "Added loading of the gm.dls bundled with Windows (the same soundfont as Microsoft GS Wavetable): just pick C:\\Windows\\System32\\drivers\\gm.dls; it shares the playback engine with .sf2.", "ja": "Windows標準のgm.dls（Microsoft GS Wavetableと同じ音色ライブラリ）の読み込みに対応：C:\\Windows\\System32\\drivers\\gm.dls を選ぶだけ。.sf2と同じ再生エンジンを共用します。", "ko": "Windows에 기본 포함된 gm.dls(Microsoft GS Wavetable과 같은 음색 라이브러리) 불러오기를 추가했습니다: C:\\Windows\\System32\\drivers\\gm.dls를 선택하면 됩니다. .sf2와 같은 재생 엔진을 공유합니다.", "tw": "新增載入 Windows 自帶的 gm.dls（Microsoft GS Wavetable 同款音色庫）：選擇 C:\\Windows\\System32\\drivers\\gm.dls 即可，與 .sf2 共用同一播放引擎"},
+ "修复 MIDI 轨道与 VOS 通道错位（VOS 会省掉无音符轨道，如 Ice Cap 的电吉他被误配成合成鼓）；开头音色以 VOS 记录为准，避免控制轨覆盖音色":{"en": "Fixed MIDI tracks being misaligned with VOS channels (VOS omits tracks with no notes, e.g. the electric guitar in Ice Cap was mistaken for a drum kit); the initial instrument follows the VOS record so control tracks no longer override it.", "ja": "MIDIトラックとVOSチャンネルのずれを修正（VOSはノーツのないトラックを省くため、Ice Capのエレキギターがドラムと誤認されていました）。冒頭の音色はVOSの記録を優先し、コントロールトラックが音色を上書きしないように。", "ko": "MIDI 트랙과 VOS 채널이 어긋나던 문제 수정 (VOS는 노트가 없는 트랙을 생략하므로 Ice Cap의 일렉기타가 드럼으로 잘못 매칭되었음). 시작 음색은 VOS 기록을 따르며 컨트롤 트랙이 음색을 덮어쓰지 않습니다.", "tw": "修復 MIDI 軌道與 VOS 通道錯位（VOS 會省掉無音符軌道，如 Ice Cap 的電吉他被誤配成合成鼓）；開頭音色以 VOS 記錄為準，避免控制軌覆蓋音色"},
+ "长条结束时再触发一次打击特效和结尾判定；手机触控支持滑动扫音符、按接触面积同时按多条轨道（可调触控范围）；新增版本号与更新日志":{"en": "A hit effect and ending judgment now trigger again when a hold note ends; mobile touch supports swiping across notes and pressing several lanes at once by contact area (adjustable touch range); added version number and changelog.", "ja": "ロングノーツの終了時にヒットエフェクトと終端判定をもう一度発生させるように。スマホのタッチでスワイプによるなぞりと、接触面積による複数レーン同時押しに対応（タッチ範囲を調整可能）。バージョン番号と更新履歴を追加。", "ko": "롱노트가 끝날 때 타격 이펙트와 종료 판정을 한 번 더 발생시킵니다. 모바일 터치에서 쓸어서 노트 치기와 접촉 면적에 따른 여러 레인 동시 입력을 지원합니다 (터치 범위 조절 가능). 버전 번호와 업데이트 내역을 추가했습니다.", "tw": "長條結束時再觸發一次打擊特效和結尾判定；手機觸控支援滑動掃音符、按接觸面積同時按多條軌道（可調觸控範圍）；新增版本號與更新日誌"},
+ "读取 MIDI 全部轨道（按通道合并控制数据）；按键音：按下轨道会响起该轨道即将到来的音符；新增 BAD 判定；长条铺满轨道宽度；手机开局可隐藏设置并全屏游玩，右上角 ✕ 退出":{"en": "Reads all MIDI tracks (control data merged by channel); key sounds: pressing a lane plays that lane’s upcoming note; added the BAD judgment; hold notes fill the lane width; on mobile settings can be hidden at start for fullscreen play, with ✕ at the top right to exit.", "ja": "MIDIの全トラックを読み込み（コントロールデータはチャンネルごとに統合）。キー音：レーンを押すとそのレーンの次に来るノーツの音が鳴ります。BAD判定を追加。ロングノーツがレーン幅いっぱいに。スマホでは開始時に設定を隠して全画面プレイでき、右上の✕で終了。", "ko": "MIDI의 모든 트랙을 읽습니다 (컨트롤 데이터는 채널별로 병합). 키 소리: 레인을 누르면 그 레인의 곧 올 노트 소리가 납니다. BAD 판정 추가. 롱노트가 레인 폭을 가득 채웁니다. 모바일에서는 시작 시 설정을 숨기고 전체 화면으로 플레이할 수 있으며 오른쪽 위 ✕로 종료합니다.", "tw": "讀取 MIDI 全部軌道（按通道合併控制資料）；按鍵音：按下軌道會響起該軌道即將到來的音符；新增 BAD 判定；長條鋪滿軌道寬度；手機開局可隱藏設定並全屏遊玩，右上角 ✕ 退出"},
+ "支持本地加载 .sf2 音色库（含 XG 音色库分组）；应用 MIDI 控制数据（音量、表情、声像、弯音、颤音、截止、混响）；伴奏与按键音量分开调节":{"en": "Supports loading local .sf2 soundfonts (including XG soundfont grouping); applies MIDI control data (volume, expression, pan, pitch bend, vibrato, cutoff, reverb); backing and key volumes can be adjusted separately.", "ja": "ローカルの.sf2音色ライブラリの読み込みに対応（XG音色ライブラリのグループ分けを含む）。MIDIコントロールデータ（音量、エクスプレッション、パン、ピッチベンド、ビブラート、カットオフ、リバーブ）を適用。伴奏とキー音量を個別に調整可能。", "ko": "로컬 .sf2 음색 라이브러리 불러오기를 지원합니다 (XG 음색 라이브러리 그룹 포함). MIDI 컨트롤 데이터(볼륨, 익스프레션, 팬, 피치 벤드, 비브라토, 컷오프, 리버브)를 적용합니다. 반주와 키 볼륨을 따로 조절할 수 있습니다.", "tw": "支援本地載入 .sf2 音色庫（含 XG 音色庫分組）；應用 MIDI 控制資料（音量、表情、聲像、彎音、顫音、截止、混響）；伴奏與按鍵音量分開調節"},
+ "游戏名定为 鸣域 · Resonia，加入标题画面；按键自定义；按 1/2 和上下方向键调速；判定线与命中特效":{"en": "The game is named 鸣域 · Resonia, with a title screen added; custom key bindings; speed adjustment with 1/2 and the up/down arrow keys; judgment line and hit effects.", "ja": "ゲーム名を「鸣域 · Resonia」に決定し、タイトル画面を追加。キーのカスタマイズ。1/2と上下矢印キーで速度調整。判定ラインとヒットエフェクト。", "ko": "게임 이름을 鸣域 · Resonia로 정하고 타이틀 화면을 추가했습니다. 키 사용자 지정. 1/2와 위/아래 방향키로 속도 조절. 판정선과 타격 이펙트.", "tw": "遊戲名定為 鳴域 · Resonia，加入標題畫面；按鍵自定義；按 1/2 和上下方向鍵調速；判定線與命中特效"},
+ "首个可玩原型：VOS/VOW 解析（原始格式与 VOS022）、7 键下落、判定与计分、延迟校准":{"en": "First playable prototype: VOS/VOW parsing (original format and VOS022), 7-key falling notes, judging and scoring, latency calibration.", "ja": "最初のプレイ可能なプロトタイプ：VOS/VOW解析（オリジナル形式とVOS022）、7鍵落下、判定とスコア計算、遅延補正。", "ko": "첫 플레이 가능한 프로토타입: VOS/VOW 분석 (원본 형식과 VOS022), 7키 낙하, 판정과 점수 계산, 지연 보정.", "tw": "首個可玩原型：VOS/VOW 解析（原始格式與 VOS022）、7 鍵下落、判定與計分、延遲校準"}
+};
+let LANG='';try{LANG=localStorage.getItem('resonia-lang')||''}catch(e){}
+if(!LK[LANG]){const n=(navigator.language||'zh').toLowerCase();LANG=/^zh-(tw|hk|mo|hant)/.test(n)?'zh-TW':n.startsWith('zh')?'zh':n.startsWith('ja')?'ja':n.startsWith('ko')?'ko':'en'}
+function tt(k,...a){const e=I18N[k],v=(e&&e[LK[LANG]])||k;return a.length?v.replace(/\{(\d+)\}/g,(m,i)=>a[i]):v}
+(function(){
+  document.documentElement.lang=LANG=='zh-TW'?'zh-Hant':LANG=='zh'?'zh-Hans':LANG;
+  if(LANG=='zh')return;
+  const tr=x=>{const e=I18N[x.trim()];return e&&e[LK[LANG]]};
+  const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:n=>/^(SCRIPT|STYLE)$/.test(n.parentNode.tagName)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}),ns=[];
+  while(w.nextNode())ns.push(w.currentNode);
+  for(const n of ns){const k=n.nodeValue.trim();if(!k)continue;const v=tr(k);if(v)n.nodeValue=n.nodeValue.replace(k,()=>v.trim())}
+  document.querySelectorAll('[title],[placeholder]').forEach(el=>{for(const a of ['title','placeholder']){const k=el.getAttribute(a);if(k){const v=tr(k);if(v)el.setAttribute(a,v)}}});
+})();
+</script>
+<script>
 // ---------- VOS parser (7 lanes; 768 ticks/beat; BPM from embedded MIDI) ----------
 const TPB=768;
 function parseVos(buf){
@@ -177,7 +430,7 @@ function parseVos(buf){
   const asc=(o,n)=>String.fromCharCode(...d.subarray(o,o+n));
   const dec=(b,e)=>{try{return new TextDecoder(e).decode(b)}catch(x){return ''}};
   const orig=u32(0)==3&&asc(8,3)=='inf',nw=u32(0)==2&&asc(8,12)=='Vosctemp.trk';
-  if(!orig&&!nw)throw new Error('不支持的文件（可能是 VOS1/rank 格式）');
+  if(!orig&&!nw)throw new Error(tt('不支持的文件（可能是 VOS1/rank 格式）'));
   let title,lenMs,ch=[],refs=[],mo=0,o;
   if(orig){
     mo=u32(0x18);o=0x40;
@@ -337,14 +590,14 @@ function voice(e,when){
 
 // ---- SF2 pure (parsing / zone lookup; no audio) ----
 let sf=null;
-const banks={sf2:null,dls:null},bankNames={sf2:'音色库 (.sf2)',dls:'音色库 (.dls · Windows GS)'};
+const banks={sf2:null,dls:null},bankNames={sf2:tt('音色库 (.sf2)'),dls:tt('音色库 (.dls · Windows GS)')};
 const isBank=v=>v=='sf2'||v=='dls';
 const useSf=()=>{const v=document.getElementById('out').value;return document.getElementById('omode').value=='ext'&&isBank(v)&&!!banks[v]};
 function parseSf2(buf){
   const v=new DataView(buf),u8=new Uint8Array(buf);
   const str=(o,n)=>{let s='';for(let i=0;i<n&&u8[o+i];i++)s+=String.fromCharCode(u8[o+i]);return s};
   const tag=o=>String.fromCharCode(u8[o],u8[o+1],u8[o+2],u8[o+3]);
-  if(buf.byteLength<12||tag(0)!='RIFF'||tag(8)!='sfbk')throw new Error('不是有效的 SF2 文件');
+  if(buf.byteLength<12||tag(0)!='RIFF'||tag(8)!='sfbk')throw new Error(tt('不是有效的 SF2 文件'));
   let smpl=null,smplOff=0;const P={};
   const walk=(o,end)=>{while(o+8<=end){const t=tag(o),n=v.getUint32(o+4,true),b=o+8;
     if(t=='LIST'){const lt=tag(b);if(lt=='sdta'||lt=='pdta')walk(b+4,b+n)}
@@ -352,7 +605,7 @@ function parseSf2(buf){
     else P[t]=[b,n];
     o=b+n+(n&1)}};
   walk(12,8+v.getUint32(4,true));
-  if(!smpl||!P.phdr||!P.shdr)throw new Error('音色库缺少必要数据');
+  if(!smpl||!P.phdr||!P.shdr)throw new Error(tt('音色库缺少必要数据'));
   const rec=(k,sz,f)=>{const[b,n]=P[k]||[0,0],r=[];for(let i=0;i<Math.floor(n/sz);i++)r.push(f(b+i*sz));return r};
   const gen=k=>rec(k,4,o=>({o:v.getUint16(o,true),a:v.getUint16(o+2,true),s:v.getInt16(o+2,true)}));
   const ph=rec('phdr',38,o=>({name:str(o,20),pr:v.getUint16(o+20,true),bk:v.getUint16(o+22,true),bag:v.getUint16(o+24,true)}));
@@ -369,11 +622,11 @@ function sfZones(bags,gens,b0,b1){const out=[];for(let j=b0;j<b1;j++){const z={}
 function parseDls(buf){
   const v=new DataView(buf),u8=new Uint8Array(buf),L=buf.byteLength;
   const tag=o=>String.fromCharCode(u8[o],u8[o+1],u8[o+2],u8[o+3]);
-  if(L<12||tag(0)!='RIFF'||tag(8)!='DLS ')throw new Error('不是有效的 DLS 文件');
+  if(L<12||tag(0)!='RIFF'||tag(8)!='DLS ')throw new Error(tt('不是有效的 DLS 文件'));
   const kids=(o,end)=>{const r=[];while(o+8<=end&&o+8<=L){const n=v.getUint32(o+4,true);r.push({t:tag(o),b:o+8,n,lt:n>=4?tag(o+8):''});o+=8+n+(n&1)}return r};
   const top=kids(12,L),find=(a,t,lt)=>a.find(x=>x.t==t&&(!lt||x.lt==lt));
   const lins=find(top,'LIST','lins'),wv=find(top,'LIST','wvpl'),pt=find(top,'ptbl');
-  if(!lins||!wv||!pt)throw new Error('DLS 缺少必要数据');
+  if(!lins||!wv||!pt)throw new Error(tt('DLS 缺少必要数据'));
   const nc=v.getUint32(pt.b+4,true),cues=[];for(let i=0;i<nc;i++)cues.push(v.getUint32(pt.b+8+4*i,true));
   const wsmp=b=>{const cb=v.getUint32(b,true),r={unity:v.getUint16(b+4,true),fine:v.getInt16(b+6,true),att:v.getInt32(b+8,true),loop:null};
     if(v.getUint32(b+16,true)>0)r.loop=[v.getUint32(b+cb+8,true),v.getUint32(b+cb+12,true)];return r};
@@ -487,7 +740,7 @@ async function sfPreload(){
   for(const b of song.back)ev.push(b);
   for(const e of ev){if(!e)continue;const k=e.ch+':'+e.p+':'+e.vel+':'+((e.t/4000)|0);if(seen.has(k))continue;seen.add(k);for(const z of sfZonesFor(e))if(sf.bufs[z.s]===undefined)need.add(z.s)}
   const list=[...need];let i=0;
-  const tick=()=>{if($('go'))$('go').textContent='准备音色 '+Math.min(i,list.length)+'/'+list.length};
+  const tick=()=>{if($('go'))$('go').textContent=tt('准备音色 {0}/{1}',Math.min(i,list.length),list.length)};
   if(sf.comp){
     const worker=async()=>{while(i<list.length){const si=list[i++];await sfDecode(si);tick()}};
     await Promise.all([worker(),worker(),worker(),worker()]);
@@ -499,12 +752,12 @@ async function sfPreload(){
   if(sf.comp){ // 解码失败的采样再试一次（并发解码偶尔会失败）
     const bad=list.filter(si=>sf.bufs[si]===null);
     for(const si of bad){sf.stat.fail--;sf.stat.retried++;sf.bufs[si]=false;await sfDecode(si,true)}
-    const t=sf.stat;if(t&&typeof setSt=='function'){const k=$('out').value,m='本曲采样 '+list.length+' 个，解码成功 '+t.dec+'，失败 '+t.fail+'，循环点异常 '+t.badLoop;
+    const t=sf.stat;if(t&&typeof setSt=='function'){const k=$('out').value,m=tt('本曲采样 {0} 个，解码成功 {1}，失败 {2}，循环点异常 {3}',list.length,t.dec,t.fail,t.badLoop);
       const r=bankSt[k];if(r){r.t=r.t.split('\n')[0]+'\n'+m;if(t.fail||t.badLoop){r.s='warn'}showSt()}}
   }
   // 预热：浏览器在采样第一次被 AudioBufferSourceNode 使用时会在主线程复制整段数据（大采样会卡几十毫秒，造成卡顿/爆音），这里提前触发一次
   let w=0;
-  for(const si of list){const b=sf.bufs[si];if(b&&b.buf){try{const sn=ctx.createBufferSource();sn.buffer=b.buf}catch(x){}}if(++w%6==0){if($('go'))$('go').textContent='预热音色 '+w+'/'+list.length;await new Promise(r=>setTimeout(r,0))}}
+  for(const si of list){const b=sf.bufs[si];if(b&&b.buf){try{const sn=ctx.createBufferSource();sn.buffer=b.buf}catch(x){}}if(++w%6==0){if($('go'))$('go').textContent=tt('预热音色 {0}/{1}',w,list.length);await new Promise(r=>setTimeout(r,0))}}
 }
 function sfPlay(e,when,g,C,T,to,W,d,done){
   const drum=e.ins>=128,pr=at(C.prog,T,drum?0:e.ins),msb=at(C.bm,T,0),lsb=at(C.bl,T,0),zs=sfFind(drum,pr,e.p,e.vel,sf.dls?msb:(msb>=64&&msb<=126?msb:lsb));
@@ -565,8 +818,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.30';
+const VERSION='0.9.31';
 const CHANGELOG=[
+  ['0.9.31','2026-10-12','新增多语言：简体中文 / 繁體中文 / English / 日本語 / 한국어（标题旁的下拉框切换，切换后自动刷新页面；首次打开按浏览器语言选择）。界面、提示信息和更新日志均已翻译。'],
   ['0.9.30','2026-10-12','新增“效果”（自选）：上隐、下隐、打乱（Random）、镜像（Mirror）、幻象（Phantom：音符先在原轨道下落，在轨道上 1/4 处飞到另一条没有音符遮挡的轨道，每个音符只变一次）。带转盘的 BMS 谱面，转盘轨道不参与打乱/镜像/幻象。'],
   ['0.9.29','2026-10-12','配合 Studio：支持隐藏窗口里的“编辑器试听”（自动演奏，VOS 的 MIDI 也能听）。'],
   ['0.9.28','2026-10-12','.rsc 谱面带节奏表（tempo）时，小节线按它画（变速曲目也准）。'],
@@ -642,8 +896,10 @@ const CHANGELOG=[
   ['0.1.0','2026-10-08','首个可玩原型：VOS/VOW 解析（原始格式与 VOS022）、7 键下落、判定与计分、延迟校准']
 ];
 (function(){const g=id=>document.getElementById(id);g('vbtn').textContent='v'+VERSION;
-  g('vlog').innerHTML=CHANGELOG.map(c=>'<li><b>v'+c[0]+'</b> <span>'+c[1]+'</span><br>'+c[2]+'</li>').join('');
-  g('vbtn').onclick=()=>{g('vlog').hidden=!g('vlog').hidden}})();
+  g('vlog').innerHTML=CHANGELOG.map(c=>'<li><b>v'+c[0]+'</b> <span>'+c[1]+'</span><br>'+tt(c[2])+'</li>').join('');
+  g('vbtn').onclick=()=>{g('vlog').hidden=!g('vlog').hidden};
+  const ls=g('langSel');ls.innerHTML=LANGS.map(l=>'<option value="'+l[0]+'">'+l[1]+'</option>').join('');ls.value=LANG;
+  ls.onchange=()=>{try{localStorage.setItem('resonia-lang',ls.value)}catch(e){}location.reload()}})();
 
 // ---------- Game ----------
 const cv=document.getElementById('cv'),c2=cv.getContext('2d'),W=420,LX=[],LD=[];let LANES=7;let H=640,JY=H-110;
@@ -716,14 +972,14 @@ $('off').addEventListener('change',()=>{try{localStorage.setItem('resonia-off',$
     // 每次点按匹配最近的一拍；偏差用 (按键时间 − 节拍时间) 表示
     for(const t of d){const k=Math.round((t-st.t0)/BEAT);if(k<PRE||k>=PRE+N)continue;all.push((t-(st.t0+k*BEAT))*1000)}
     stop();
-    if(all.length<8){pt.textContent='有效点按太少（'+all.length+' / '+N+'），请重试：听到声音再按，不要连按。';go.textContent='重测';go.disabled=false;return}
+    if(all.length<8){pt.textContent=tt('有效点按太少（{0} / {1}），请重试：听到声音再按，不要连按。',all.length,N);go.textContent=tt('重测');go.disabled=false;return}
     const med=a=>{const b=[...a].sort((x,y)=>x-y),m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2};
     const m0=med(all),ok=all.filter(x=>Math.abs(x-m0)<150);
     const mean=ok.reduce((a,b)=>a+b,0)/ok.length,sd=Math.sqrt(ok.reduce((a,b)=>a+(b-mean)**2,0)/ok.length);
     const out=outLat()*1000,off=-Math.round((mean-out)/5)*5,clamped=Math.max(-400,Math.min(400,off));
     $('off').value=clamped;$('off').dispatchEvent(new Event('input'));$('off').dispatchEvent(new Event('change'));
-    pt.innerHTML='已设置“延迟”为 <b>'+(clamped>0?'+':'')+clamped+' ms</b><br><span style="color:var(--mut);font-size:12px">'+ok.length+' 次有效 · 平均 '+mean.toFixed(0)+' ms · 抖动 ±'+sd.toFixed(0)+' ms'+(sd>45?' · 抖动偏大，建议重测':'')+(clamped!==off?' · 已到上限':'')+'</span>';
-    go.textContent='重测';go.disabled=false;
+    pt.innerHTML=tt('已设置“延迟”为 <b>{0} ms</b>',(clamped>0?'+':'')+clamped)+'<br><span style="color:var(--mut);font-size:12px">'+tt('{0} 次有效 · 平均 {1} ms · 抖动 ±{2} ms',ok.length,mean.toFixed(0),sd.toFixed(0))+(sd>45?tt(' · 抖动偏大，建议重测'):'')+(clamped!==off?tt(' · 已到上限'):'')+'</span>';
+    go.textContent=tt('重测');go.disabled=false;
   }
   function begin(){
     initAudio();if(ctx.resume)ctx.resume();
@@ -732,20 +988,20 @@ $('off').addEventListener('change',()=>{try{localStorage.setItem('resonia-off',$
       const o=ctx.createOscillator(),g=ctx.createGain(),t=t0+i*BEAT;o.frequency.value=i<PRE?660:1000;o.connect(g);g.connect(ctx.destination);
       g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.5,t+.002);g.gain.exponentialRampToValueAtTime(.001,t+.05);o.start(t);o.stop(t+.06);
     }
-    st.kd=e=>{if(e.key==='Escape'){stop();pt.textContent='已取消';go.textContent='开始';go.disabled=false;return}if(e.repeat)return;e.preventDefault();e.stopPropagation();tap(e.timeStamp)};
+    st.kd=e=>{if(e.key==='Escape'){stop();pt.textContent=tt('已取消');go.textContent=tt('开始');go.disabled=false;return}if(e.repeat)return;e.preventDefault();e.stopPropagation();tap(e.timeStamp)};
     st.pd=e=>{if(e.target.closest('button'))return;tap(e.timeStamp)};
     document.addEventListener('keydown',st.kd,true);box.addEventListener('pointerdown',st.pd,true);
-    go.disabled=true;go.textContent='测量中…';
+    go.disabled=true;go.textContent=tt('测量中…');
     const loop=()=>{if(!st||!st.on)return;
       const now=ctx.currentTime-outLat(),k=Math.floor((now-t0)/BEAT+1e-9),ph=now-(t0+k*BEAT);
       dot.classList.toggle('on',k>=0&&ph<0.08&&k<PRE+N);
-      if(k!==st.shown&&k>=0){st.shown=k;pt.textContent=k<PRE?'预备… '+(k+1)+' / '+PRE:'测量 '+Math.min(N,k-PRE+1)+' / '+N}
+      if(k!==st.shown&&k>=0){st.shown=k;pt.textContent=k<PRE?tt('预备… {0} / {1}',k+1,PRE):tt('测量 {0} / {1}',Math.min(N,k-PRE+1),N)}
       if(ctx.currentTime>t0+(PRE+N)*BEAT+0.5)return finish();
       st.raf=requestAnimationFrame(loop)};
     st.raf=requestAnimationFrame(loop);
   }
   function tap(ts){if(!st)return;st.taps.push(ctxOf(ts))}
-  $('calb').onclick=()=>{if(running){hint('请先退出当前演奏再校准');return}box.hidden=false;pt.textContent='准备中…';go.textContent='开始';go.disabled=false};
+  $('calb').onclick=()=>{if(running){hint(tt('请先退出当前演奏再校准'));return}box.hidden=false;pt.textContent=tt('准备中…');go.textContent=tt('开始');go.disabled=false};
   go.onclick=()=>{if(!st)begin()};
   $('calx').onclick=()=>{stop();box.hidden=true};
 })();
@@ -764,7 +1020,7 @@ function dbgInfo(e){
   const C=(song&&song.ctl[e.ch])||{},T=e.t||0,drum=e.ins>=128,pr=at(C.prog,T,drum?0:e.ins);let nm='';
   if(useSf()){const msb=at(C.bm,T,0),lsb=at(C.bl,T,0),bk=drum?128:(sf.dls?msb:(msb>=64&&msb<=126?msb:lsb));
     let i=sf.pre[bk*128+pr];if(i===undefined)i=sf.pre[pr];if(i===undefined)i=sf.pre[0];nm=(i!==undefined&&sf.ph[i]&&sf.ph[i].name)||''}
-  return 'ch'+e.ch+' 音色'+pr+(nm?' '+nm:'')+' 音高'+e.p+(drum?'(鼓)':'');
+  return tt('ch{0} 音色{1}{2} 音高{3}{4}',e.ch,pr,nm?' '+nm:'',e.p,drum?tt('(鼓)'):'');
 }
 function hitSound(n,pre){
   if(n.snd.s!==undefined){voice({...n.snd,t:n.t,key:true},ctx.currentTime);return}
@@ -775,10 +1031,10 @@ function hitSound(n,pre){
 }
 $('midiBtn').onclick=async()=>{
   const m=$('midiMsg');
-  try{midiAccess=await navigator.requestMIDIAccess()}catch(err){m.textContent='无法使用 Web MIDI（'+(err.message||err.name)+'）。可把页面保存到本地，用 Chrome 或 Edge 打开再试。';return}
-  const sel=$('out');sel.innerHTML='<option value="">内置合成器</option>';
+  try{midiAccess=await navigator.requestMIDIAccess()}catch(err){m.textContent=tt('无法使用 Web MIDI（{0}）。可把页面保存到本地，用 Chrome 或 Edge 打开再试。',err.message||err.name);return}
+  const sel=$('out');sel.innerHTML='<option value="">'+tt('内置合成器')+'</option>';
   for(const o of midiAccess.outputs.values()){const op=document.createElement('option');op.value=o.id;op.textContent=o.name;sel.appendChild(op)}
-  m.textContent=midiAccess.outputs.size?'找到 '+midiAccess.outputs.size+' 个输出设备，请在左侧选择':'没有找到 MIDI 输出设备';
+  m.textContent=midiAccess.outputs.size?tt('找到 {0} 个输出设备，请在左侧选择',midiAccess.outputs.size):tt('没有找到 MIDI 输出设备');
 };
 const bankSt={};
 function setSt(st,t){const e=$('sfst');e.hidden=false;e.className='st '+st;e.title=t||''}
@@ -788,7 +1044,7 @@ function applyOut(){
   panic();const ext=$('omode').value=='ext',v=$('out').value;$('ext').hidden=!ext;
   if(ext&&isBank(v)&&banks[v])sf=banks[v];
   midiOut=ext&&v&&!isBank(v)&&midiAccess?midiAccess.outputs.get(v):null;
-  showSt();hint(ext&&!Object.values(banks).some(Boolean)?'尚未载入音色库，暂时使用内部合成器':'');
+  showSt();hint(ext&&!Object.values(banks).some(Boolean)?tt('尚未载入音色库，暂时使用内部合成器'):'');
   try{localStorage.setItem('resonia-omode',$('omode').value);localStorage.setItem('resonia-out',v)}catch(x){}
 }
 $('out').onchange=applyOut;$('omode').onchange=applyOut;
@@ -807,20 +1063,20 @@ function setBank(k,parsed,name){
 function selectOut(v){if(isBank(v)&&banks[v]){$('omode').value='ext';$('out').value=v}else $('omode').value='int';applyOut()}
 const bankMsg=()=>Object.keys(banks).filter(k=>banks[k]).map(k=>bankFile[k]).join('、');
 $('sfile').onchange=async e=>{
-  const f=e.target.files[0];if(!f)return;setSt('load','读取中…');
+  const f=e.target.files[0];if(!f)return;setSt('load',tt('读取中…'));
   try{
     await new Promise(r=>setTimeout(r,40));
     const ab=await f.arrayBuffer(),isD=/\.dls$/i.test(f.name),k=isD?'dls':'sf2';
     await new Promise(r=>setTimeout(r,40));
     setBank(k,isD?parseDls(ab):parseSf2(ab),f.name);
     const big=ab.byteLength>64*1024*1024;if(!big)idbPut(k,{name:f.name,ab});
-    const p=banks[k];bankSt[k]={s:'ok',t:'已加载 '+f.name+'（'+(p.ph.length-1)+' 个'+(isD?'音色':'预设')+(big?'；文件较大(>64MB)，不会记住，下次需重新选择，也建议改用更小的库':'，已记住，下次自动恢复')+(p.comp?'；压缩格式，开始时会先解码':'')+'）'};
+    const p=banks[k];bankSt[k]={s:'ok',t:tt('已加载 {0}（{1} 个{2}{3}{4}）',f.name,p.ph.length-1,isD?tt('音色'):tt('预设'),big?tt('；文件较大(>64MB)，不会记住，下次需重新选择，也建议改用更小的库'):tt('，已记住，下次自动恢复'),p.comp?tt('；压缩格式，开始时会先解码'):'')};
     selectOut(k);
-  }catch(err){setSt('err','音色库加载失败：'+err.message)}
+  }catch(err){setSt('err',tt('音色库加载失败：{0}',err.message))}
   e.target.value='';
 };
 (async()=>{
-  for(const k of ['sf2','dls']){const r=await idbGet(k);if(!r||!r.ab)continue;try{setBank(k,k=='dls'?parseDls(r.ab):parseSf2(r.ab),r.name);bankSt[k]={s:'ok',t:'已恢复：'+r.name}}catch(x){}}
+  for(const k of ['sf2','dls']){const r=await idbGet(k);if(!r||!r.ab)continue;try{setBank(k,k=='dls'?parseDls(r.ab):parseSf2(r.ab),r.name);bankSt[k]={s:'ok',t:tt('已恢复：{0}',r.name)}}catch(x){}}
   let m=null,o=null;try{m=localStorage.getItem('resonia-omode');o=localStorage.getItem('resonia-out')}catch(x){}
   const ks=['sf2','dls'].filter(k=>banks[k]);
   if(m=='ext'&&ks.length)selectOut(banks[o]?o:ks[0]);else if(m=='ext'){$('omode').value='ext';applyOut()}else showSt();
@@ -844,7 +1100,7 @@ function stopSamples(){for(const s of [...actSrc]){try{s.stop()}catch(x){}}}
 async function readZip(ab){
   const dv=new DataView(ab),u8=new Uint8Array(ab);let p=ab.byteLength-22;
   while(p>=0&&dv.getUint32(p,true)!==0x06054b50)p--;
-  if(p<0)throw new Error('不是有效的 ZIP 文件');
+  if(p<0)throw new Error(tt('不是有效的 ZIP 文件'));
   const n=dv.getUint16(p+10,true);let q=dv.getUint32(p+16,true);const out=[];
   const dec=(b,utf)=>{if(utf)return new TextDecoder().decode(b);try{return new TextDecoder('utf-8',{fatal:true}).decode(b)}catch(x){return new TextDecoder('shift_jis').decode(b)}};
   for(let i=0;i<n;i++){
@@ -855,7 +1111,7 @@ async function readZip(ab){
     out.push({path:name,ab:async()=>{
       const ds=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true),raw=u8.subarray(ds,ds+cs);
       if(cm===0)return raw.slice().buffer;
-      if(cm!==8)throw new Error('不支持的压缩方式 '+cm);
+      if(cm!==8)throw new Error(tt('不支持的压缩方式 {0}',cm));
       return await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
     }});
   }
@@ -975,7 +1231,7 @@ async function decodeSamples(items,say){
   const q=items.slice(),samples={};let done=0,bad=0,miss=0;
   const work=async()=>{for(;;){const it=q.shift();if(!it)return;
     if(!it.e)miss++;else try{samples[it.id]=await decodeAudio(await it.e.ab())}catch(x){bad++}
-    done++;if(done%4==0||done==items.length)say('解码音频 '+done+' / '+items.length)}};
+    done++;if(done%4==0||done==items.length)say(tt('解码音频 {0} / {1}',done,items.length))}};
   await Promise.all([work(),work(),work(),work()]);
   return{samples,bad,miss};
 }
@@ -989,7 +1245,7 @@ async function buildBms(ch,find,say){
   for(const b of P.back){const s=samples[b.id];b.s=b.id;b.vel=127;b.ch=0;b.ins=0;b.p=60;b.dur=0;end=Math.max(end,b.t+(s?s.duration*1000:0))}
   const res={samples:{},media:{}};for(const it of sItems)if(it.e&&samples[it.id])res.samples[it.id]=it.e;for(const it of bItems)if(it.e&&bmps[it.id])res.media[it.id]=it.e;
   return{title:P.title||ch.path.split('/').pop(),artist:P.artist,level:+P.level||0,chartName:ch.path.split('/').pop(),lenMs:end+1500,bars:P.bars,lanes:P.lanes,scratch:P.scratch,notes:P.notes,back:P.back,ctl:{},mev:[],chan:{},tracks:0,bpm:P.bpm,samples,bga:P.bga,bmps,res,
-    kind:'BMS',note:((miss||bad)?`（缺少 ${miss} 个、无法解码 ${bad} 个音频）`:'')+(P.bga.length?` · BGA ${Object.keys(bmps).length} 个素材${bmiss?`（${bmiss} 个无法显示，如 mpg/avi）`:''}`:'')};
+    kind:'BMS',note:((miss||bad)?tt('（缺少 {0} 个、无法解码 {1} 个音频）',miss,bad):'')+(P.bga.length?tt(' · BGA {0} 个素材',Object.keys(bmps).length)+(bmiss?tt('（{0} 个无法显示，如 mpg/avi）',bmiss):''):'')};
 }
 let volMode='v';const volUser={};
 function setSong(s,name,extra){
@@ -999,33 +1255,33 @@ function setSong(s,name,extra){
   if(!s.bars&&s.bpm>0){s.bars=[];const iv=240000/s.bpm;for(let t=0;t<(s.lenMs||0)&&s.bars.length<5000;t+=iv)s.bars.push(t)} // 没有小节信息的曲目：按首个 BPM 等间隔估算
   // 伴奏/按键音量的默认值：VOS 为 0.5 / 1.3，其他格式为 1 / 1（手动调过的值按类别记住）
   {const m=s.kind?'o':'v',d=m=='v'?[.5,1.3]:[1,1],u=volUser[m]||d;volMode=m;for(const [id,v] of [['bv',u[0]],['kv',u[1]]]){$(id).value=v;$(id).dispatchEvent(new Event('input'))}}
-  song=s;applyLaneMap(s);songInfo=`${s.title||name} · 可玩音符 ${s.notes.length} · 伴奏事件 ${s.back.length}`+(s.kind?' · '+s.kind:' · MIDI 轨道 '+s.tracks)+(s.note||'');
+  song=s;applyLaneMap(s);songInfo=tt('{0} · 可玩音符 {1} · 伴奏事件 {2}',s.title||name,s.notes.length,s.back.length)+(s.kind?' · '+s.kind:tt(' · MIDI 轨道 {0}',s.tracks))+(s.note||'');
   $('info').textContent='';$('fname').textContent=name;$('go').disabled=false;$('pt').textContent=s.title||name;pKey='';draw(0);
 }
 async function fillSink(){
   const sel=$('sink');
-  if(!(window.AudioContext&&'setSinkId' in AudioContext.prototype)){sel.innerHTML='<option>浏览器不支持切换（使用系统默认）</option>';sel.disabled=true;return}
+  if(!(window.AudioContext&&'setSinkId' in AudioContext.prototype)){sel.innerHTML='<option>'+tt('浏览器不支持切换（使用系统默认）')+'</option>';sel.disabled=true;return}
   let ds=[];try{ds=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind=='audiooutput')}catch(x){}
   let sv='';try{sv=localStorage.getItem('resonia-sink')||''}catch(x){}
-  sel.innerHTML='<option value="">系统默认</option>';
+  sel.innerHTML='<option value="">'+tt('系统默认')+'</option>';
   const hasName=ds.some(d=>d.label);$('sinkNm').hidden=hasName;
   ds=ds.filter(d=>d.deviceId!='default'&&d.deviceId!='communications');
-  ds.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('输出设备 '+(i+1)+'（名称未授权）');sel.appendChild(o)});
+  ds.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||(tt('输出设备 {0}（名称未授权）',i+1));sel.appendChild(o)});
   sel.value=[...sel.options].some(o=>o.value==sv)?sv:'';
 }
-$('sinkNm').onclick=async()=>{try{const st=await navigator.mediaDevices.getUserMedia({audio:true});st.getTracks().forEach(t=>t.stop())}catch(x){$('info').textContent='未获得授权，无法显示设备名称';return}await fillSink()};
+$('sinkNm').onclick=async()=>{try{const st=await navigator.mediaDevices.getUserMedia({audio:true});st.getTracks().forEach(t=>t.stop())}catch(x){$('info').textContent=tt('未获得授权，无法显示设备名称');return}await fillSink()};
 $('sink').onchange=()=>{const v=$('sink').value;try{localStorage.setItem('resonia-sink',v)}catch(x){}initAudio();if(ctx.setSinkId)ctx.setSinkId(v).catch(()=>{})};
 try{const m=localStorage.getItem('resonia-mv');if(m)$('mv').value=m}catch(x){}
 $('mv').oninput=()=>{if(master)master.gain.value=.6*(+$('mv').value);try{localStorage.setItem('resonia-mv',$('mv').value)}catch(x){}};
 for(const id of ['bv','kv'])$(id).addEventListener('change',()=>{volUser[volMode]=[+$('bv').value,+$('kv').value]});
 async function loadSong(ab,name){
   try{setSong(parseVos(ab),name)}
-  catch(err){$('info').textContent='解析失败：'+err.message}
+  catch(err){$('info').textContent=tt('解析失败：{0}',err.message)}
 }
 async function openChart(i){
-  const it=pack.items[i];$('info').textContent='正在读取谱面…';
+  const it=pack.items[i];$('info').textContent=tt('正在读取谱面…');
   try{setSong(await it.load(t=>$('info').textContent=t),it.name);$('info').textContent=''}
-  catch(err){$('info').textContent='谱面读取失败：'+err.message}
+  catch(err){$('info').textContent=tt('谱面读取失败：{0}',err.message)}
 }
 // ---------- 第三方插件（格式导入）----------
 // 插件是一个 .js 文件，在页面里调用 Resonia.register({...})。详见 docs/PLUGIN-API.md
@@ -1033,7 +1289,7 @@ const plugins=[];
 const Resonia=window.Resonia={
   version:()=>VERSION,
   register(p){
-    if(!p||!p.id||typeof p.open!=='function'||!Array.isArray(p.exts))throw new Error('插件缺少 id / exts / open');
+    if(!p||!p.id||typeof p.open!=='function'||!Array.isArray(p.exts))throw new Error(tt('插件缺少 id / exts / open'));
     const i=plugins.findIndex(x=>x.id===p.id);if(i>=0)plugins.splice(i,1);
     plugins.push(p);plugRefresh();
   },
@@ -1062,17 +1318,17 @@ function plugRefresh(){
   const box=$('pll');box.innerHTML='';
   for(const p of plugins){const d=document.createElement('div');d.className='row';d.style.cssText='font-size:12px;color:var(--mu);margin-top:4px';
     d.textContent=(p.name||p.id)+(p.version?' v'+p.version:'')+' · '+p.exts.map(e=>'.'+e.replace(/^\./,'')).join(' ')+' ';
-    const x=document.createElement('button');x.className='fbtn sm';x.style.cssText='border:0;cursor:pointer';x.textContent='移除';x.onclick=async()=>{await plugForget(p.id);plugins.splice(plugins.indexOf(p),1);plugRefresh()};d.appendChild(x);box.appendChild(d)}
-  $('plmsg').textContent=plugins.length?'已载入 '+plugins.length+' 个插件':'未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器';
+    const x=document.createElement('button');x.className='fbtn sm';x.style.cssText='border:0;cursor:pointer';x.textContent=tt('移除');x.onclick=async()=>{await plugForget(p.id);plugins.splice(plugins.indexOf(p),1);plugRefresh()};d.appendChild(x);box.appendChild(d)}
+  $('plmsg').textContent=plugins.length?tt('已载入 {0} 个插件',plugins.length):tt('未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器');
 }
 const plugSrc={}; // 记住插件源码（IndexedDB 'plugins'），下次打开自动恢复
 async function plugSave(){await idbPut('plugins',Object.keys(plugSrc).map(k=>({name:k,src:plugSrc[k]})))}
 async function plugForget(id){for(const k of Object.keys(plugSrc))if(plugSrc[k].includes(id))delete plugSrc[k];await plugSave()}
-function plugRun(src){return new Promise((ok,no)=>{const u=URL.createObjectURL(new Blob([src],{type:'text/javascript'})),sc=document.createElement('script');sc.src=u;sc.onload=()=>{URL.revokeObjectURL(u);sc.remove();ok()};sc.onerror=()=>{sc.remove();no(new Error('脚本无法运行'))};document.head.appendChild(sc)})}
+function plugRun(src){return new Promise((ok,no)=>{const u=URL.createObjectURL(new Blob([src],{type:'text/javascript'})),sc=document.createElement('script');sc.src=u;sc.onload=()=>{URL.revokeObjectURL(u);sc.remove();ok()};sc.onerror=()=>{sc.remove();no(new Error(tt('脚本无法运行')))};document.head.appendChild(sc)})}
 $('plf').onchange=async e=>{
   const fs=[...e.target.files];e.target.value='';if(!fs.length)return;
-  if(!confirm('插件是会在本页运行的程序，能读取你选择的文件。只载入你信任的插件文件。\n\n继续载入 '+fs.map(f=>f.name).join('、')+'？'))return;
-  for(const f of fs){try{const src=await f.text(),n0=plugins.length;await plugRun(src);plugSrc[f.name]=src;$('plmsg').textContent='已载入 '+f.name}catch(err){$('plmsg').textContent='插件 '+f.name+' 载入失败：'+err.message}}
+  if(!confirm(tt('插件是会在本页运行的程序，能读取你选择的文件。只载入你信任的插件文件。\n\n继续载入 {0}？',fs.map(f=>f.name).join(tt('、')))))return;
+  for(const f of fs){try{const src=await f.text(),n0=plugins.length;await plugRun(src);plugSrc[f.name]=src;$('plmsg').textContent=tt('已载入 {0}',f.name)}catch(err){$('plmsg').textContent=tt('插件 {0} 载入失败：{1}',f.name,err.message)}}
   await plugSave();plugRefresh();
 };
 (async()=>{const r=await idbGet('plugins');if(Array.isArray(r))for(const x of r){try{await plugRun(x.src);plugSrc[x.name]=x.src}catch(e){}}plugRefresh()})();
@@ -1101,7 +1357,7 @@ $('needd').onclick=async()=>{
     const hs=await dirHandles();let dup=false;for(const x of hs)try{if(await x.isSameEntry(h))dup=true}catch(e){}
     if(!dup){hs.push(h);await idbPut('dirs',hs)}
     const out=[];await dirScan(h,pendingNeed.test,3,out,pendingNeed.all);
-    if(out.length&&pendingList)await importFiles([...pendingList,...out]);else $('needt').textContent='这个文件夹里没找到 '+pendingNeed.want+'，换一个文件夹或手动选择';
+    if(out.length&&pendingList)await importFiles([...pendingList,...out]);else $('needt').textContent=tt('这个文件夹里没找到 {0}，换一个文件夹或手动选择',pendingNeed.want);
   }catch(e){}
 };
 $('needf').onchange=async e=>{const add=[...e.target.files];e.target.value='';if(add.length&&pendingList)await importFiles([...pendingList,...add])};
@@ -1111,7 +1367,7 @@ async function importFiles(list){
   try{
     let ents=[];
     for(const f of list){
-      if(/\.(zip|rsm)$/i.test(f.name)){$('info').textContent='正在读取压缩包…';ents.push(...await readZip(await f.arrayBuffer()))}
+      if(/\.(zip|rsm)$/i.test(f.name)){$('info').textContent=tt('正在读取压缩包…');ents.push(...await readZip(await f.arrayBuffer()))}
       else ents.push({path:f.webkitRelativePath||f.name,ab:()=>f.arrayBuffer()});
     }
     const find=mkRes(ents),items=[];
@@ -1144,11 +1400,11 @@ async function importFiles(list){
       }
       for(const r of rules){
         const have=ents.find(e=>fext(e)===r.have);if(!have||ents.some(e=>fext(e)===r.miss))continue;
-        const nd=r.mk(have);$('info').textContent='正在查找 '+nd.want+'…';
+        const nd=r.mk(have);$('info').textContent=tt('正在查找 {0}…',nd.want);
         const got=await autoFindBy(nd.test,nd.all,true);
         if(got.length){await importFiles([...list,...got]);return}
-        pendingList=list;pendingNeed=nd;$('needt').textContent='已选 '+nameOf(have)+'，还需要对应的 '+nd.want;
-        $('needb').textContent='选择 '+nd.acc.split(',')[0];$('needf').accept=nd.acc;$('needd').hidden=!window.showDirectoryPicker;$('need').hidden=false;$('info').textContent='';
+        pendingList=list;pendingNeed=nd;$('needt').textContent=tt('已选 {0}，还需要对应的 {1}',nameOf(have),nd.want);
+        $('needb').textContent=tt('选择 {0}',nd.acc.split(',')[0]);$('needf').accept=nd.acc;$('needd').hidden=!window.showDirectoryPicker;$('need').hidden=false;$('info').textContent='';
         return;
       }
     }
@@ -1157,13 +1413,13 @@ async function importFiles(list){
       const ex=p.exts.map(e=>e.replace(/^\./,'').toLowerCase()),hid=(p.hide||[]).map(e=>e.replace(/^\./,'').toLowerCase()),mine=ents.filter(e=>ex.includes(fext(e)));
       if(!mine.some(e=>!hid.includes(fext(e)))&&!(p.match&&p.match(ents)))continue;
       try{const r=await p.open(mine.length?mine:ents,{ents,find,api:Resonia.api});for(const it of r||[])items.push({name:it.name||it.label,label:'['+(p.name||p.id)+'] '+(it.label||it.name),load:say=>it.build(say)})}
-      catch(err){perr.push(err.notice?err.message:'插件 '+(p.name||p.id)+'：'+err.message)}
+      catch(err){perr.push(err.notice?{m:err.message,n:1}:{m:tt('插件 {0}：{1}',p.name||p.id,err.message)})}
     }
     if(!items.length){
       const vos=ents.filter(e=>/\.(vos|vow)$/i.test(e.path));
       if(vos.length)return loadSong(await vos[0].ab(),vos[0].path.split('/').pop());
-      if(perr.length){const e=new Error(perr.join('；'));e.notice=perr.length==1&&!/^插件 /.test(perr[0]);throw e}
-      throw new Error('没有找到可用的谱面（支持 .vos .vow .bms .bme .bml .rsc / .rsm，或包含它们的 .zip / 文件夹）');
+      if(perr.length){const e=new Error(perr.map(x=>x.m).join(tt('；')));e.notice=perr.length==1&&!!perr[0].n;throw e}
+      throw new Error(tt('没有找到可用的谱面（支持 .vos .vow .bms .bme .bml .rsc / .rsm，或包含它们的 .zip / 文件夹）'));
     }
     pack={items};
     if(items.length>1){
@@ -1171,7 +1427,7 @@ async function importFiles(list){
       sel.hidden=false;sel.onchange=()=>openChart(+sel.value);
     }
     await openChart(0);
-  }catch(err){$('info').textContent=(err.notice?'':'导入失败：')+err.message}
+  }catch(err){$('info').textContent=err.notice?err.message:tt('导入失败：{0}',err.message)}
 }
 // ---------- .rsc 谱面 / .rsm 曲包：读写 ----------
 async function buildRsc(R,ci,man,find,say){
@@ -1196,7 +1452,7 @@ async function buildRsc(R,ci,man,find,say){
   return{title:(R.meta&&R.meta.title)||'',artist:(R.meta&&R.meta.artist)||'',level:c.level||0,chartName:c.name||'',lenMs:end+1000,notes,back,
     ctl:V.ctl||{},mev:V.mev||[],chan:V.chan||{},tracks:V.tracks||0,bpm:c.bpm||120,lanes:c.lanes,bars,
     samples:hasS?S.samples:undefined,bga:bga.length?bga:undefined,bmps:B.bmps,res,kind:hasS?'RSM':undefined,
-    note:(S.miss||S.bad)?`（缺少 ${S.miss} 个、无法解码 ${S.bad} 个音频）`:''};
+    note:(S.miss||S.bad)?tt('（缺少 {0} 个、无法解码 {1} 个音频）',S.miss,S.bad):''};
 }
 $('file').onchange=async e=>{await importFiles(e.target.files);e.target.value=''};
 $('dirf').onchange=async e=>{await importFiles(e.target.files);e.target.value=''};
@@ -1205,7 +1461,7 @@ $('dirf').onchange=async e=>{await importFiles(e.target.files);e.target.value=''
 (async()=>{
   let L;try{const r=await fetch('songs/index.json',{cache:'no-cache'});if(!r.ok)return;L=await r.json()}catch(x){return}
   if(!Array.isArray(L)||!L.length)return;
-  const sel=$('lib');sel.innerHTML='<option value="">— 选择曲目（共 '+L.length+' 首）—</option>';
+  const sel=$('lib');sel.innerHTML='<option value="">'+tt('— 选择曲目（共 {0} 首）—',L.length)+'</option>';
   const gs={};
   L.forEach((m,i)=>{const o=document.createElement('option');o.value=i;o.textContent=m.title||m.file;const g=m.group||'';
     if(!g){sel.appendChild(o);return}
@@ -1213,9 +1469,9 @@ $('dirf').onchange=async e=>{await importFiles(e.target.files);e.target.value=''
     gs[g].appendChild(o)});
   $('cLib').hidden=false;
   sel.onchange=async()=>{
-    const m=L[sel.value];if(!m)return;$('info').textContent='正在下载曲目…';
+    const m=L[sel.value];if(!m)return;$('info').textContent=tt('正在下载曲目…');
     try{const r=await fetch('songs/'+m.file.split('/').map(encodeURIComponent).join('/'));if(!r.ok)throw new Error('HTTP '+r.status);await loadSong(await r.arrayBuffer(),m.title||m.file)}
-    catch(err){$('info').textContent='曲目下载失败：'+err.message}
+    catch(err){$('info').textContent=tt('曲目下载失败：{0}',err.message)}
   };
 })();
 const touchish=()=>{let m=false;try{m=matchMedia('(pointer:coarse), (max-width:700px)').matches}catch(x){}return m||navigator.maxTouchPoints>0||'ontouchstart' in window||innerWidth<=700};
@@ -1244,7 +1500,7 @@ $('lanesel').onchange=()=>{laneOv=+$('lanesel').value;if(running)return;applyLan
 async function start(){
   if(!song)return;const wasRunning=running;
   initAudio();ctx.resume();
-  if(useSf()&&!song.samples){const go=$('go');go.disabled=true;try{await sfPreload()}catch(x){}go.disabled=false;go.textContent=wasRunning?'重新开始':'开始'}clearInterval(schedTimer);rebind=null;renderKeys();$('go').blur();
+  if(useSf()&&!song.samples){const go=$('go');go.disabled=true;try{await sfPreload()}catch(x){}go.disabled=false;go.textContent=wasRunning?tt('重新开始'):tt('开始')}clearInterval(schedTimer);rebind=null;renderKeys();$('go').blur();
   for(const n of song.notes){n.done=false;n.hit=false;n.holding=false;n.rel=null;n.dead=false}
   applyLaneMap(song);lanesQ=Array.from({length:LANES},(_,l)=>song.notes.filter(n=>n.lane==l));lp=Array(LANES).fill(0);holdN=Array(LANES).fill(null);
   keys.fill(false);resetPtr();drops=0;dbgLast='';
@@ -1261,7 +1517,7 @@ async function start(){
   const mo=midiOut&&!song.samples;
   if(mo){if(!song.mout)buildMout();const M=song.mout;while(mi<M.length&&M[mi].ms<startOff){if(M[mi].r==0)midiOut.send(M[mi].b);mi++}}
   schedTimer=setInterval(sched,25);
-  $('go').textContent='重新开始';
+  $('go').textContent=tt('重新开始');
   if(!wasRunning)requestAnimationFrame(frame);
 }
 let pvAuto=false,pvi=0;
@@ -1278,16 +1534,16 @@ function addFx(l,j){
 }
 // ---------- Skin（皮肤）：主题 + 自定义图片素材 ----------
 const K3=[['#f4f6ff','#aeb8f0'],['#62b8ff','#2c72d6'],['#ffd24d','#e0961a']];let KIND=kindsFor(7);setGeo(null);const hasTT=()=>!!(S.tt&&LANES==8);
-const SKSLOTS=[['bg','页面背景'],['field','轨道背景'],['note0','白键音符'],['note1','蓝键音符'],['note2','黄键音符'],['hold','长条'],['line','判定线'],['key0','按键（松开）'],['key1','按键（按下）'],['fx','打击特效']];
+const SKSLOTS=[['bg',tt('页面背景')],['field',tt('轨道背景')],['note0',tt('白键音符')],['note1',tt('蓝键音符')],['note2',tt('黄键音符')],['hold',tt('长条')],['line',tt('判定线')],['key0',tt('按键（松开）')],['key1',tt('按键（按下）')],['fx',tt('打击特效')]];
 const svgUrl=x=>'url("data:image/svg+xml,'+encodeURIComponent(x)+'")';
 const MEADOW=svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 750" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#241a4d"/><stop offset=".45" stop-color="#6d54b0"/><stop offset=".72" stop-color="#d9c8ee"/></linearGradient><radialGradient id="m" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6d8"/><stop offset="1" stop-color="#fff6d8" stop-opacity="0"/></radialGradient></defs><rect width="1000" height="750" fill="url(#s)"/><circle cx="820" cy="150" r="130" fill="url(#m)"/><g fill="#fff" opacity=".8"><circle cx="120" cy="80" r="2"/><circle cx="260" cy="150" r="1.5"/><circle cx="420" cy="60" r="2"/><circle cx="560" cy="130" r="1.5"/><circle cx="700" cy="50" r="2"/><circle cx="930" cy="260" r="1.5"/></g><ellipse cx="300" cy="760" rx="700" ry="250" fill="#7fd05c"/><ellipse cx="880" cy="780" rx="520" ry="230" fill="#5db854"/><ellipse cx="620" cy="560" rx="150" ry="70" fill="#a6e07f"/><g><circle cx="700" cy="470" r="95" fill="#f6c9dc"/><rect x="655" y="470" width="90" height="70" fill="#f6c9dc"/><circle cx="700" cy="455" r="22" fill="#fff3a8" stroke="#e59ab8" stroke-width="5"/><path d="M590 480a110 70 0 0 1 220 0z" fill="#e9577f"/></g><g><circle cx="900" cy="560" r="70" fill="#fff"/><ellipse cx="880" cy="500" rx="14" ry="48" fill="#fff"/><ellipse cx="925" cy="500" rx="14" ry="48" fill="#fff"/><circle cx="880" cy="560" r="7" fill="#7a3d3d"/><circle cx="920" cy="560" r="7" fill="#7a3d3d"/></g><g fill="#fff"><circle cx="560" cy="690" r="9"/><circle cx="590" cy="680" r="7"/><circle cx="780" cy="710" r="9"/><circle cx="440" cy="705" r="7"/></g><g fill="#ffd24d"><circle cx="560" cy="690" r="3"/><circle cx="780" cy="710" r="3"/></g></svg>`);
 const SK={
-  classic:{name:'经典',layout:'center',hud:'classic'},
-  meadow:{name:'糖果星球',layout:'left',hud:'panel',field:'glass',pal:K3,style:'pill',page:MEADOW+' center/cover fixed #2b1d4f',glow:'255,226,160',line:'rgba(255,255,255,.95)'},
-  neon:{name:'霓虹',layout:'center',hud:'panel',field:'glass',pal:[['#eafcff','#7fd9ff'],['#25d9ff','#0a8ab0'],['#ff4fd8','#a01788']],style:'neon',
+  classic:{name:tt('经典'),layout:'center',hud:'classic'},
+  meadow:{name:tt('糖果星球'),layout:'left',hud:'panel',field:'glass',pal:K3,style:'pill',page:MEADOW+' center/cover fixed #2b1d4f',glow:'255,226,160',line:'rgba(255,255,255,.95)'},
+  neon:{name:tt('霓虹'),layout:'center',hud:'panel',field:'glass',pal:[['#eafcff','#7fd9ff'],['#25d9ff','#0a8ab0'],['#ff4fd8','#a01788']],style:'neon',
     page:'radial-gradient(ellipse at 50% 20%,#1b1650 0,transparent 60%),linear-gradient(rgba(37,217,255,.07) 1px,transparent 1px) 0 0/42px 42px,linear-gradient(90deg,rgba(37,217,255,.07) 1px,transparent 1px) 0 0/42px 42px,#05060f',glow:'37,217,255',line:'#25d9ff'},
   iidx:{name:'IIDX 1P',layout:'center',hud:'panel',field:'glass',pal:[['#f6f8ff','#c4cae0'],['#4aa0ff','#1f5fc4'],['#ff4a4a','#a80f1a']],style:'pill',look:'iidx',kind:[2,0,1,0,1,0,1,0],geo:{x0:6,w:[84,49.5,42,49.5,42,49.5,42,49.5]},tt:true,page:'radial-gradient(ellipse at 50% 0,#27303c 0,transparent 62%),linear-gradient(#08090c,#0e1015)',glow:'110,210,255',line:'#ff3a2a'},
-  custom:{name:'自定义',layout:'center',hud:'classic',pal:K3,style:'pill',field:''}
+  custom:{name:tt('自定义'),layout:'center',hud:'classic',pal:K3,style:'pill',field:''}
 };
 let S=SK.classic,SI={};const CI={},CIfile={};
 const imOK=im=>im&&im.complete&&im.naturalWidth>0;
@@ -1612,13 +1868,13 @@ const fmtT=ms=>{const t=Math.max(0,ms/1000|0);return (t/60|0)+':'+String(t%60).p
     else hw=false}catch(x){}
   if(hw===null)return;
   el.hidden=false;el.classList.toggle('sw',!hw);
-  el.innerHTML='<span class="st '+(hw?'ok':'warn')+'"></span>'+(hw?'硬件加速':'软件渲染');
-  el.title=hw?'浏览器正在使用显卡渲染：'+name:'浏览器没有使用显卡渲染（'+(name||'WebGL 不可用')+'），画面可能卡顿、撕裂。请在浏览器设置里开启“使用图形加速功能”后重启浏览器；Chrome 可打开 chrome://gpu 查看状态。';
+  el.innerHTML='<span class="st '+(hw?'ok':'warn')+'"></span>'+(hw?tt('硬件加速'):tt('软件渲染'));
+  el.title=hw?tt('浏览器正在使用显卡渲染：{0}',name):tt('浏览器没有使用显卡渲染（{0}），画面可能卡顿、撕裂。请在浏览器设置里开启“使用图形加速功能”后重启浏览器；Chrome 可打开 chrome://gpu 查看状态。',name||tt('WebGL 不可用'));
 })();
 let pKey='',seekDrag=null,seekMs=null;
 let prevOut=null;
 $('tm').onchange=()=>{const on=$('tm').checked;
-  if(on){prevOut={m:$('omode').value,v:$('out').value};if(banks.dls){selectOut('dls');hint('')}else hint('测试模式默认使用 gm.dls：请在“声音 → 外部合成器”里载入一次 C:\\Windows\\System32\\drivers\\gm.dls，之后会自动记住')}
+  if(on){prevOut={m:$('omode').value,v:$('out').value};if(banks.dls){selectOut('dls');hint('')}else hint(tt('测试模式默认使用 gm.dls：请在“声音 → 外部合成器”里载入一次 C:\\Windows\\System32\\drivers\\gm.dls，之后会自动记住'))}
   else if(prevOut){$('omode').value=prevOut.m;if(prevOut.v&&banks[prevOut.v])$('out').value=prevOut.v;applyOut();prevOut=null;if(!$('tm').checked&&$('omode').value=='int')hint('')}
   $('pb').classList.toggle('seek',on);if(!on){seekMs=null;seekDrag=null}pKey='';progress(running?songMs():0)};
 (function(){
@@ -1730,9 +1986,9 @@ function draw(now){
   if(S.hud=='panel')skHud(now);
   c2.textAlign='left';c2.fillStyle='#e8ebff';c2.font='bold 20px system-ui';if(S.hud!='panel')c2.fillText(String(score).padStart(7,'0'),10,28);
   const tot=cnt?cnt.P+cnt.G+cnt.O+cnt.B+cnt.M:0;
-  if(tot&&S.hud!='panel'){c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText('准确率 '+((cnt.P*1+cnt.G*.7+cnt.O*.4)/tot*100).toFixed(1)+'%',10,48)}
-  if($('dbg').checked&&running){c2.textAlign='left';c2.font='12px system-ui';c2.fillStyle='#8b92c4';c2.fillText('FPS '+fps+' · 发声 '+voices+' · 丢音 '+drops+(song&&song.bga&&song.bga.length?' · BGA '+bgaCur.map(e=>e?e.id:'-').join('/'):''),10,66);c2.fillText(dbgLast,10,82)}
-  if(performance.now()-spdT<900){c2.textAlign='right';c2.font='bold 16px system-ui';c2.fillStyle='#ffd24d';c2.fillText('速度 '+(+$('spd').value).toFixed(2),W-10,60)}
+  if(tot&&S.hud!='panel'){c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText(tt('准确率 {0}%',((cnt.P*1+cnt.G*.7+cnt.O*.4)/tot*100).toFixed(1)),10,48)}
+  if($('dbg').checked&&running){c2.textAlign='left';c2.font='12px system-ui';c2.fillStyle='#8b92c4';c2.fillText(tt('FPS {0} · 发声 {1} · 丢音 {2}',fps,voices,drops)+(song&&song.bga&&song.bga.length?' · BGA '+bgaCur.map(e=>e?e.id:'-').join('/'):''),10,66);c2.fillText(dbgLast,10,82)}
+  if(performance.now()-spdT<900){c2.textAlign='right';c2.font='bold 16px system-ui';c2.fillStyle='#ffd24d';c2.fillText(tt('速度 {0}',(+$('spd').value).toFixed(2)),W-10,60)}
   if(running&&document.body.classList.contains('playing')){c2.textAlign='center';c2.font='bold 22px system-ui';c2.fillStyle='rgba(255,255,255,.5)';c2.fillText('✕',W-28,32)}
   if(combo>1){c2.textAlign='center';c2.font='bold 44px system-ui';c2.fillStyle='rgba(255,255,255,.85)';if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.55)';c2.strokeText(combo,W/2,220)}c2.fillText(combo,W/2,220);c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText('COMBO',W/2,240)}
   if(lastJ&&performance.now()-lastJT<500){c2.textAlign='center';c2.font='bold 22px system-ui';c2.fillStyle=lastJ=='MISS'?'#ff6b7a':lastJ=='BAD'?'#c78bff':lastJ=='PERFECT'?'#ffd24d':lastJ=='GREAT'?'#6cffb0':'#6c8cff';if(II()&&lastJ!='MISS'){const tx=lastJ+(combo>1?' '+combo:''),cx=LX[1]+(LX[LANES-1]+LD[LANES-1]-LX[1])/2,gj=c2.createLinearGradient(0,276,0,306);gj.addColorStop(0,'#ffd0da');gj.addColorStop(.5,'#ff5f86');gj.addColorStop(1,'#d8123c');c2.font='italic 900 30px Impact,system-ui';c2.lineWidth=3;c2.lineJoin='round';c2.strokeStyle='rgba(255,255,255,.9)';c2.strokeText(tx,cx,300);c2.fillStyle=gj;c2.fillText(tx,cx,300)}else{if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.6)';c2.strokeText(lastJ,W/2,300)}c2.fillText(lastJ,W/2,300)}}
@@ -1740,13 +1996,13 @@ function draw(now){
     c2.fillStyle='rgba(8,10,22,.82)';c2.fillRect(0,0,W,H);c2.textAlign='center';
     c2.fillStyle='#fff';c2.font='bold 54px system-ui';c2.fillText('鸣域',W/2,250);
     c2.fillStyle='#6c8cff';c2.font='600 24px system-ui';c2.fillText('R E S O N I A',W/2,292);
-    c2.fillStyle='#8b92c4';c2.font='14px system-ui';c2.fillText(song?'点击上方“开始”':'请先打开一首歌曲',W/2,340);
+    c2.fillStyle='#8b92c4';c2.font='14px system-ui';c2.fillText(song?tt('点击上方“开始”'):tt('请先打开一首歌曲'),W/2,340);
   }
   if(ended){
-    c2.fillStyle='rgba(8,10,22,.88)';c2.fillRect(0,0,W,H);c2.textAlign='center';c2.fillStyle='#fff';c2.font='bold 30px system-ui';c2.fillText('结算',W/2,200);
-    c2.font='18px system-ui';c2.fillText('得分 '+score,W/2,250);c2.fillText('最大连击 '+maxCombo,W/2,282);
+    c2.fillStyle='rgba(8,10,22,.88)';c2.fillRect(0,0,W,H);c2.textAlign='center';c2.fillStyle='#fff';c2.font='bold 30px system-ui';c2.fillText(tt('结算'),W/2,200);
+    c2.font='18px system-ui';c2.fillText(tt('得分 {0}',score),W/2,250);c2.fillText(tt('最大连击 {0}',maxCombo),W/2,282);
     c2.fillStyle='#8b92c4';c2.font='15px system-ui';c2.fillText(`P ${cnt.P}   G ${cnt.G}   O ${cnt.O}   B ${cnt.B}   M ${cnt.M}`,W/2,318);
-    if(document.body.classList.contains('playing'))c2.fillText('点击屏幕返回',W/2,360);
+    if(document.body.classList.contains('playing'))c2.fillText(tt('点击屏幕返回'),W/2,360);
   }
 }
 // ---- 皮肤界面与素材持久化 ----
