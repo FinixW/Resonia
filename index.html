@@ -564,8 +564,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.25';
+const VERSION='0.9.26';
 const CHANGELOG=[
+  ['0.9.26','2026-10-12','BMS 改用原生轨道：5 键谱面是 5 轨、7 键是 7 轨，不再居中塞进 7 条；1P 的转盘（16 通道）不再当作伴奏，而是放在最左的转盘轨道（带转盘时为 6 / 8 轨，8 轨可配 IIDX 皮肤）。'],
   ['0.9.25','2026-10-12','VOS 曲目补上小节线（按 MIDI 拍号与速度表）；没有小节信息的曲目（如 O2JAM）按首个 BPM 等间隔估算小节线；伴奏音量/按键音量默认值：VOS 为 0.5 / 1.3，其他格式为 1 / 1，手动调整后按类别记住。'],
   ['0.9.24','2026-10-12','“调试”卡片精简：“发声诊断”改名“诊断”，“测试模式”去掉括号说明，轨道数与它们排在同一行。'],
   ['0.9.23','2026-10-12','IIDX 1P 皮肤按参考图重做：黑色轨道、金属边框、转盘 + 黑白键（白键音符白色、黑键音符蓝色、转盘音符红色）、青色光晕加红色判定线、转盘中心红白贴纸（按下时旋转）、青色数码风分数、粉红斜体“GREAT 连击数”。'],
@@ -881,8 +882,9 @@ function parseBms(txt){
   const nm=Math.max(0,...ch.map(x=>x.m))+1,bs=[0];
   for(let i=0;i<nm;i++)bs.push(bs[i]+4*(len[i]||1));
   const bpm0=parseFloat(H.BPM)||120,tev=[],bgm=[],keys=[],lns=[],bgaE=[];
-  const LANE={'1':0,'2':1,'3':2,'4':3,'5':4,'8':5,'9':6};
-  let has67=false;
+  // 1P 键道：11-15 = 键 1-5，16 = 转盘/脚踏，18/19 = 键 6/7；转盘用 -1 标记，扫完整首曲子后再定轨道号
+  const LANE={'1':0,'2':1,'3':2,'4':3,'5':4,'6':-1,'8':5,'9':6};
+  let has67=false,hasSc=false;
   for(const x of ch){
     const n=x.s.length>>1;if(!n)continue;
     for(let i=0;i<n;i++){
@@ -895,11 +897,11 @@ function parseBms(txt){
       else if(c=='04'||c=='07'||c=='0A')bgaE.push({b,id:pr,l:c=='04'?0:c=='07'?1:2});
       else if(/^[12][1-9]$/.test(c)){
         const side=c[0],k=c[1];
-        if(side=='1'&&LANE[k]!==undefined){keys.push({b,id:pr,l:LANE[k]});if(k=='8'||k=='9')has67=true}
+        if(side=='1'&&LANE[k]!==undefined){keys.push({b,id:pr,l:LANE[k]});if(k=='8'||k=='9')has67=true;if(k=='6')hasSc=true}
         else bgm.push({b,id:pr});
       }else if(/^[56][1-9]$/.test(c)){
         const side=c[0],k=c[1];
-        if(side=='5'&&LANE[k]!==undefined){lns.push({b,id:pr,l:LANE[k]});if(k=='8'||k=='9')has67=true}
+        if(side=='5'&&LANE[k]!==undefined){lns.push({b,id:pr,l:LANE[k]});if(k=='8'||k=='9')has67=true;if(k=='6')hasSc=true}
       }
     }
   }
@@ -910,9 +912,11 @@ function parseBms(txt){
     T.push(e.t?{b:e.b,ms:ms+e.sb*60000/p.bpm,bpm:p.bpm}:{b:e.b,ms,bpm:e.bpm});
   }
   const toMs=b=>{let lo=0,hi=T.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(T[m].b<b)lo=m;else hi=m-1}const e=T[lo];return e.ms+(b-e.b)*60000/e.bpm};
-  const sh=has67?0:1,lnobj=(H.LNOBJ||'').toUpperCase();
+  // 原生轨道：5 键 → 5 轨，7 键 → 7 轨，带转盘则转盘在最左（6 / 8 轨）
+  const off=hasSc?1:0,nl=(has67?7:5)+off;for(const k of keys.concat(lns))k.l=k.l<0?0:k.l+off;
+  const sh=0,lnobj=(H.LNOBJ||'').toUpperCase();
   const notes=[],back=bgm.map(x=>({t:toMs(x.b),id:x.id}));
-  const byL=Array.from({length:7},()=>[]);
+  const byL=Array.from({length:nl},()=>[]);
   for(const k of keys)byL[k.l].push(k);
   const mk=(l,t,e,id)=>notes.push({t,lane:l+sh,hold:e>t,end:Math.max(t,e),snd:{s:id,ch:0,ins:0,p:60,vel:127,dur:0},done:false});
   byL.forEach((a,l)=>{
@@ -922,13 +926,13 @@ function parseBms(txt){
       const t=toMs(k.b);last={t,lane:l+sh,hold:false,end:t,snd:{s:k.id,ch:0,ins:0,p:60,vel:127,dur:0},done:false};notes.push(last);
     }
   });
-  const byLn=Array.from({length:7},()=>[]);for(const k of lns)byLn[k.l].push(k);
+  const byLn=Array.from({length:nl},()=>[]);for(const k of lns)byLn[k.l].push(k);
   byLn.forEach((a,l)=>{a.sort((x,y)=>x.b-y.b);for(let i=0;i+1<a.length;i+=2)mk(l,toMs(a[i].b),toMs(a[i+1].b),a[i].id)});
   notes.sort((a,b)=>a.t-b.t);back.sort((a,b)=>a.t-b.t);
   const used=new Set([...notes.map(n=>n.snd.s),...back.map(b=>b.id)]);
   const bga=bgaE.map(x=>({t:toMs(x.b),id:x.id,l:x.l})).sort((a,b)=>a.t-b.t);
   const bars=bs.map(toMs);
-  return{H,bmp,bga,bars,title:[H.TITLE,H.SUBTITLE].filter(Boolean).join(' '),artist:H.ARTIST||'',level:H.PLAYLEVEL||'',keys:has67?7:5,wav,notes,back,used,bpm:bpm0,
+  return{H,bmp,bga,bars,title:[H.TITLE,H.SUBTITLE].filter(Boolean).join(' '),artist:H.ARTIST||'',level:H.PLAYLEVEL||'',keys:has67?7:5,lanes:nl,wav,notes,back,used,bpm:bpm0,
     nlane:new Set(notes.map(n=>n.lane)).size};
 }
 // ---------- 资源包导入（多文件 / 文件夹 / ZIP）----------
@@ -977,7 +981,7 @@ async function buildBms(ch,find,say){
   let end=0;for(const n of P.notes)end=Math.max(end,n.end);
   for(const b of P.back){const s=samples[b.id];b.s=b.id;b.vel=127;b.ch=0;b.ins=0;b.p=60;b.dur=0;end=Math.max(end,b.t+(s?s.duration*1000:0))}
   const res={samples:{},media:{}};for(const it of sItems)if(it.e&&samples[it.id])res.samples[it.id]=it.e;for(const it of bItems)if(it.e&&bmps[it.id])res.media[it.id]=it.e;
-  return{title:P.title||ch.path.split('/').pop(),artist:P.artist,level:+P.level||0,chartName:ch.path.split('/').pop(),lenMs:end+1500,bars:P.bars,notes:P.notes,back:P.back,ctl:{},mev:[],chan:{},tracks:0,bpm:P.bpm,samples,bga:P.bga,bmps,res,
+  return{title:P.title||ch.path.split('/').pop(),artist:P.artist,level:+P.level||0,chartName:ch.path.split('/').pop(),lenMs:end+1500,bars:P.bars,lanes:P.lanes,notes:P.notes,back:P.back,ctl:{},mev:[],chan:{},tracks:0,bpm:P.bpm,samples,bga:P.bga,bmps,res,
     kind:'BMS',note:((miss||bad)?`（缺少 ${miss} 个、无法解码 ${bad} 个音频）`:'')+(P.bga.length?` · BGA ${Object.keys(bmps).length} 个素材${bmiss?`（${bmiss} 个无法显示，如 mpg/avi）`:''}`:'')};
 }
 let volMode='v';const volUser={};
