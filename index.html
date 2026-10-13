@@ -161,7 +161,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div class="sl"><span>按键音量</span><input type="range" id="kv" min="0" max="2.5" step="0.1" value="1.3" data-minor="0.1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
 </section>
 <section class="card" id="cSkin"><h3>皮肤</h3>
-  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="iidx">IIDX 1P</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il">音符<select id="noteSty"><option value="">跟随皮肤</option><option value="glass">水晶</option><option value="pill">胶囊</option><option value="metal">金属</option><option value="bar">光带</option><option value="slash">斜纹</option><option value="neonl">霓虹线框</option></select></label><label class="il">特效<select id="fxSty"><option value="">跟随皮肤</option><option value="star">星芒</option><option value="ring">光环</option><option value="burst">迸发</option><option value="cross">十字闪</option><option value="wave">冲击波</option><option value="none">无</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
+  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="iidx">IIDX 1P</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il">音符<select id="noteSty"><option value="">跟随皮肤</option><option value="glass">水晶</option><option value="pill">胶囊</option><option value="metal">金属</option><option value="bar">光带</option><option value="slash">斜纹</option><option value="neonl">霓虹线框</option><option value="gem">宝石</option><option value="ice">冰晶</option><option value="pillP">紫霞胶囊</option><option value="pillC">蓝能胶囊</option><option value="metalG">绿金属</option><option value="flame">火焰条</option></select></label><label class="il">特效<select id="fxSty"><option value="">跟随皮肤</option><option value="star">星芒</option><option value="ring">光环</option><option value="burst">迸发</option><option value="cross">十字闪</option><option value="wave">冲击波</option><option value="flare">镜头光斑</option><option value="dust">尘环</option><option value="shard">碎片</option><option value="rays">光芒</option><option value="dot">光点</option><option value="beam">光束</option><option value="none">无</option></select></label><label class="il">连击数字<select id="cmbSty"><option value="">跟随皮肤</option><option value="metal">金属立体</option><option value="lcd">青色数码</option><option value="pink">粉色斜体</option><option value="gold">金色</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
   <details id="skCustom" hidden><summary>自定义素材（图片只保存在你的浏览器里，不会上传）</summary><div id="skSlots"></div><button id="skClear">清除全部素材</button></details>
 </section>
 <section class="card" id="cPlug"><h3>第三方<span class="gpu" style="color:var(--mu)">格式插件</span></h3><div class="row"><label class="fbtn sm">载入插件…<input type="file" id="plf" accept=".js" multiple></label><span id="plmsg" class="fname" style="color:var(--mu)">未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器</span></div><div id="pll"></div></section>
@@ -176,6 +176,23 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 const LANGS=[['zh','简体中文'],['zh-TW','繁體中文'],['en','English'],['ja','日本語'],['ko','한국어']];
 const LK={zh:'zh','zh-TW':'tw',en:'en',ja:'ja',ko:'ko'};
 const I18N={
+ "连击数字":{"en": "Combo digits", "ja": "コンボ数字", "ko": "콤보 숫자", "tw": "連擊數字"},
+ "金属立体":{"en": "Chrome", "ja": "メタリック", "ko": "크롬", "tw": "金屬立體"},
+ "青色数码":{"en": "Cyan digital", "ja": "シアンデジタル", "ko": "시안 디지털", "tw": "青色數碼"},
+ "粉色斜体":{"en": "Pink italic", "ja": "ピンク斜体", "ko": "핑크 이탤릭", "tw": "粉色斜體"},
+ "金色":{"en": "Gold", "ja": "ゴールド", "ko": "골드"},
+ "宝石":{"en": "Gem", "ja": "ジェム", "ko": "보석", "tw": "寶石"},
+ "冰晶":{"en": "Ice", "ja": "アイス", "ko": "얼음"},
+ "紫霞胶囊":{"en": "Violet capsule", "ja": "バイオレットカプセル", "ko": "보랏빛 캡슐", "tw": "紫霞膠囊"},
+ "蓝能胶囊":{"en": "Azure capsule", "ja": "アズールカプセル", "ko": "푸른 캡슐", "tw": "藍能膠囊"},
+ "绿金属":{"en": "Green metal", "ja": "グリーンメタル", "ko": "그린 메탈", "tw": "綠金屬"},
+ "火焰条":{"en": "Flame bar", "ja": "フレイムバー", "ko": "불꽃 바", "tw": "火焰條"},
+ "镜头光斑":{"en": "Lens flare", "ja": "レンズフレア", "ko": "렌즈 플레어", "tw": "鏡頭光斑"},
+ "尘环":{"en": "Dust ring", "ja": "ダストリング", "ko": "먼지 고리", "tw": "塵環"},
+ "碎片":{"en": "Shards", "ja": "破片", "ko": "파편"},
+ "光芒":{"en": "Rays", "ja": "光芒", "ko": "광선"},
+ "光点":{"en": "Spark", "ja": "スパーク", "ko": "광점", "tw": "光點"},
+ "光束":{"en": "Light beam", "ja": "ライトビーム", "ko": "광선 기둥"},
  "跟随皮肤":{"en": "Follow skin", "ja": "スキンに合わせる", "ko": "스킨 따라가기", "tw": "跟隨皮膚"},
  "音符":{"en": "Notes", "ja": "ノーツ", "ko": "노트"},
  "特效":{"en": "Hit FX", "ja": "エフェクト", "ko": "이펙트"},
@@ -1569,7 +1586,32 @@ function rr(x,y,w,h,r){r=Math.min(r,w/2,h/2);c2.beginPath();c2.moveTo(x+r,y);c2.
 // ---- 音符样式：离屏精灵缓存（每种样式/键种/宽度只画一次），再按帧 drawImage ----
 let NSV='',FSV='',NSC={};
 try{const v=JSON.parse(localStorage.getItem('resonia-nfx')||'null');if(v){NSV=v.n||'';FSV=v.f||''}}catch(x){}
+// ---- 连击数字样式 ----
+let CSV='';
+try{const v=JSON.parse(localStorage.getItem('resonia-nfx')||'null');if(v)CSV=v.c||''}catch(x){}
+function drawCombo(n,cx,y){
+  const tx=String(n);c2.textAlign='center';c2.lineJoin='round';
+  if(CSV=='metal'){
+    c2.font='900 48px Impact,system-ui';const g=c2.createLinearGradient(0,y-40,0,y+4);g.addColorStop(0,'#f4f6fa');g.addColorStop(.5,'#aab0bb');g.addColorStop(.55,'#6c727d');g.addColorStop(1,'#c5cad4');
+    c2.lineWidth=7;c2.strokeStyle='#14161b';c2.strokeText(tx,cx,y);c2.lineWidth=3;c2.strokeStyle='#e8ebf2';c2.strokeText(tx,cx,y);c2.fillStyle=g;c2.fillText(tx,cx,y);
+    c2.font='900 20px Impact,system-ui';c2.lineWidth=4;c2.strokeStyle='#14161b';c2.strokeText('COMBO',cx,y+22);c2.fillStyle='#bfc5d0';c2.fillText('COMBO',cx,y+22);
+  }else if(CSV=='lcd'){
+    c2.font='bold 46px ui-monospace,Menlo,Consolas,monospace';c2.shadowColor='#2de2f0';c2.shadowBlur=14;c2.fillStyle='#38e8ff';c2.fillText(tx,cx,y);c2.shadowBlur=0;c2.fillStyle='#e8fdff';c2.globalAlpha=.55;c2.fillText(tx,cx,y-1);c2.globalAlpha=1;
+    c2.font='bold 13px ui-monospace,Menlo,Consolas,monospace';c2.fillStyle='#2aa9b8';c2.fillText('COMBO',cx,y+20);
+  }else if(CSV=='pink'){
+    c2.font='italic 900 46px Impact,system-ui';const g=c2.createLinearGradient(0,y-38,0,y+4);g.addColorStop(0,'#ffd0da');g.addColorStop(.5,'#ff5f86');g.addColorStop(1,'#d8123c');
+    c2.lineWidth=5;c2.strokeStyle='rgba(255,255,255,.92)';c2.strokeText(tx,cx,y);c2.fillStyle=g;c2.fillText(tx,cx,y);
+    c2.font='italic 900 16px Impact,system-ui';c2.lineWidth=3;c2.strokeText('COMBO',cx,y+20);c2.fillStyle='#ff5f86';c2.fillText('COMBO',cx,y+20);
+  }else if(CSV=='gold'){
+    c2.font='900 48px Impact,system-ui';const g=c2.createLinearGradient(0,y-40,0,y+4);g.addColorStop(0,'#fff6c8');g.addColorStop(.5,'#ffc233');g.addColorStop(1,'#b86a0a');
+    c2.lineWidth=6;c2.strokeStyle='#4a2500';c2.strokeText(tx,cx,y);c2.fillStyle=g;c2.fillText(tx,cx,y);
+    c2.font='900 18px Impact,system-ui';c2.lineWidth=4;c2.strokeText('COMBO',cx,y+21);c2.fillStyle='#ffd27a';c2.fillText('COMBO',cx,y+21);
+  }
+}
 function noteSprite(sty,k,w,c){
+  if(sty=='pillP'){sty='pill';c=[['#ffd6f4','#a45bd8'],['#e8a8ff','#7a2fc0'],['#ffb0d0','#c02a7a']][k]}
+  else if(sty=='pillC'){sty='pill';c=[['#e6fbff','#2aa6e8'],['#8fe6ff','#1167d8'],['#b8fff0','#0a9ab0']][k]}
+  else if(sty=='metalG'){sty='metal';c=[['#e6ffe6','#58b058'],['#b6ecb6','#2f8a2f'],['#ffe9a0','#c08a10']][k]}
   const key=sty+'|'+k+'|'+Math.round(w*4)+'|'+c[0]+c[1];let cv2=NSC[key];if(cv2)return cv2;
   cv2=NSC[key]=document.createElement('canvas');const pw=Math.ceil(w+4),ph=20;cv2.width=Math.ceil(pw*dpr);cv2.height=Math.ceil(ph*dpr);
   const g=cv2.getContext('2d');g.scale(dpr,dpr);
@@ -1609,6 +1651,22 @@ function noteSprite(sty,k,w,c){
     for(let i=-h;i<w+h;i+=11){g.beginPath();g.moveTo(x+i,y+h);g.lineTo(x+i+7,y+h);g.lineTo(x+i+7+h*.8,y);g.lineTo(x+i+h*.8,y);g.closePath();g.fill()}
     g.fillStyle='rgba(255,255,255,.5)';g.fillRect(x,y,w,1.5);g.fillStyle='rgba(0,0,0,.25)';g.fillRect(x,y+h-2,w,2);g.restore();
     rr2(3);g.strokeStyle='rgba(0,0,0,.45)';g.lineWidth=1;g.stroke();
+  }else if(sty=='gem'){ // 宝石：饱和色体 + 暗斜边 + 光泽扫过
+    const gc=[['#cfe8ff','#2b6cff'],['#8db8ff','#1536c8'],['#ffa090','#c8201a']][k];
+    rr2(4);g.fillStyle=lg(y,y+h,[[0,gc[0]],[.28,gc[1]],[.8,gc[1]],[1,'rgba(0,0,30,.9)']]);g.fill();
+    g.save();rr2(4);g.clip();g.fillStyle='rgba(255,255,255,.55)';g.beginPath();g.moveTo(x,y+h*.55);g.lineTo(x+w*.45,y);g.lineTo(x+w*.6,y);g.lineTo(x+w*.12,y+h*.55);g.closePath();g.fill();
+    g.fillStyle=lg(y+h*.55,y+h,[[0,'rgba(255,255,255,0)'],[1,'rgba(255,255,255,.4)']]);g.fillRect(x,y+h*.55,w,h*.45);g.restore();
+    rr2(4);g.strokeStyle='rgba(0,0,20,.8)';g.lineWidth=1.4;g.stroke();g.strokeStyle='rgba(255,255,255,.4)';g.lineWidth=.8;g.beginPath();g.moveTo(x+3,y+1);g.lineTo(x+w-3,y+1);g.stroke();
+  }else if(sty=='ice'){ // 冰晶：近白半透明 + 青色边缘 + 斜向反光
+    rr2(4);g.fillStyle=lg(y,y+h,[[0,'#ffffff'],[.5,'#bfeaff'],[1,'#5fb8ee']]);g.fill();
+    g.save();rr2(4);g.clip();g.fillStyle='rgba(255,255,255,.7)';g.beginPath();g.moveTo(x+w*.1,y+h);g.lineTo(x+w*.3,y);g.lineTo(x+w*.42,y);g.lineTo(x+w*.22,y+h);g.closePath();g.fill();
+    g.beginPath();g.moveTo(x+w*.6,y+h);g.lineTo(x+w*.72,y);g.lineTo(x+w*.78,y);g.lineTo(x+w*.66,y+h);g.closePath();g.fill();g.restore();
+    rr2(4);g.strokeStyle='#3aa0d8';g.lineWidth=1.3;g.stroke();
+  }else if(sty=='flame'){ // 火焰条：红橙黄横向渐变 + 亮箭头
+    rr2(2);const hg=g.createLinearGradient(x,0,x+w,0);hg.addColorStop(0,'#ff3a1a');hg.addColorStop(.5,'#ffb020');hg.addColorStop(1,'#ff3a1a');g.fillStyle=hg;g.fill();
+    g.save();rr2(2);g.clip();g.fillStyle=lg(y,y+h,[[0,'rgba(255,255,255,.7)'],[.5,'rgba(255,255,255,0)'],[1,'rgba(90,0,0,.55)']]);g.fillRect(x,y,w,h);
+    g.fillStyle='rgba(255,240,170,.9)';for(let i=4;i<w-6;i+=12){g.beginPath();g.moveTo(x+i,y+h*.3);g.lineTo(x+i+6,y+h*.5);g.lineTo(x+i,y+h*.7);g.closePath();g.fill()}g.restore();
+    rr2(2);g.strokeStyle='rgba(80,10,0,.8)';g.lineWidth=1.2;g.stroke();
   }else{ // neonl：霓虹线框
     rr2(4);g.fillStyle=c[1]+'55';g.fill();g.shadowColor=c[0];g.shadowBlur=6;g.strokeStyle=c[0];g.lineWidth=2;rr2(4);g.stroke();
   }
@@ -1868,6 +1926,30 @@ function fxCustom(sty,e,k,cx,cy,lw){
     const r=lw*(.2+k*1.0),g=c2.createRadialGradient(cx,cy,r*.55,cx,cy,r);g.addColorStop(0,`rgba(${col},0)`);g.addColorStop(.8,`rgba(${col},${.55*a})`);g.addColorStop(1,`rgba(255,255,255,${.9*a})`);
     c2.save();c2.translate(cx,cy);c2.scale(1,.38);c2.translate(-cx,-cy);c2.fillStyle=g;c2.beginPath();c2.arc(cx,cy,r,0,Math.PI*2);c2.fill();c2.restore();
     const vg=c2.createLinearGradient(0,cy-90,0,cy);vg.addColorStop(0,`rgba(${col},0)`);vg.addColorStop(1,`rgba(${col},${.5*a})`);c2.fillStyle=vg;c2.fillRect(cx-lw*.3,cy-90,lw*.6,90);
+  }else if(sty=='flare'){ // 镜头光斑：光晕 + 横向拉丝 + 鬼影环
+    const R=lw*(.5+k*.6),g=c2.createRadialGradient(cx,cy,0,cx,cy,R);g.addColorStop(0,`rgba(255,255,255,${a})`);g.addColorStop(.3,`rgba(${col},${.6*a})`);g.addColorStop(1,`rgba(${col},0)`);c2.fillStyle=g;c2.beginPath();c2.arc(cx,cy,R,0,Math.PI*2);c2.fill();
+    const sg=c2.createLinearGradient(cx-lw*1.1,0,cx+lw*1.1,0);sg.addColorStop(0,`rgba(${col},0)`);sg.addColorStop(.5,`rgba(255,255,255,${.9*a})`);sg.addColorStop(1,`rgba(${col},0)`);c2.fillStyle=sg;c2.fillRect(cx-lw*1.1,cy-1.2,lw*2.2,2.4);
+    c2.strokeStyle=`rgba(${col},${.5*a})`;c2.lineWidth=1.5;c2.beginPath();c2.arc(cx-lw*.35*(1-k),cy-6,lw*.18,0,Math.PI*2);c2.stroke();c2.beginPath();c2.arc(cx+lw*.45*(1-k),cy-3,lw*.1,0,Math.PI*2);c2.stroke();
+  }else if(sty=='dust'){ // 尘环：由细小颗粒组成的扩散环
+    const r=lw*(.2+k*.95);c2.fillStyle=`rgba(${col},${.85*a})`;
+    for(let i=0;i<46;i++){const ang=i/46*Math.PI*2+((i*7)%5)*.07,rr3=r*(.88+((i*13)%7)/28);c2.fillRect(cx+Math.cos(ang)*rr3-1,cy+Math.sin(ang)*rr3*.42-1,2+(i%3),1.5+(i%2))}
+    c2.strokeStyle=`rgba(255,255,255,${.35*a})`;c2.lineWidth=1;c2.beginPath();c2.ellipse(cx,cy,r,r*.42,0,0,Math.PI*2);c2.stroke();
+  }else if(sty=='shard'){ // 碎片：不规则白色碎片向上迸射
+    for(let i=0;i<14;i++){const ang=-Math.PI*(.06+.88*((i*.618)%1)),d=(28+((i*29)%40))*k*1.3,sz=3.5*(1-k*.6)+((i*5)%3);
+      c2.save();c2.translate(cx+Math.cos(ang)*d,cy+Math.sin(ang)*d+k*k*26);c2.rotate(i+k*5);c2.fillStyle=i%3?`rgba(255,255,255,${a})`:`rgba(${col},${a})`;
+      c2.beginPath();c2.moveTo(-sz,0);c2.lineTo(0,-sz*.7);c2.lineTo(sz,sz*.2);c2.lineTo(-sz*.2,sz*.8);c2.closePath();c2.fill();c2.restore()}
+    const g=c2.createRadialGradient(cx,cy,0,cx,cy,lw*.4);g.addColorStop(0,`rgba(255,255,255,${.6*a})`);g.addColorStop(1,`rgba(${col},0)`);c2.fillStyle=g;c2.beginPath();c2.arc(cx,cy,lw*.4,0,Math.PI*2);c2.fill();
+  }else if(sty=='rays'){ // 光芒：密集细射线 + 中心白点
+    const L=lw*(.4+k*.9);c2.strokeStyle=`rgba(${col},${.85*a})`;c2.lineWidth=1.2;
+    for(let i=0;i<28;i++){const ang=i/28*Math.PI*2,len=L*(.55+((i*17)%5)/9);c2.beginPath();c2.moveTo(cx+Math.cos(ang)*len*.18,cy+Math.sin(ang)*len*.18);c2.lineTo(cx+Math.cos(ang)*len,cy+Math.sin(ang)*len);c2.stroke()}
+    const g=c2.createRadialGradient(cx,cy,0,cx,cy,lw*.3);g.addColorStop(0,`rgba(255,255,255,${a})`);g.addColorStop(1,`rgba(${col},0)`);c2.fillStyle=g;c2.beginPath();c2.arc(cx,cy,lw*.3,0,Math.PI*2);c2.fill();
+  }else if(sty=='dot'){ // 光点：亮点 + 细环
+    const g=c2.createRadialGradient(cx,cy,0,cx,cy,lw*.28);g.addColorStop(0,`rgba(255,255,255,${a})`);g.addColorStop(.4,`rgba(${col},${.8*a})`);g.addColorStop(1,`rgba(${col},0)`);c2.fillStyle=g;c2.beginPath();c2.arc(cx,cy,lw*.28*(1+k),0,Math.PI*2);c2.fill();
+    c2.strokeStyle=`rgba(${col},${a})`;c2.lineWidth=1.5;c2.beginPath();c2.arc(cx,cy,lw*(.15+.5*k),0,Math.PI*2);c2.stroke();
+  }else if(sty=='beam'){ // 光束：整条轨道向上的竖向光柱
+    const H2=Math.min(JY,260),g=c2.createLinearGradient(0,cy-H2,0,cy+6);g.addColorStop(0,`rgba(${col},0)`);g.addColorStop(.7,`rgba(${col},${.5*a})`);g.addColorStop(1,`rgba(255,255,255,${.85*a})`);
+    c2.fillStyle=g;const bw=lw*(1-k*.5);c2.fillRect(cx-bw/2,cy-H2,bw,H2+6);
+    c2.fillStyle=`rgba(255,255,255,${.9*a})`;c2.fillRect(cx-2,cy-H2*.6,4,H2*.6+6);
   }
   c2.restore();
 }
@@ -2141,7 +2223,8 @@ function draw(now){
   if($('dbg').checked&&running){c2.textAlign='left';c2.font='12px system-ui';c2.fillStyle='#8b92c4';c2.fillText(tt('FPS {0} · 发声 {1} · 丢音 {2}',fps,voices,drops)+(song&&song.bga&&song.bga.length?' · BGA '+bgaCur.map(e=>e?e.id:'-').join('/'):''),10,66);c2.fillText(dbgLast,10,82)}
   if(performance.now()-spdT<900){c2.textAlign='right';c2.font='bold 16px system-ui';c2.fillStyle='#ffd24d';c2.fillText(tt('速度 {0}',(+$('spd').value).toFixed(2)),W-10,60)}
   if(running&&document.body.classList.contains('playing')){c2.textAlign='center';c2.font='bold 22px system-ui';c2.fillStyle='rgba(255,255,255,.5)';c2.fillText('✕',W-28,32)}
-  if(combo>1){c2.textAlign='center';c2.font='bold 44px system-ui';c2.fillStyle='rgba(255,255,255,.85)';if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.55)';c2.strokeText(combo,FCX(),220)}c2.fillText(combo,FCX(),220);c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText('COMBO',FCX(),240)}
+  if(combo>1&&CSV)drawCombo(combo,FCX(),228);
+  else if(combo>1){c2.textAlign='center';c2.font='bold 44px system-ui';c2.fillStyle='rgba(255,255,255,.85)';if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.55)';c2.strokeText(combo,FCX(),220)}c2.fillText(combo,FCX(),220);c2.font='13px system-ui';c2.fillStyle='#8b92c4';c2.fillText('COMBO',FCX(),240)}
   if(lastJ&&performance.now()-lastJT<500){c2.textAlign='center';c2.font='bold 22px system-ui';c2.fillStyle=lastJ=='MISS'?'#ff6b7a':lastJ=='BAD'?'#c78bff':lastJ=='PERFECT'?'#ffd24d':lastJ=='GREAT'?'#6cffb0':'#6c8cff';if(II()&&lastJ!='MISS'){const tx=lastJ+(combo>1?' '+combo:''),cx=FCX(),gj=c2.createLinearGradient(0,276,0,306);gj.addColorStop(0,'#ffd0da');gj.addColorStop(.5,'#ff5f86');gj.addColorStop(1,'#d8123c');c2.font='italic 900 30px Impact,system-ui';c2.lineWidth=3;c2.lineJoin='round';c2.strokeStyle='rgba(255,255,255,.9)';c2.strokeText(tx,cx,300);c2.fillStyle=gj;c2.fillText(tx,cx,300)}else{if(S.pal){c2.lineWidth=4;c2.lineJoin='round';c2.strokeStyle='rgba(0,0,0,.6)';c2.strokeText(lastJ,FCX(),300)}c2.fillText(lastJ,FCX(),300)}}
   if(!running&&!ended){
     c2.fillStyle='rgba(8,10,22,.82)';c2.fillRect(0,0,W,H);c2.textAlign='center';
@@ -2172,8 +2255,9 @@ function draw(now){
   $('skinSel').onchange=()=>{const id=$('skinSel').value;$('skLay').value='';$('skHud').checked=(SK[id]||SK.classic).hud=='panel';applySkin()};
   $('skLay').onchange=applySkin;$('skHud').onchange=applySkin;
   $('noteSty').value=NSV;$('fxSty').value=FSV;
-  const saveNF=()=>{NSV=$('noteSty').value;FSV=$('fxSty').value;try{localStorage.setItem('resonia-nfx',JSON.stringify({n:NSV,f:FSV}))}catch(x){}if(!running)draw(song&&ctx?songMs():0)};
-  $('noteSty').onchange=saveNF;$('fxSty').onchange=saveNF;
+  $('cmbSty').value=CSV;
+  const saveNF=()=>{NSV=$('noteSty').value;FSV=$('fxSty').value;CSV=$('cmbSty').value;try{localStorage.setItem('resonia-nfx',JSON.stringify({n:NSV,f:FSV,c:CSV}))}catch(x){}if(!running)draw(song&&ctx?songMs():0)};
+  $('noteSty').onchange=saveNF;$('fxSty').onchange=saveNF;$('cmbSty').onchange=saveNF;
   try{const v=JSON.parse(localStorage.getItem('resonia-skin')||'null');if(v&&SK[v.id]){$('skinSel').value=v.id;$('skLay').value=v.lay||'';$('skHud').checked=!!v.hud}}catch(x){}
   applySkin();
   idbGet('skin').then(r=>{if(!r)return;for(const k of Object.keys(r))if(r[k]&&SKSLOTS.some(q=>q[0]==k))setSlot(k,r[k]);marks()});
