@@ -161,7 +161,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div class="sl"><span>按键音量</span><input type="range" id="kv" min="0" max="2.5" step="0.1" value="1.3" data-minor="0.1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
 </section>
 <section class="card" id="cSkin"><h3>皮肤</h3>
-  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="iidx">IIDX 1P</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
+  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="iidx">IIDX 1P</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il">音符<select id="noteSty"><option value="">跟随皮肤</option><option value="glass">水晶</option><option value="pill">胶囊</option><option value="metal">金属</option><option value="bar">光带</option><option value="slash">斜纹</option><option value="neonl">霓虹线框</option></select></label><label class="il">特效<select id="fxSty"><option value="">跟随皮肤</option><option value="star">星芒</option><option value="ring">光环</option><option value="burst">迸发</option><option value="cross">十字闪</option><option value="wave">冲击波</option><option value="none">无</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
   <details id="skCustom" hidden><summary>自定义素材（图片只保存在你的浏览器里，不会上传）</summary><div id="skSlots"></div><button id="skClear">清除全部素材</button></details>
 </section>
 <section class="card" id="cPlug"><h3>第三方<span class="gpu" style="color:var(--mu)">格式插件</span></h3><div class="row"><label class="fbtn sm">载入插件…<input type="file" id="plf" accept=".js" multiple></label><span id="plmsg" class="fname" style="color:var(--mu)">未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器</span></div><div id="pll"></div></section>
@@ -176,6 +176,21 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 const LANGS=[['zh','简体中文'],['zh-TW','繁體中文'],['en','English'],['ja','日本語'],['ko','한국어']];
 const LK={zh:'zh','zh-TW':'tw',en:'en',ja:'ja',ko:'ko'};
 const I18N={
+ "跟随皮肤":{"en": "Follow skin", "ja": "スキンに合わせる", "ko": "스킨 따라가기", "tw": "跟隨皮膚"},
+ "音符":{"en": "Notes", "ja": "ノーツ", "ko": "노트"},
+ "特效":{"en": "Hit FX", "ja": "エフェクト", "ko": "이펙트"},
+ "水晶":{"en": "Crystal", "ja": "クリスタル", "ko": "크리스탈"},
+ "胶囊":{"en": "Capsule", "ja": "カプセル", "ko": "캡슐", "tw": "膠囊"},
+ "金属":{"en": "Metal", "ja": "メタル", "ko": "메탈", "tw": "金屬"},
+ "光带":{"en": "Light bar", "ja": "ライトバー", "ko": "라이트 바", "tw": "光帶"},
+ "斜纹":{"en": "Diagonal", "ja": "斜めストライプ", "ko": "사선", "tw": "斜紋"},
+ "霓虹线框":{"en": "Neon outline", "ja": "ネオン枠線", "ko": "네온 외곽선", "tw": "霓虹線框"},
+ "星芒":{"en": "Starburst", "ja": "スターバースト", "ko": "별빛"},
+ "光环":{"en": "Halo ring", "ja": "光輪", "ko": "광환", "tw": "光環"},
+ "迸发":{"en": "Burst", "ja": "バースト", "ko": "분출", "tw": "迸發"},
+ "十字闪":{"en": "Cross flash", "ja": "クロスフラッシュ", "ko": "십자 섬광", "tw": "十字閃"},
+ "冲击波":{"en": "Shockwave", "ja": "衝撃波", "ko": "충격파", "tw": "衝擊波"},
+ "无":{"en": "None", "ja": "なし", "ko": "없음", "tw": "無"},
  "BAD 改为纯时间判定（命中音符但偏差 120~150ms，参照 O2Jam），打错轨道（空按）不再判 BAD，超过 150ms 为 MISS；PERFECT ±40ms、GREAT ±80ms、GOOD ±120ms 保持原样。判定线统一为“两条线之间的区域”（所有皮肤一致），小节线紧贴音符底边（音符在小节线上方），判定文字和连击数按轨道区域居中。":{"en": "BAD is now purely time-based (a note hit 120–150 ms off, following O2Jam); pressing a lane with no note no longer gives BAD, and anything beyond 150 ms is a MISS; PERFECT ±40 ms, GREAT ±80 ms and GOOD ±120 ms stay as before. The judgment line is now the area between two lines on every skin, bar lines sit right on the bottom edge of notes (notes above the bar line), and the judgment text and combo are centered on the lane area.", "ja": "BADを純粋な時間判定に変更（ノーツを120～150msずれて叩いた場合、O2Jam準拠）。ノーツのないレーンの空打ちはBADになりません。150msを超えるとMISS。PERFECT ±40ms、GREAT ±80ms、GOOD ±120msは従来どおりです。判定ラインは全スキンで「2本の線の間の領域」に統一し、小節線はノーツの下端にぴったり接し（ノーツは小節線の上）、判定文字とコンボ数はレーン領域の中央に揃えました。", "ko": "BAD를 순수한 시간 판정으로 변경 (노트를 120~150ms 어긋나게 친 경우, O2Jam 기준). 노트가 없는 레인을 눌러도 BAD가 되지 않으며 150ms를 넘으면 MISS입니다. PERFECT ±40ms, GREAT ±80ms, GOOD ±120ms는 기존 그대로입니다. 판정선은 모든 스킨에서 “두 선 사이의 영역”으로 통일하고, 마디선은 노트 아래쪽 가장자리에 맞닿으며 (노트가 마디선 위에 위치), 판정 글자와 콤보 수는 레인 영역의 가운데에 정렬됩니다.", "tw": "BAD 改為純時間判定（命中音符但偏差 120~150ms，參照 O2Jam），打錯軌道（空按）不再判 BAD，超過 150ms 為 MISS；PERFECT ±40ms、GREAT ±80ms、GOOD ±120ms 保持原樣。判定線統一為“兩條線之間的區域”（所有皮膚一致），小節線緊貼音符底邊（音符在小節線上方），判定文字和連擊數按軌道區域居中。"},
  "新增多语言：简体中文 / 繁體中文 / English / 日本語 / 한국어（标题旁的下拉框切换，切换后自动刷新页面；首次打开按浏览器语言选择）。界面、提示信息和更新日志均已翻译。":{"en": "Added multilingual support: 简体中文 / 繁體中文 / English / 日本語 / 한국어 (switch with the dropdown next to the title; the page reloads automatically after switching; the browser language is used on first visit). The interface, messages and changelog are all translated.", "ja": "多言語対応を追加：簡体字中国語 / 繁体字中国語 / English / 日本語 / 한국어（タイトル横のドロップダウンで切替、切替後は自動でページを再読み込み。初回はブラウザの言語に合わせます）。画面、メッセージ、更新履歴をすべて翻訳しました。", "ko": "다국어 지원 추가: 简体中文 / 繁體中文 / English / 日本語 / 한국어 (제목 옆 드롭다운으로 전환하며 전환 후 페이지가 자동으로 새로고침됩니다. 처음 접속 시에는 브라우저 언어를 따릅니다). 화면, 안내 메시지, 업데이트 내역을 모두 번역했습니다.", "tw": "新增多語言：簡體中文 / 繁體中文 / English / 日本語 / 한국어（標題旁的下拉框切換，切換後自動重新整理頁面；首次開啟按瀏覽器語言選擇）。介面、提示資訊和更新日誌均已翻譯。"},
  "更新日志":{"en": "Changelog", "ja": "更新履歴", "ko": "업데이트 내역", "tw": "更新日誌"},
@@ -1550,10 +1565,60 @@ const SK={
 let S=SK.classic,SI={};const CI={},CIfile={};
 const imOK=im=>im&&im.complete&&im.naturalWidth>0;
 function rr(x,y,w,h,r){r=Math.min(r,w/2,h/2);c2.beginPath();c2.moveTo(x+r,y);c2.arcTo(x+w,y,x+w,y+h,r);c2.arcTo(x+w,y+h,x,y+h,r);c2.arcTo(x,y+h,x,y,r);c2.arcTo(x,y,x+w,y,r);c2.closePath()}
+
+// ---- 音符样式：离屏精灵缓存（每种样式/键种/宽度只画一次），再按帧 drawImage ----
+let NSV='',FSV='',NSC={};
+try{const v=JSON.parse(localStorage.getItem('resonia-nfx')||'null');if(v){NSV=v.n||'';FSV=v.f||''}}catch(x){}
+function noteSprite(sty,k,w,c){
+  const key=sty+'|'+k+'|'+Math.round(w*4)+'|'+c[0]+c[1];let cv2=NSC[key];if(cv2)return cv2;
+  cv2=NSC[key]=document.createElement('canvas');const pw=Math.ceil(w+4),ph=20;cv2.width=Math.ceil(pw*dpr);cv2.height=Math.ceil(ph*dpr);
+  const g=cv2.getContext('2d');g.scale(dpr,dpr);
+  const x=2,y=2.5,h=15,rr2=(r)=>{g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h)};
+  const lg=(a,b,stops)=>{const q=g.createLinearGradient(0,a,0,b);stops.forEach(s=>q.addColorStop(s[0],s[1]));return q};
+  if(sty=='glass'){ // 水晶：深色体 + 强高光 + 内发光
+    rr2(4);g.fillStyle=lg(y,y+h,[[0,c[0]],[.45,c[1]],[1,c[1]]]);g.fill();
+    g.save();rr2(4);g.clip();
+    g.fillStyle='rgba(255,255,255,.28)';g.fillRect(x,y,w,h*.48);
+    g.fillStyle=lg(y,y+h*.5,[[0,'rgba(255,255,255,.75)'],[1,'rgba(255,255,255,.05)']]);g.fillRect(x+2,y+1,w-4,h*.4);
+    const rg=g.createRadialGradient(x+w/2,y+h,1,x+w/2,y+h,w*.5);rg.addColorStop(0,'rgba(255,255,255,.35)');rg.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=rg;g.fillRect(x,y,w,h);
+    g.restore();rr2(4);g.strokeStyle='rgba(0,0,0,.55)';g.lineWidth=1;g.stroke();
+    g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=1;g.beginPath();g.moveTo(x+4,y+.5);g.lineTo(x+w-4,y+.5);g.stroke();
+  }else if(sty=='pill'){ // 胶囊：全圆角，边缘亮、中心带光斑
+    const r=h/2;g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h);
+    const hg=g.createLinearGradient(x,0,x+w,0);hg.addColorStop(0,c[1]);hg.addColorStop(.5,c[0]);hg.addColorStop(1,c[1]);g.fillStyle=hg;g.fill();
+    g.save();g.clip();
+    const rg=g.createRadialGradient(x+w/2,y+h*.45,1,x+w/2,y+h*.45,w*.42);rg.addColorStop(0,'rgba(255,255,255,.85)');rg.addColorStop(.5,'rgba(255,255,255,.25)');rg.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle=rg;g.fillRect(x,y,w,h);g.fillStyle='rgba(255,255,255,.55)';g.fillRect(x+r*.8,y+1.5,w-r*1.6,2);g.fillStyle='rgba(0,0,0,.18)';g.fillRect(x,y+h-3,w,3);g.restore();
+    g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h);g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=1.5;g.stroke();g.strokeStyle=c[1];g.lineWidth=.8;g.stroke();
+  }else if(sty=='metal'){ // 金属：拉丝灰体 + 彩色端帽
+    rr2(3);g.fillStyle=lg(y,y+h,[[0,'#f4f6fa'],[.35,'#aab0bb'],[.6,'#6f7581'],[1,'#c9ced8']]);g.fill();
+    g.save();rr2(3);g.clip();
+    g.fillStyle='rgba(0,0,0,.16)';for(let i=3;i<h;i+=3)g.fillRect(x,y+i,w,.6);
+    const cw=Math.max(7,w*.18),cg=lg(y,y+h,[[0,c[0]],[1,c[1]]]);g.fillStyle=cg;g.fillRect(x,y,cw,h);g.fillRect(x+w-cw,y,cw,h);
+    g.fillStyle='rgba(255,255,255,.45)';g.fillRect(x,y,w,1.5);g.restore();
+    rr2(3);g.strokeStyle='rgba(10,12,18,.8)';g.lineWidth=1.2;g.stroke();
+  }else if(sty=='bar'){ // 光带：橙黄渐变条 + 亮芯 + 刻度
+    rr2(2);const bc=k==0?['#fff6c8','#ffb300']:k==1?['#d6f4ff','#2aa8ff']:['#ffd6d6','#ff3a3a'];
+    g.fillStyle=lg(y,y+h,[[0,bc[0]],[.5,bc[1]],[1,'rgba(0,0,0,.55)']]);g.fill();
+    g.save();rr2(2);g.clip();g.fillStyle='rgba(255,255,255,.85)';g.fillRect(x,y+h*.38,w,2);
+    g.fillStyle='rgba(255,255,255,.35)';for(let i=6;i<w-3;i+=8)g.fillRect(x+i,y+1,1.5,h-2);
+    g.restore();rr2(2);g.strokeStyle='rgba(255,255,255,.65)';g.lineWidth=1;g.stroke();
+  }else if(sty=='slash'){ // 斜纹：玻璃体 + 斜向高光条
+    rr2(3);g.fillStyle=lg(y,y+h,[[0,c[0]],[1,c[1]]]);g.fill();
+    g.save();rr2(3);g.clip();g.fillStyle='rgba(255,255,255,.4)';
+    for(let i=-h;i<w+h;i+=11){g.beginPath();g.moveTo(x+i,y+h);g.lineTo(x+i+7,y+h);g.lineTo(x+i+7+h*.8,y);g.lineTo(x+i+h*.8,y);g.closePath();g.fill()}
+    g.fillStyle='rgba(255,255,255,.5)';g.fillRect(x,y,w,1.5);g.fillStyle='rgba(0,0,0,.25)';g.fillRect(x,y+h-2,w,2);g.restore();
+    rr2(3);g.strokeStyle='rgba(0,0,0,.45)';g.lineWidth=1;g.stroke();
+  }else{ // neonl：霓虹线框
+    rr2(4);g.fillStyle=c[1]+'55';g.fill();g.shadowColor=c[0];g.shadowBlur=6;g.strokeStyle=c[0];g.lineWidth=2;rr2(4);g.stroke();
+  }
+  return cv2;
+}
 function skNote(x,y,w,l){
   const k=KIND[l],im=SI['note'+k];
   if(imOK(im)){c2.drawImage(im,x,y-8,w,16);return}
-  const c=S.pal[k];
+  const c=(S.pal||K3)[k];
+  if(NSV){c2.drawImage(noteSprite(NSV,k,w,c),x-2,y-10,w+4,20);return}
   if(S.style=='neon'){rr(x,y-8,w,15,3);c2.fillStyle=c[1]+'66';c2.fill();c2.strokeStyle=c[0];c2.lineWidth=2;c2.stroke();return}
   // 渐变对象缓存（每帧每个音符都新建渐变会产生大量垃圾回收，造成偶发卡顿）；用平移把渐变放到音符位置
   let g=skG['n'+k];if(!g){g=skG['n'+k]=c2.createLinearGradient(0,-8,0,7);g.addColorStop(0,c[0]);g.addColorStop(1,c[1])}
@@ -1566,8 +1631,8 @@ let skG={};
 function skHold(x,yt,w,h,l,y0,h0){
   const k=KIND[l],im=SI.hold||SI['note'+k];
   if(imOK(SI.hold)){const I=SI.hold,ih=I.naturalHeight;const sy=(yt-y0)/h0*ih,sh=h/h0*ih;c2.drawImage(I,0,sy,I.naturalWidth,Math.max(1,sh),x,yt,w,h);return}
-  const c=S.pal[k];
-  if(S.style=='neon'){c2.fillStyle=c[1]+'55';c2.fillRect(x,yt,w,h);c2.fillStyle=c[0];c2.fillRect(x,yt,2,h);c2.fillRect(x+w-2,yt,2,h);return}
+  const c=(S.pal||K3)[k];
+  if(S.style=='neon'||NSV=='neonl'){c2.fillStyle=c[1]+'55';c2.fillRect(x,yt,w,h);c2.fillStyle=c[0];c2.fillRect(x,yt,2,h);c2.fillRect(x+w-2,yt,2,h);return}
   let g=skG['h'+l];if(!g){g=skG['h'+l]=c2.createLinearGradient(x,0,x+w,0);g.addColorStop(0,c[1]);g.addColorStop(.5,c[0]);g.addColorStop(1,c[1])}
   c2.fillStyle=g;c2.globalAlpha*=.9;c2.fillRect(x,yt,w,h);c2.globalAlpha/=.9;
   c2.fillStyle='rgba(0,0,0,.25)';c2.fillRect(x,yt,1,h);c2.fillRect(x+w-1,yt,1,h);
@@ -1776,15 +1841,47 @@ function applySkin(){skG={};
   try{localStorage.setItem('resonia-skin',JSON.stringify({id,lay:$('skLay').value,hud:$('skHud').checked}))}catch(x){}
   if(typeof draw=='function'&&!running)draw(song&&ctx?songMs():0);
 }
+
+// ---- 击打特效样式（程序绘制，加色混合）：星芒 / 光环 / 迸发 / 十字闪 / 冲击波 ----
+function fxCustom(sty,e,k,cx,cy,lw){
+  const col=e.c,a=1-k;c2.save();c2.globalCompositeOperation='lighter';
+  if(sty=='star'){
+    const R=lw*(.55+k*.5),g=c2.createRadialGradient(cx,cy,0,cx,cy,R);g.addColorStop(0,`rgba(255,255,255,${.95*a})`);g.addColorStop(.25,`rgba(${col},${.7*a})`);g.addColorStop(1,`rgba(${col},0)`);
+    c2.fillStyle=g;c2.beginPath();c2.arc(cx,cy,R,0,Math.PI*2);c2.fill();
+    c2.fillStyle=`rgba(${col},${.8*a})`;const L=lw*(.5+1.1*k);
+    for(let i=0;i<8;i++){const ang=i*Math.PI/4+.2,len=(i%2?.55:1)*L;c2.save();c2.translate(cx,cy);c2.rotate(ang);c2.beginPath();c2.moveTo(0,-2.2*a);c2.lineTo(len,0);c2.lineTo(0,2.2*a);c2.closePath();c2.fill();c2.restore()}
+  }else if(sty=='ring'){
+    const r=lw*(.25+k*.85);c2.lineWidth=1.5+4*a;c2.strokeStyle=`rgba(${col},${a})`;c2.beginPath();c2.ellipse(cx,cy,r,r*.42,0,0,Math.PI*2);c2.stroke();
+    c2.lineWidth=1;c2.strokeStyle=`rgba(255,255,255,${.8*a})`;c2.beginPath();c2.ellipse(cx,cy,r*.72,r*.3,0,0,Math.PI*2);c2.stroke();
+    c2.fillStyle=`rgba(255,255,255,${.7*a})`;for(let i=0;i<14;i++){const ang=i/14*Math.PI*2;c2.fillRect(cx+Math.cos(ang)*r*1.1-1,cy+Math.sin(ang)*r*.46-1,2,2)}
+    const g=c2.createRadialGradient(cx,cy,0,cx,cy,lw*.4);g.addColorStop(0,`rgba(255,255,255,${.6*a})`);g.addColorStop(1,`rgba(${col},0)`);c2.fillStyle=g;c2.beginPath();c2.arc(cx,cy,lw*.4,0,Math.PI*2);c2.fill();
+  }else if(sty=='burst'){
+    c2.lineCap='round';c2.lineWidth=2;c2.strokeStyle=`rgba(${col},${a})`;
+    e.p.forEach((p,i)=>{const d=p.v*k*400*1.1,ang=-Math.PI*(.04+.92*((i*.6180339)%1)),d0=d*.55;c2.beginPath();c2.moveTo(cx+Math.cos(ang)*d0,cy+Math.sin(ang)*d0*1.1);c2.lineTo(cx+Math.cos(ang)*d,cy+Math.sin(ang)*d*1.1);c2.stroke()});
+    c2.fillStyle=`rgba(255,255,255,${a})`;for(let i=0;i<10;i++){const ang=i*2.399,d=lw*(.15+((i*.37)%1)*.8)*(.4+k);c2.fillRect(cx+Math.cos(ang)*d-1.5,cy+Math.sin(ang)*d*.6-1.5-k*18,3,3)}
+    const g=c2.createRadialGradient(cx,cy,0,cx,cy,lw*.5);g.addColorStop(0,`rgba(255,255,255,${.7*a})`);g.addColorStop(1,`rgba(${col},0)`);c2.fillStyle=g;c2.fillRect(cx-lw/2,cy-lw/2,lw,lw);
+  }else if(sty=='cross'){
+    const L=lw*(.45+.6*(1-a*a)),T=3.5*a+.5;c2.fillStyle=`rgba(${col},${.9*a})`;
+    for(const ang of [Math.PI/4,-Math.PI/4]){c2.save();c2.translate(cx,cy);c2.rotate(ang);c2.beginPath();c2.moveTo(-L,0);c2.lineTo(0,-T);c2.lineTo(L,0);c2.lineTo(0,T);c2.closePath();c2.fill();c2.restore()}
+    const g=c2.createRadialGradient(cx,cy,0,cx,cy,lw*.32);g.addColorStop(0,`rgba(255,255,255,${a})`);g.addColorStop(.5,`rgba(${col},${.5*a})`);g.addColorStop(1,`rgba(${col},0)`);c2.fillStyle=g;c2.beginPath();c2.arc(cx,cy,lw*.32,0,Math.PI*2);c2.fill();
+  }else if(sty=='wave'){
+    const r=lw*(.2+k*1.0),g=c2.createRadialGradient(cx,cy,r*.55,cx,cy,r);g.addColorStop(0,`rgba(${col},0)`);g.addColorStop(.8,`rgba(${col},${.55*a})`);g.addColorStop(1,`rgba(255,255,255,${.9*a})`);
+    c2.save();c2.translate(cx,cy);c2.scale(1,.38);c2.translate(-cx,-cy);c2.fillStyle=g;c2.beginPath();c2.arc(cx,cy,r,0,Math.PI*2);c2.fill();c2.restore();
+    const vg=c2.createLinearGradient(0,cy-90,0,cy);vg.addColorStop(0,`rgba(${col},0)`);vg.addColorStop(1,`rgba(${col},${.5*a})`);c2.fillStyle=vg;c2.fillRect(cx-lw*.3,cy-90,lw*.6,90);
+  }
+  c2.restore();
+}
 function drawFx(){
   const now=performance.now();
   for(let i=fx.length-1;i>=0;i--){
     const e=fx[i],age=now-e.s;if(age>400){fx.splice(i,1);continue}
     const k=age/400,lw=LD[e.l],cx=LX[e.l]+lw/2,cy=JY-1;
     if(imOK(SI.fx)){const z=lw*(1.1+k*1.3);c2.globalAlpha=1-k;c2.drawImage(SI.fx,cx-z/2,cy-z/2,z,z);c2.globalAlpha=1;continue}
+    if(FSV=='none')continue;
+    if(FSV){fxCustom(FSV,e,k,cx,cy,lw);continue}
     c2.fillStyle=`rgba(${e.c},${.6*(1-k)})`;c2.fillRect(LX[e.l]+2,JY-11,lw-4,20);
-    const g=c2.createLinearGradient(0,JY-120,0,JY);g.addColorStop(0,`rgba(${e.c},0)`);g.addColorStop(1,`rgba(${e.c},${.35*(1-k)})`);
-    c2.fillStyle=g;c2.fillRect(LX[e.l],JY-120,lw,120);
+    const g=c2.createLinearGradient(0,JY-114,0,JY+6);g.addColorStop(0,`rgba(${e.c},0)`);g.addColorStop(1,`rgba(${e.c},${.35*(1-k)})`);
+    c2.fillStyle=g;c2.fillRect(LX[e.l],JY-114,lw,120);
     c2.strokeStyle=`rgba(${e.c},${1-k})`;c2.lineWidth=1+3*(1-k);
     c2.beginPath();c2.ellipse(cx,cy,lw*.3+k*lw*.55,6+k*24,0,0,Math.PI*2);c2.stroke();
     c2.fillStyle=`rgba(${e.c},${1-k})`;
@@ -1991,7 +2088,7 @@ function draw(now){
   else if(S.field=='glass'){c2.fillStyle='rgba(6,8,22,.84)';c2.fillRect(0,0,W,H)}
   for(let l=0;l<LANES;l++){
     if(!imOK(SI.field)&&!bgaOn){if(S.field=='glass'){if(l%2){c2.fillStyle='rgba(255,255,255,.035)';c2.fillRect(LX[l],0,LD[l],H)}}else{c2.fillStyle=l%2?'#10142a':'#0b0e20';c2.fillRect(LX[l],0,LD[l],H)}}
-    if(flash[l]>0||keys[l]){const g=c2.createLinearGradient(0,JY-160,0,JY);g.addColorStop(0,'rgba('+gl+',0)');g.addColorStop(1,'rgba('+gl+','+(keys[l]?.45:flash[l]*.3)+')');c2.fillStyle=g;c2.fillRect(LX[l],JY-160,LD[l],160);flash[l]=Math.max(0,flash[l]-.08)}
+    if(flash[l]>0||keys[l]){const g=c2.createLinearGradient(0,JY-154,0,JY+6);g.addColorStop(0,'rgba('+gl+',0)');g.addColorStop(1,'rgba('+gl+','+(keys[l]?.45:flash[l]*.3)+')');c2.fillStyle=g;c2.fillRect(LX[l],JY-154,LD[l],160);flash[l]=Math.max(0,flash[l]-.08)}
   }
   c2.strokeStyle=II()?'#6b717d':S.field=='glass'||imOK(SI.field)?'rgba(255,255,255,.1)':'#232a52';c2.lineWidth=1;
   for(let l=1;l<LANES;l++){const gx=LX[l]-(LX[l]-LX[l-1]-LD[l-1])/2;c2.beginPath();c2.moveTo(gx,0);c2.lineTo(gx,H);c2.stroke()}
@@ -2017,13 +2114,13 @@ function draw(now){
         // 只绘制可见部分：超长的长条不再提交几万像素高的巨大矩形（可能触发 GPU 栅格化异常，表现为黑色横条）
         const ya=Math.max(yt,-12),hb=Math.min(yt+h,H+12)-ya;
         if(hb>0){
-          if(S.pal)skHold(x,ya,lwn,hb,n.lane,yt,h);
+          if(S.pal||NSV)skHold(x,ya,lwn,hb,n.lane,yt,h);
           else{c2.fillStyle=lcol(n.lane);c2.fillRect(x,ya,lwn,hb);
             c2.fillStyle='rgba(0,0,0,.2)';c2.fillRect(x,ya,1,hb);c2.fillRect(x+lwn-1,ya,1,hb);if(yt>=-12)c2.fillRect(x,yt,lwn,2)}
         }
       }
       if(n.holding){c2.fillStyle='rgba(255,255,255,'+(.35+.2*Math.sin(performance.now()/60))+')';c2.fillRect(LX[n.lane]+2,JY-11,LD[n.lane]-4,20)}
-      if(!n.holding||!n.hold){if(S.pal)skNote(x,y,lwn,n.lane);else{c2.fillStyle=lcol(n.lane);c2.fillRect(x,y-8,lwn,14);c2.fillStyle='rgba(0,0,0,.25)';c2.fillRect(x,y+3,lwn,3)}}
+      if(!n.holding||!n.hold){if(S.pal||NSV)skNote(x,y,lwn,n.lane);else{c2.fillStyle=lcol(n.lane);c2.fillRect(x,y-8,lwn,14);c2.fillStyle='rgba(0,0,0,.25)';c2.fillRect(x,y+3,lwn,3)}}
       c2.globalAlpha=1;
     }
     if(fi||fo)c2.restore();
@@ -2074,6 +2171,9 @@ function draw(now){
   $('skClear').onclick=()=>{for(const k of Object.keys(CIfile)){delete CIfile[k];delete CI[k]}idbPut('skin',{});marks();applySkin()};
   $('skinSel').onchange=()=>{const id=$('skinSel').value;$('skLay').value='';$('skHud').checked=(SK[id]||SK.classic).hud=='panel';applySkin()};
   $('skLay').onchange=applySkin;$('skHud').onchange=applySkin;
+  $('noteSty').value=NSV;$('fxSty').value=FSV;
+  const saveNF=()=>{NSV=$('noteSty').value;FSV=$('fxSty').value;try{localStorage.setItem('resonia-nfx',JSON.stringify({n:NSV,f:FSV}))}catch(x){}if(!running)draw(song&&ctx?songMs():0)};
+  $('noteSty').onchange=saveNF;$('fxSty').onchange=saveNF;
   try{const v=JSON.parse(localStorage.getItem('resonia-skin')||'null');if(v&&SK[v.id]){$('skinSel').value=v.id;$('skLay').value=v.lay||'';$('skHud').checked=!!v.hud}}catch(x){}
   applySkin();
   idbGet('skin').then(r=>{if(!r)return;for(const k of Object.keys(r))if(r[k]&&SKSLOTS.some(q=>q[0]==k))setSlot(k,r[k]);marks()});
