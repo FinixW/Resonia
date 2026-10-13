@@ -161,7 +161,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div class="sl"><span>按键音量</span><input type="range" id="kv" min="0" max="2.5" step="0.1" value="1.3" data-minor="0.1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
 </section>
 <section class="card" id="cSkin"><h3>皮肤</h3>
-  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="iidx">IIDX 1P</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il">音符<select id="noteSty"><option value="">跟随皮肤</option><option value="glass">水晶</option><option value="pill">胶囊</option><option value="metal">金属</option><option value="bar">光带</option><option value="slash">斜纹</option><option value="neonl">霓虹线框</option><option value="gem">宝石</option><option value="ice">冰晶</option><option value="pillP">紫霞胶囊</option><option value="pillC">蓝能胶囊</option><option value="metalG">绿金属</option><option value="flame">火焰条</option></select></label><label class="il">特效<select id="fxSty"><option value="">跟随皮肤</option><option value="star">星芒</option><option value="ring">光环</option><option value="burst">迸发</option><option value="cross">十字闪</option><option value="wave">冲击波</option><option value="flare">镜头光斑</option><option value="dust">尘环</option><option value="shard">碎片</option><option value="rays">光芒</option><option value="dot">光点</option><option value="beam">光束</option><option value="none">无</option></select></label><label class="il">连击数字<select id="cmbSty"><option value="">跟随皮肤</option><option value="metal">金属立体</option><option value="lcd">青色数码</option><option value="pink">粉色斜体</option><option value="gold">金色</option></select></label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
+  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="iidx">IIDX 1P</option><option value="custom">自定义…</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il">音符<select id="noteSty"><option value="">跟随皮肤</option><option value="glass">水晶</option><option value="pill">胶囊</option><option value="metal">金属</option><option value="bar">光带</option><option value="slash">斜纹</option><option value="neonl">霓虹线框</option><option value="gem">宝石</option><option value="ice">冰晶</option><option value="pillP">紫霞胶囊</option><option value="pillC">蓝能胶囊</option><option value="metalG">绿金属</option><option value="flame">火焰条</option></select></label><label class="il">特效<select id="fxSty"><option value="">跟随皮肤</option><option value="star">星芒</option><option value="ring">光环</option><option value="burst">迸发</option><option value="cross">十字闪</option><option value="wave">冲击波</option><option value="flare">镜头光斑</option><option value="dust">尘环</option><option value="shard">碎片</option><option value="rays">光芒</option><option value="dot">光点</option><option value="beam">光束</option><option value="none">无</option></select></label><label class="il">连击数字<select id="cmbSty"><option value="">跟随皮肤</option><option value="metal">金属立体</option><option value="lcd">青色数码</option><option value="pink">粉色斜体</option><option value="gold">金色</option></select></label><label class="il"><input type="checkbox" id="noteAnim" checked>音符动画</label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
   <details id="skCustom" hidden><summary>自定义素材（图片只保存在你的浏览器里，不会上传）</summary><div id="skSlots"></div><button id="skClear">清除全部素材</button></details>
 </section>
 <section class="card" id="cPlug"><h3>第三方<span class="gpu" style="color:var(--mu)">格式插件</span></h3><div class="row"><label class="fbtn sm">载入插件…<input type="file" id="plf" accept=".js" multiple></label><span id="plmsg" class="fname" style="color:var(--mu)">未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器</span></div><div id="pll"></div></section>
@@ -176,6 +176,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 const LANGS=[['zh','简体中文'],['zh-TW','繁體中文'],['en','English'],['ja','日本語'],['ko','한국어']];
 const LK={zh:'zh','zh-TW':'tw',en:'en',ja:'ja',ko:'ko'};
 const I18N={
+ "音符动画":{"en": "Note animation", "ja": "ノーツアニメーション", "ko": "노트 애니메이션", "tw": "音符動畫"},
  "连击数字":{"en": "Combo digits", "ja": "コンボ数字", "ko": "콤보 숫자", "tw": "連擊數字"},
  "金属立体":{"en": "Chrome", "ja": "メタリック", "ko": "크롬", "tw": "金屬立體"},
  "青色数码":{"en": "Cyan digital", "ja": "シアンデジタル", "ko": "시안 디지털", "tw": "青色數碼"},
@@ -1584,8 +1585,8 @@ const imOK=im=>im&&im.complete&&im.naturalWidth>0;
 function rr(x,y,w,h,r){r=Math.min(r,w/2,h/2);c2.beginPath();c2.moveTo(x+r,y);c2.arcTo(x+w,y,x+w,y+h,r);c2.arcTo(x+w,y+h,x,y+h,r);c2.arcTo(x,y+h,x,y,r);c2.arcTo(x,y,x+w,y,r);c2.closePath()}
 
 // ---- 音符样式：离屏精灵缓存（每种样式/键种/宽度只画一次），再按帧 drawImage ----
-let NSV='',FSV='',NSC={};
-try{const v=JSON.parse(localStorage.getItem('resonia-nfx')||'null');if(v){NSV=v.n||'';FSV=v.f||''}}catch(x){}
+let NSV='',FSV='',NSC={},NAV=true,NFR=0;const NF=10;
+try{const v=JSON.parse(localStorage.getItem('resonia-nfx')||'null');if(v){NSV=v.n||'';FSV=v.f||'';if(v.a===false)NAV=false}}catch(x){}
 // ---- 连击数字样式 ----
 let CSV='';
 try{const v=JSON.parse(localStorage.getItem('resonia-nfx')||'null');if(v)CSV=v.c||''}catch(x){}
@@ -1608,11 +1609,12 @@ function drawCombo(n,cx,y){
     c2.font='900 18px Impact,system-ui';c2.lineWidth=4;c2.strokeText('COMBO',cx,y+21);c2.fillStyle='#ffd27a';c2.fillText('COMBO',cx,y+21);
   }
 }
-function noteSprite(sty,k,w,c){
+function noteSprite(sty,k,w,c,fr){
+  fr=fr===undefined?-1:fr;
   if(sty=='pillP'){sty='pill';c=[['#ffd6f4','#a45bd8'],['#e8a8ff','#7a2fc0'],['#ffb0d0','#c02a7a']][k]}
   else if(sty=='pillC'){sty='pill';c=[['#e6fbff','#2aa6e8'],['#8fe6ff','#1167d8'],['#b8fff0','#0a9ab0']][k]}
   else if(sty=='metalG'){sty='metal';c=[['#e6ffe6','#58b058'],['#b6ecb6','#2f8a2f'],['#ffe9a0','#c08a10']][k]}
-  const key=sty+'|'+k+'|'+Math.round(w*4)+'|'+c[0]+c[1];let cv2=NSC[key];if(cv2)return cv2;
+  const key=sty+'|'+k+'|'+Math.round(w*4)+'|'+c[0]+c[1]+'|'+fr;let cv2=NSC[key];if(cv2)return cv2;
   cv2=NSC[key]=document.createElement('canvas');const pw=Math.ceil(w+4),ph=20;cv2.width=Math.ceil(pw*dpr);cv2.height=Math.ceil(ph*dpr);
   const g=cv2.getContext('2d');g.scale(dpr,dpr);
   const x=2,y=2.5,h=15,rr2=(r)=>{g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h)};
@@ -1670,13 +1672,18 @@ function noteSprite(sty,k,w,c){
   }else{ // neonl：霓虹线框
     rr2(4);g.fillStyle=c[1]+'55';g.fill();g.shadowColor=c[0];g.shadowBlur=6;g.strokeStyle=c[0];g.lineWidth=2;rr2(4);g.stroke();
   }
+  if(fr>=0){ // 动画：预渲染 NF 帧（高光扫过 + 轻微呼吸），运行时只是按时间选帧 drawImage，开销与静态音符相同
+    const t=fr/NF;g.save();rr2(4);g.clip();
+    const px=x-12+t*(w+24);g.fillStyle='rgba(255,255,255,.5)';g.beginPath();g.moveTo(px,y+h);g.lineTo(px+5,y+h);g.lineTo(px+5+h*.7,y);g.lineTo(px+h*.7,y);g.closePath();g.fill();
+    g.fillStyle='rgba(255,255,255,'+(.06+.07*Math.sin(t*Math.PI*2))+')';g.fillRect(x,y,w,h);g.restore();
+  }
   return cv2;
 }
 function skNote(x,y,w,l){
   const k=KIND[l],im=SI['note'+k];
   if(imOK(im)){c2.drawImage(im,x,y-8,w,16);return}
   const c=(S.pal||K3)[k];
-  if(NSV){c2.drawImage(noteSprite(NSV,k,w,c),x-2,y-10,w+4,20);return}
+  if(NSV){c2.drawImage(noteSprite(NSV,k,w,c,NAV?(NFR+l*3)%NF:-1),x-2,y-10,w+4,20);return}
   if(S.style=='neon'){rr(x,y-8,w,15,3);c2.fillStyle=c[1]+'66';c2.fill();c2.strokeStyle=c[0];c2.lineWidth=2;c2.stroke();return}
   // 渐变对象缓存（每帧每个音符都新建渐变会产生大量垃圾回收，造成偶发卡顿）；用平移把渐变放到音符位置
   let g=skG['n'+k];if(!g){g=skG['n'+k]=c2.createLinearGradient(0,-8,0,7);g.addColorStop(0,c[0]);g.addColorStop(1,c[1])}
@@ -1953,29 +1960,35 @@ function fxCustom(sty,e,k,cx,cy,lw){
   }
   c2.restore();
 }
+function fxOne(e,age){
+  const k=age/400,lw=LD[e.l],cx=LX[e.l]+lw/2,cy=JY-1;
+  if(imOK(SI.fx)){const z=lw*(1.1+k*1.3);c2.globalAlpha=1-k;c2.drawImage(SI.fx,cx-z/2,cy-z/2,z,z);c2.globalAlpha=1;return}
+  if(FSV=='none')return;
+  if(FSV){fxCustom(FSV,e,k,cx,cy,lw);return}
+  c2.fillStyle=`rgba(${e.c},${.6*(1-k)})`;c2.fillRect(LX[e.l]+2,JY-11,lw-4,20);
+  const g=c2.createLinearGradient(0,JY-114,0,JY+6);g.addColorStop(0,`rgba(${e.c},0)`);g.addColorStop(1,`rgba(${e.c},${.35*(1-k)})`);
+  c2.fillStyle=g;c2.fillRect(LX[e.l],JY-114,lw,120);
+  c2.strokeStyle=`rgba(${e.c},${1-k})`;c2.lineWidth=1+3*(1-k);
+  c2.beginPath();c2.ellipse(cx,cy,lw*.3+k*lw*.55,6+k*24,0,0,Math.PI*2);c2.stroke();
+  c2.fillStyle=`rgba(${e.c},${1-k})`;
+  for(const p of e.p){const d=p.v*age;c2.fillRect(cx+Math.cos(p.a)*d*1.3-2,cy+Math.sin(p.a)*d+.0005*age*age-2,4,4)}
+}
+const HOLDP=Array.from({length:12},(_,i)=>({a:-Math.PI*(.08+.84*((i*.618)%1)),v:.12+((i*.37)%1)*.2}));
 function drawFx(){
   const now=performance.now();
   for(let i=fx.length-1;i>=0;i--){
     const e=fx[i],age=now-e.s;if(age>400){fx.splice(i,1);continue}
-    const k=age/400,lw=LD[e.l],cx=LX[e.l]+lw/2,cy=JY-1;
-    if(imOK(SI.fx)){const z=lw*(1.1+k*1.3);c2.globalAlpha=1-k;c2.drawImage(SI.fx,cx-z/2,cy-z/2,z,z);c2.globalAlpha=1;continue}
-    if(FSV=='none')continue;
-    if(FSV){fxCustom(FSV,e,k,cx,cy,lw);continue}
-    c2.fillStyle=`rgba(${e.c},${.6*(1-k)})`;c2.fillRect(LX[e.l]+2,JY-11,lw-4,20);
-    const g=c2.createLinearGradient(0,JY-114,0,JY+6);g.addColorStop(0,`rgba(${e.c},0)`);g.addColorStop(1,`rgba(${e.c},${.35*(1-k)})`);
-    c2.fillStyle=g;c2.fillRect(LX[e.l],JY-114,lw,120);
-    c2.strokeStyle=`rgba(${e.c},${1-k})`;c2.lineWidth=1+3*(1-k);
-    c2.beginPath();c2.ellipse(cx,cy,lw*.3+k*lw*.55,6+k*24,0,0,Math.PI*2);c2.stroke();
-    c2.fillStyle=`rgba(${e.c},${1-k})`;
-    for(const p of e.p){const d=p.v*age;c2.fillRect(cx+Math.cos(p.a)*d*1.3-2,cy+Math.sin(p.a)*d+.0005*age*age-2,4,4)}
+    fxOne(e,age);
   }
+  // 按住长条期间：该轨道的特效持续循环播放（松开或结束后停止）
+  if(running)for(let l=0;l<LANES;l++){const n=holdN[l];if(n&&n.holding&&keys[l])fxOne({l,c:n.fc||FXC.PERFECT,p:HOLDP},(now+l*90)%400)}
 }
 // 判定窗口（毫秒）：PERFECT ±40，GREAT ±80，GOOD ±120，BAD ±150（O2Jam 的 BAD 范围），超出即 MISS；BAD 只按时间判，命中音符但不加连击也不断连击
 const W_PERF=40,W_GREAT=80,W_GOOD=120,HIT=150;
 function judge(n,ad){
   n.done=true;n.hit=true;
   let j,w;if(ad<=W_PERF){j='PERFECT';w=1000;cnt.P++}else if(ad<=W_GREAT){j='GREAT';w=700;cnt.G++}else if(ad<=W_GOOD){j='GOOD';w=400;cnt.O++}else{j='BAD';w=0;cnt.B++}
-  score+=w;if(j!='BAD'){combo++;maxCombo=Math.max(maxCombo,combo)}lastJ=j;lastJT=performance.now();addFx(n.lane,j);
+  score+=w;if(j!='BAD'){combo++;maxCombo=Math.max(maxCombo,combo)}lastJ=j;lastJT=performance.now();addFx(n.lane,j);n.fc=FXC[j];
   hitSound(n);
   if(n.hold){n.holding=true;n.rel=null;holdN[n.lane]=n}
 }
@@ -2160,7 +2173,7 @@ function drawBga(now){
   return true;
 }
 function draw(now){
-  c2.clearRect(0,0,W,H);
+  c2.clearRect(0,0,W,H);NFR=Math.floor(performance.now()/80);
   const bgaOn=false,bgaWant=!!(song&&((song.bga&&song.bga.length)||song.bgaScene)&&$('bga').checked);
   bgaVis(bgaWant?drawBga(now):false);
   const pr=progress(now);
@@ -2255,9 +2268,9 @@ function draw(now){
   $('skinSel').onchange=()=>{const id=$('skinSel').value;$('skLay').value='';$('skHud').checked=(SK[id]||SK.classic).hud=='panel';applySkin()};
   $('skLay').onchange=applySkin;$('skHud').onchange=applySkin;
   $('noteSty').value=NSV;$('fxSty').value=FSV;
-  $('cmbSty').value=CSV;
-  const saveNF=()=>{NSV=$('noteSty').value;FSV=$('fxSty').value;CSV=$('cmbSty').value;try{localStorage.setItem('resonia-nfx',JSON.stringify({n:NSV,f:FSV,c:CSV}))}catch(x){}if(!running)draw(song&&ctx?songMs():0)};
-  $('noteSty').onchange=saveNF;$('fxSty').onchange=saveNF;$('cmbSty').onchange=saveNF;
+  $('cmbSty').value=CSV;$('noteAnim').checked=NAV;
+  const saveNF=()=>{NSV=$('noteSty').value;FSV=$('fxSty').value;CSV=$('cmbSty').value;NAV=$('noteAnim').checked;try{localStorage.setItem('resonia-nfx',JSON.stringify({n:NSV,f:FSV,c:CSV,a:NAV}))}catch(x){}if(!running)draw(song&&ctx?songMs():0)};
+  $('noteSty').onchange=saveNF;$('fxSty').onchange=saveNF;$('cmbSty').onchange=saveNF;$('noteAnim').onchange=saveNF;
   try{const v=JSON.parse(localStorage.getItem('resonia-skin')||'null');if(v&&SK[v.id]){$('skinSel').value=v.id;$('skLay').value=v.lay||'';$('skHud').checked=!!v.hud}}catch(x){}
   applySkin();
   idbGet('skin').then(r=>{if(!r)return;for(const k of Object.keys(r))if(r[k]&&SKSLOTS.some(q=>q[0]==k))setSlot(k,r[k]);marks()});
