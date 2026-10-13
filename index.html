@@ -2432,8 +2432,7 @@ const PANELS=[
   g.fillStyle=pRG(g,A.x0+A.w*.6,40,0,260,[[0,'rgba(255,255,200,.16)'],[1,'rgba(255,255,200,0)']]);g.fillRect(A.x0,0,A.w,A.yb);
   for(const[x,w,s]of[[0,A.x0,1],[A.x1,W-A.x1,-1]]){g.fillStyle='#0a1d12';g.fillRect(x,0,w,A.yb);
    const sx=x+2,sw=w-4;g.fillStyle=pG(g,sx,0,sx+sw,0,[[0,'#2c6b34'],[.35,'#8bd470'],[.7,'#3f8f45'],[1,'#1f5a2b']]);g.fillRect(sx,0,sw,A.yb);
-   for(let y=70+r()*20;y<A.yb+60;y+=108+r()*18){g.fillStyle='rgba(10,50,20,.55)';g.fillRect(sx-1.5,y,sw+3,5);g.fillStyle='rgba(210,255,170,.45)';g.fillRect(sx-1.5,y-1,sw+3,1.2);
-     for(let q=0;q<2;q++){pLeaf(g,s>0?sx+sw:sx,y-8-r()*30,34+r()*20,(s>0?-.5:Math.PI+.5)+(r()-.5)*.8+q*.5,'rgba(60,160,70,.9)')}}
+   for(let y=70+r()*20;y<A.yb+60;y+=108+r()*18){g.fillStyle='rgba(10,50,20,.55)';g.fillRect(sx-1.5,y,sw+3,5);g.fillStyle='rgba(210,255,170,.45)';g.fillRect(sx-1.5,y-1,sw+3,1.2);}
    g.fillStyle='rgba(220,255,180,.55)';g.fillRect(s>0?A.x0-2:A.x1,0,2,A.yb)}},
  front(g,A){pnBase(g,'#0a1d12');
   g.fillStyle='#d6c685';pR(g,A.x0-8,JY+9,A.w+16,H-JY-11,3);g.fill();
