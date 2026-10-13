@@ -161,7 +161,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div class="sl"><span>按键音量</span><input type="range" id="kv" min="0" max="2.5" step="0.1" value="1.3" data-minor="0.1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
 </section>
 <section class="card" id="cSkin"><h3>皮肤</h3>
-  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="iidx">IIDX 1P</option><option value="custom">自定义…</option></select></label><label class="il">面板<select id="panelSel"><option value="">无</option><option value="ink">水墨</option><option value="bamboo">竹韵</option><option value="liuli">琉璃</option><option value="cyber">赛博霓虹</option><option value="mint">薄荷云朵</option><option value="sakura">樱花星愿</option><option value="imperial">帝国舰桥</option><option value="hologram">全息未来</option><option value="modern">摩登极简</option><option value="graffiti">涂鸦嘻哈</option></select></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il">音符<select id="noteSty"><option value="">跟随皮肤</option><option value="glass">水晶</option><option value="pill">胶囊</option><option value="metal">金属</option><option value="bar">光带</option><option value="slash">斜纹</option><option value="neonl">霓虹线框</option><option value="gem">宝石</option><option value="ice">冰晶</option><option value="pillP">紫霞胶囊</option><option value="pillC">蓝能胶囊</option><option value="metalG">绿金属</option><option value="flame">火焰条</option></select></label><label class="il">特效<select id="fxSty"><option value="">跟随皮肤</option><option value="star">星芒</option><option value="ring">光环</option><option value="burst">迸发</option><option value="cross">十字闪</option><option value="wave">冲击波</option><option value="flare">镜头光斑</option><option value="dust">尘环</option><option value="shard">碎片</option><option value="rays">光芒</option><option value="dot">光点</option><option value="beam">光束</option><option value="none">无</option></select></label><label class="il">连击数字<select id="cmbSty"><option value="">跟随皮肤</option><option value="metal">金属立体</option><option value="lcd">青色数码</option><option value="pink">粉色斜体</option><option value="gold">金色</option></select></label><label class="il"><input type="checkbox" id="noteAnim" checked>音符动画</label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
+  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="iidx">IIDX 1P</option><option value="custom">自定义…</option></select></label><label class="il">面板<select id="panelSel"><option value="">无</option><option value="ink">水墨</option><option value="bamboo">竹韵</option><option value="liuli">琉璃</option><option value="cyber">赛博霓虹</option><option value="mint">薄荷云朵</option><option value="sakura">樱花星愿</option><option value="imperial">帝国舰桥</option><option value="hologram">全息未来</option><option value="modern">摩登极简</option><option value="graffiti">涂鸦嘻哈</option></select></label><label class="il">轨道背景不透明度<input type="range" id="fldA" min="0" max="100" value="100" style="width:90px"></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il">音符<select id="noteSty"><option value="">跟随皮肤</option><option value="glass">水晶</option><option value="pill">胶囊</option><option value="metal">金属</option><option value="bar">光带</option><option value="slash">斜纹</option><option value="neonl">霓虹线框</option><option value="gem">宝石</option><option value="ice">冰晶</option><option value="pillP">紫霞胶囊</option><option value="pillC">蓝能胶囊</option><option value="metalG">绿金属</option><option value="flame">火焰条</option></select></label><label class="il">特效<select id="fxSty"><option value="">跟随皮肤</option><option value="star">星芒</option><option value="ring">光环</option><option value="burst">迸发</option><option value="cross">十字闪</option><option value="wave">冲击波</option><option value="flare">镜头光斑</option><option value="dust">尘环</option><option value="shard">碎片</option><option value="rays">光芒</option><option value="dot">光点</option><option value="beam">光束</option><option value="none">无</option></select></label><label class="il">连击数字<select id="cmbSty"><option value="">跟随皮肤</option><option value="metal">金属立体</option><option value="lcd">青色数码</option><option value="pink">粉色斜体</option><option value="gold">金色</option></select></label><label class="il"><input type="checkbox" id="noteAnim" checked>音符动画</label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
   <details id="skCustom" hidden><summary>自定义素材（图片只保存在你的浏览器里，不会上传）</summary><div id="skSlots"></div><button id="skClear">清除全部素材</button></details>
 </section>
 <section class="card" id="cPlug"><h3>第三方<span class="gpu" style="color:var(--mu)">格式插件</span></h3><div class="row"><label class="fbtn sm">载入插件…<input type="file" id="plf" accept=".js" multiple></label><span id="plmsg" class="fname" style="color:var(--mu)">未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器</span></div><div id="pll"></div></section>
@@ -176,6 +176,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 const LANGS=[['zh','简体中文'],['zh-TW','繁體中文'],['en','English'],['ja','日本語'],['ko','한국어']];
 const LK={zh:'zh','zh-TW':'tw',en:'en',ja:'ja',ko:'ko'};
 const I18N={
+ "轨道背景不透明度":{"en": "Lane background opacity", "ja": "レーン背景の不透明度", "ko": "레인 배경 불투명도", "tw": "軌道背景不透明度"},
  "面板":{"en": "Panel", "ja": "パネル", "ko": "패널", "tw": "面板"},
  "水墨":{"en": "Ink Wash", "ja": "水墨", "ko": "수묵", "tw": "水墨"},
  "竹韵":{"en": "Bamboo", "ja": "竹韻", "ko": "죽운", "tw": "竹韻"},
@@ -1599,6 +1600,7 @@ const imOK=im=>im&&im.complete&&im.naturalWidth>0;
 function rr(x,y,w,h,r){r=Math.min(r,w/2,h/2);c2.beginPath();c2.moveTo(x+r,y);c2.arcTo(x+w,y,x+w,y+h,r);c2.arcTo(x+w,y+h,x,y+h,r);c2.arcTo(x,y+h,x,y,r);c2.arcTo(x,y,x+w,y,r);c2.closePath()}
 
 // ---- 音符样式：离屏精灵缓存（每种样式/键种/宽度只画一次），再按帧 drawImage ----
+let FA=1;try{const v=localStorage.getItem('resonia-fa');if(v!==null&&!isNaN(+v))FA=Math.min(1,Math.max(0,+v))}catch(x){}
 let PN=null,NSU='',FSU='',CSU='',NSV='',FSV='',NSC={},NAV=true,NFR=0;const NF=10;
 try{const v=JSON.parse(localStorage.getItem('resonia-nfx')||'null');if(v){NSU=NSV=v.n||'';FSU=FSV=v.f||'';if(v.a===false)NAV=false}}catch(x){}
 // ---- 连击数字样式 ----
@@ -1762,7 +1764,6 @@ function holdStyled(x,ya,w,hb,l,yt,h0){
   const pw=Math.ceil(w);
   for(let yy=yt-HTH+flow;yy<ya+hb;yy+=HTH){if(yy+HTH<=ya)continue;c2.drawImage(t,x,yy,pw,HTH)}
   c2.restore();
-  if(yt>=-12)c2.drawImage(noteSprite(NSV,k,w,c,NAV?(NFR+l*3)%NF:-1),x-2,yt-10,w+4,20); // 顶端封口：与音符同样式
 }
 function skHold(x,yt,w,h,l,y0,h0){
   const k=KIND[l],im=SI.hold||SI['note'+k];
@@ -2255,12 +2256,15 @@ function draw(now){
   bgaVis(bgaWant?drawBga(now):false);
   const pr=progress(now);
   const gl=S.glow||'108,140,255';
-  if(PN)c2.drawImage(pnLayer('back',PN.back),0,0,W,H);
-  else if(imOK(SI.field))c2.drawImage(SI.field,0,0,W,H);
-  else if(II()){c2.fillStyle=bgaOn?'rgba(0,0,0,.72)':'#000';c2.fillRect(LX[0],0,LX[LANES-1]+LD[LANES-1]-LX[0],JY+7)}
-  else if(S.field=='glass'){c2.fillStyle='rgba(6,8,22,.84)';c2.fillRect(0,0,W,H)}
+  if(PN){const L=pnLayer('back',PN.back),d=dpr,ml=PN.ml,mr=PN.mr,fw=W-ml-mr;
+    c2.drawImage(L,0,0,ml*d,L.height,0,0,ml,H);c2.drawImage(L,(W-mr)*d,0,mr*d,L.height,W-mr,0,mr,H);
+    if(FA>0){c2.globalAlpha=FA;c2.drawImage(L,ml*d,0,fw*d,L.height,ml,0,fw,H);c2.globalAlpha=1}}
+  else if(imOK(SI.field)){c2.globalAlpha=FA;c2.drawImage(SI.field,0,0,W,H);c2.globalAlpha=1}
+  else if(0)c2.drawImage(SI.field,0,0,W,H);
+  else if(II()){c2.globalAlpha=FA;c2.fillStyle=bgaOn?'rgba(0,0,0,.72)':'#000';c2.fillRect(LX[0],0,LX[LANES-1]+LD[LANES-1]-LX[0],JY+7);c2.globalAlpha=1}
+  else if(S.field=='glass'){c2.globalAlpha=FA;c2.fillStyle='rgba(6,8,22,.84)';c2.fillRect(0,0,W,H);c2.globalAlpha=1}
   for(let l=0;l<LANES;l++){
-    if(!PN&&!imOK(SI.field)&&!bgaOn){if(S.field=='glass'){if(l%2){c2.fillStyle='rgba(255,255,255,.035)';c2.fillRect(LX[l],0,LD[l],H)}}else{c2.fillStyle=l%2?'#10142a':'#0b0e20';c2.fillRect(LX[l],0,LD[l],H)}}
+    if(!PN&&!imOK(SI.field)&&!bgaOn){c2.globalAlpha=FA;if(S.field=='glass'){if(l%2){c2.fillStyle='rgba(255,255,255,.035)';c2.fillRect(LX[l],0,LD[l],H)}}else{c2.fillStyle=l%2?'#10142a':'#0b0e20';c2.fillRect(LX[l],0,LD[l],H)}c2.globalAlpha=1}
     if(flash[l]>0||keys[l]){const g=c2.createLinearGradient(0,JY-154,0,JY+6);g.addColorStop(0,'rgba('+gl+',0)');g.addColorStop(1,'rgba('+gl+','+(keys[l]?.45:flash[l]*.3)+')');c2.fillStyle=g;c2.fillRect(LX[l],JY-154,LD[l],160);flash[l]=Math.max(0,flash[l]-.08)}
   }
   c2.strokeStyle=PN?PN.sep:II()?'#6b717d':S.field=='glass'||imOK(SI.field)?'rgba(255,255,255,.1)':'#232a52';c2.lineWidth=1;
@@ -2280,7 +2284,7 @@ function draw(now){
       if(n.done&&n.hold&&!n.holding&&!n.dead)continue; // 打断/漏掉的长条继续滚动（变暗），不再凭空消失
       const y=Math.round((JY-(n.t-jn)*pps)*dpr)/dpr;let lx=LX[n.lane],ld=LD[n.lane];
       if(n.sl!==undefined){const k=smooth((y/JY-.06)/.19);lx=LX[n.sl]+(LX[n.lane]-LX[n.sl])*k;ld=LD[n.sl]+(LD[n.lane]-LD[n.sl])*k} // 幻象：在上 1/4 处完成变轨
-      const x=lx+3,lwn=ld-6;
+      const x=lx,lwn=ld;
       c2.globalAlpha=n.done&&!n.holding?.3:1; // dead 长条：整条变暗
       if(n.hold){
         const yt=Math.round((JY-(n.end-jn)*pps)*dpr)/dpr,yb=(n.holding?JY:y)+6,h=Math.max(3,yb-yt);
@@ -2353,7 +2357,9 @@ function pnLayer(name,fn){
   let c=PL[key];if(c)return c;
   if(Object.keys(PL).length>14)for(const k in PL)delete PL[k];
   c=PL[key]=document.createElement('canvas');c.width=Math.ceil(W*dpr);c.height=Math.ceil(H*dpr);
-  const g=c.getContext('2d');g.scale(dpr,dpr);fn(g,{x0:PN.ml,x1:W-PN.mr,w:W-PN.ml-PN.mr,yb:JY+7});return c;
+  const g=c.getContext('2d');g.scale(dpr,dpr);const A={x0:PN.ml,x1:W-PN.mr,w:W-PN.ml-PN.mr,yb:JY+7};fn(g,A);
+  if(name=='back'){g.globalAlpha=PN.va||.5;g.fillStyle=PN.vc||'#000';g.fillRect(A.x0+2,0,A.w-4,A.yb);g.globalAlpha=1}
+  return c;
 }
 function pT(s,x,y,f,fill,al,o){o=o||{};c2.font=f;c2.textAlign=al||'center';c2.lineJoin='round';
   if(o.sh){c2.save();c2.shadowColor=o.sh;c2.shadowBlur=o.sb||9;c2.fillStyle=fill;c2.fillText(s,x,y);c2.restore()}
@@ -2392,7 +2398,7 @@ const SERIF='"KaiTi","STKaiti","Kaiti SC","Songti SC",serif',ROUND='ui-rounded,"
 
 const PANELS=[
 // ---------------- 水墨 ----------------
-{id:'ink',name:'水墨',ml:26,mr:26,
+{id:'ink',vc:'#0b0c0f',va:0.5,name:'水墨',ml:26,mr:26,
  page:'radial-gradient(ellipse at 50% 30%,#efe6d0 0,#d8ccae 60%,#bfb08a 100%)',
  pal:[['#f6eed8','#b8a67c'],['#9fd4bd','#2f7d66'],['#ec5a4e','#8f1c1c']],glow:'200,60,50',sep:'rgba(220,200,150,.14)',nsty:'glass',fsty:'dust',csty:'metal',
  t:{lab:'#c9a45a',val:'#f3e8cc',cnt:'#e9dcc0',dim:'#6a5a3c',sf:SERIF,lf:'bold 10px '+SERIF,vf:'bold 21px '+SERIF,cf:'bold 12px '+SERIF},tpad:18,
@@ -2421,7 +2427,7 @@ const PANELS=[
   pnKL(lab,x+w/2,y+h/2+2,on?'#fff':'#eadfc4',null,'bold 15px '+SERIF)},
  bar:(g,x,y,w,h,f)=>{g.fillStyle='rgba(0,0,0,.25)';g.fillRect(x,y,w,h);g.fillStyle=pG(g,x,0,x+w,0,[[0,'#2a2622'],[1,'#b3262c']]);g.fillRect(x,y,w*f,h);g.fillStyle='#b3262c';g.beginPath();g.arc(x+w*f,y+h/2,3.5,0,7);g.fill()}},
 // ---------------- 竹韵 ----------------
-{id:'bamboo',name:'竹韵',ml:24,mr:24,
+{id:'bamboo',vc:'#07170e',va:0.5,name:'竹韵',ml:24,mr:24,
  page:'radial-gradient(ellipse at 50% 0,#e4f3c8 0,#a9d27c 55%,#6fa653 100%)',
  pal:[['#eefacc','#8fc65a'],['#a4ecc8','#2a9d6a'],['#ffe27a','#d08a1a']],glow:'170,235,120',sep:'rgba(160,230,130,.13)',nsty:'pill',fsty:'burst',csty:'gold',
  t:{lab:'#e6d796',val:'#f4ffe2',cnt:'#eaf8d0',dim:'#3d5a2c',sf:'system-ui',lf:'bold 10px system-ui',vf:'bold 21px '+MONO,cf:'bold 12px system-ui'},
@@ -2447,7 +2453,7 @@ const PANELS=[
   pnKL(lab,x+w/2,y+h*.25,'#fff','rgba(10,60,20,.85)')},
  bar:pnBarDef('rgba(0,0,0,.35)','#a8e68a')},
 // ---------------- 琉璃 ----------------
-{id:'liuli',name:'琉璃',ml:26,mr:26,
+{id:'liuli',vc:'#07182c',va:0.5,name:'琉璃',ml:26,mr:26,
  page:'radial-gradient(ellipse at 50% 20%,#27587a 0,#10284a 60%,#08122a 100%)',
  pal:[['#d8fffb','#2fc7c0'],['#b9ccff','#3a58d6'],['#ffa9ba','#c8203f']],glow:'120,240,230',sep:'rgba(255,230,160,.12)',nsty:'gem',fsty:'star',csty:'gold',
  t:{lab:'#f2cf7a',val:'#fff6dc',cnt:'#e8f6ff',dim:'#9cc6e0',sf:'system-ui',lf:'bold 10px system-ui',vf:'bold 21px '+MONO,cf:'bold 12px system-ui',vo:{sh:'#ffcf5a',sb:6}},
@@ -2478,7 +2484,7 @@ const PANELS=[
   pnKL(lab,x+w/2,y+h/2+2,'#fff','rgba(0,20,50,.7)')},
  bar:(g,x,y,w,h,f)=>{g.fillStyle='rgba(0,0,0,.4)';pR(g,x,y,w,h,2.5);g.fill();g.fillStyle=pG(g,x,0,x+w,0,[[0,'#35e0d2'],[.5,'#f6d57a'],[1,'#ff5a78']]);pR(g,x,y,Math.max(0,w*f),h,2.5);g.fill()}},
 // ---------------- 赛博霓虹 ----------------
-{id:'cyber',name:'赛博霓虹',ml:20,mr:20,en:true,
+{id:'cyber',vc:'#09021a',va:0.5,name:'赛博霓虹',ml:20,mr:20,en:true,
  page:'radial-gradient(ellipse at 50% 0,#2a0a4a 0,transparent 60%),linear-gradient(rgba(255,43,214,.07) 1px,transparent 1px) 0 0/40px 40px,linear-gradient(90deg,rgba(37,244,255,.06) 1px,transparent 1px) 0 0/40px 40px,#06020d',
  pal:[['#e8fdff','#25f4ff'],['#ffa0f4','#ff2bd6'],['#fff27a','#ffb000']],glow:'255,43,214',sep:'rgba(37,244,255,.18)',nsty:'neonl',fsty:'cross',csty:'pink',
  t:{lab:'#ff5af0',val:'#25f4ff',cnt:'#d8fcff',dim:'#8a6aa8',sf:'system-ui',lf:'bold 9px system-ui',vf:'bold 21px '+MONO,cf:'bold 12px '+MONO,vo:{sh:'#25f4ff',sb:8,split:true}},
@@ -2504,7 +2510,7 @@ const PANELS=[
   pnKL(lab,x+w/2,y+h/2+1,on?'#0a0214':'#f4feff',null,'bold 15px '+MONO)},
  bar:(g,x,y,w,h,f)=>{g.fillStyle='rgba(37,244,255,.12)';g.fillRect(x,y,w,h);const n=Math.floor(w/6);for(let i=0;i<n*f;i++){g.fillStyle=i%2?'#25f4ff':'#ff2bd6';g.fillRect(x+i*6,y,4.2,h)}}},
 // ---------------- 薄荷云朵 ----------------
-{id:'mint',name:'薄荷云朵',ml:22,mr:22,
+{id:'mint',vc:'#2f86a8',va:0.4,name:'薄荷云朵',ml:22,mr:22,
  page:'radial-gradient(circle at 20% 15%,#fff8d8 0,transparent 35%),linear-gradient(#bff5e3,#ffd6ea)',
  pal:[['#ffffff','#b6e6ff'],['#ffe3f1','#ff8fc3'],['#fff4ae','#ffbe3d']],glow:'255,255,255',sep:'rgba(255,255,255,.2)',nsty:'pill',fsty:'dot',csty:'gold',
  t:{lab:'#ff7ab0',val:'#5b4a8f',cnt:'#5b4a8f',dim:'#8a7ab0',sf:ROUND,lf:'bold 10px '+ROUND,vf:'bold 21px '+ROUND,cf:'bold 12px '+ROUND},
@@ -2514,8 +2520,8 @@ const PANELS=[
   for(let i=0;i<5;i++){const cx=A.x0+r()*A.w,cy=40+r()*(A.yb-120);g.fillStyle='rgba(255,255,255,.1)';for(const[dx,dy,rr]of[[0,0,16],[16,-5,13],[-15,2,11],[28,3,10]]){g.beginPath();g.arc(cx+dx,cy+dy,rr,0,7);g.fill()}}
   for(const[x,w,s]of[[0,A.x0,1],[A.x1,W-A.x1,-1]]){g.fillStyle=pG(g,0,0,0,A.yb,[[0,'#ffc9e3'],[1,'#ffe9a8']]);g.fillRect(x,0,w,A.yb);
    for(let i=0;i<22;i++){g.fillStyle='rgba(255,255,255,.55)';g.beginPath();g.arc(x+4+r()*(w-8),r()*A.yb,1.5+r()*2,0,7);g.fill()}
-   g.fillStyle='#fff';for(let y=-6;y<A.yb+10;y+=17){g.beginPath();g.arc(s>0?A.x0:A.x1,y,9,0,7);g.fill()}
-   g.fillStyle='rgba(255,140,190,.5)';for(let y=2;y<A.yb;y+=17){g.beginPath();g.arc(s>0?A.x0-3:A.x1+3,y+8.5,2,0,7);g.fill()}}},
+   g.save();g.beginPath();g.rect(x,0,w,A.yb);g.clip();g.fillStyle='#fff';for(let y=-6;y<A.yb+10;y+=17){g.beginPath();g.arc(s>0?A.x0-3:A.x1+3,y,9,0,7);g.fill()}
+   g.fillStyle='rgba(255,140,190,.5)';for(let y=2;y<A.yb;y+=17){g.beginPath();g.arc(s>0?A.x0-8:A.x1+8,y+8.5,2,0,7);g.fill()}g.restore()}},
  front(g,A){pnBase(g,'#ffd6ea');
   g.fillStyle='#fff';pR(g,A.x0-8,JY+9,A.w+16,H-JY-11,14);g.fill();g.strokeStyle='#ff9ccb';g.lineWidth=2;g.setLineDash([5,4]);pR(g,A.x0-5,JY+12,A.w+10,H-JY-17,11);g.stroke();g.setLineDash([]);
   const C=pnCells(PN),cc=['#d8fff0','#ffe0ef','#fff4c4'];C.c.forEach(([x,y,w,h],i)=>{g.fillStyle=cc[i];pR(g,x,y,w,h,12);g.fill();g.strokeStyle='#fff';g.lineWidth=2;g.stroke();g.strokeStyle='rgba(255,140,190,.5)';g.lineWidth=1;pR(g,x+.5,y+.5,w-1,h-1,12);g.stroke()});
@@ -2529,7 +2535,7 @@ const PANELS=[
   pnKL(lab,cx,cy,'#fff','#d0689a',' bold 15px '+ROUND)},
  bar:(g,x,y,w,h,f)=>{g.fillStyle='#ffe0ef';pR(g,x,y-1,w,h+2,4);g.fill();g.fillStyle=pG(g,x,0,x+w,0,[[0,'#7fe5c0'],[1,'#ff8fc3']]);pR(g,x,y-1,Math.max(h+2,w*f),h+2,4);g.fill()}},
 // ---------------- 樱花星愿 ----------------
-{id:'sakura',name:'樱花星愿',ml:24,mr:24,
+{id:'sakura',vc:'#2a1236',va:0.5,name:'樱花星愿',ml:24,mr:24,
  page:'radial-gradient(ellipse at 50% 0,#ffd9ec 0,#f6a6cf 55%,#c97ab6 100%)',
  pal:[['#fff3f8','#ffb3d1'],['#eadbff','#a97fe0'],['#ffeaa8','#ff9a3c']],glow:'255,170,214',sep:'rgba(255,200,230,.14)',nsty:'pillP',fsty:'star',csty:'pink',
  t:{lab:'#ff6fa8',val:'#7a1f55',cnt:'#7a1f55',dim:'#8a4a78',sf:ROUND,lf:'bold 10px '+ROUND,vf:'bold 21px '+ROUND,cf:'bold 12px '+ROUND},
@@ -2558,16 +2564,24 @@ const PANELS=[
   pnKL(lab,cx,cy,'#fff','#c0407a',' bold 13px '+ROUND)},
  bar:(g,x,y,w,h,f)=>{const n=Math.floor(w/17);for(let i=0;i<n;i++){g.fillStyle=(i+.5)/n<=f?'#ff3f8e':'rgba(255,255,255,.55)';pHeart(g,x+i*(w/n)+8,y+2,4.4);g.fill()}}},
 // ---------------- 帝国舰桥 ----------------
-{id:'imperial',name:'帝国舰桥',ml:18,mr:18,en:true,
+{id:'imperial',vc:'#0d0f13',va:0.4,name:'帝国舰桥',ml:18,mr:18,en:true,
  page:'linear-gradient(#0b0d11,#171b22 50%,#0b0d11)',
  pal:[['#eef2f8','#8a94a6'],['#8fd6ff','#2a7fc8'],['#ffa070','#c0361a']],glow:'255,110,60',sep:'rgba(150,165,190,.2)',nsty:'metal',fsty:'flare',csty:'lcd',
  t:{lab:'#ff8a3a',val:'#ffb347',cnt:'#e6ecf6',dim:'#7c8598',sf:'system-ui',lf:'bold 9px system-ui',vf:'bold 21px '+MONO,cf:'bold 12px '+MONO,ghost:'rgba(255,120,40,.13)',vo:{sh:'#ff7a20',sb:5}},
- back(g,A){const r=prng(71);
-  g.fillStyle=pG(g,0,0,0,A.yb,[[0,'#232830'],[1,'#10131a']]);g.fillRect(A.x0,0,A.w,A.yb);
-  for(let y=0;y<A.yb;y+=24)for(let x=A.x0;x<A.x1;x+=30){const v=r();g.fillStyle='rgba('+(v>.5?'255,255,255':'0,0,0')+','+(.015+r()*.05)+')';g.fillRect(x+1,y+1,28,22);if(r()<.05){g.fillStyle='rgba(255,200,120,.45)';g.fillRect(x+4+r()*18,y+4+r()*14,2,1.4)}}
-  g.fillStyle='rgba(255,255,255,.04)';pP(g,[[A.x0,A.yb],[A.x1,A.yb],[(A.x0+A.x1)/2+4,30],[(A.x0+A.x1)/2-4,30]]);g.fill();g.strokeStyle='rgba(255,255,255,.07)';g.lineWidth=1;g.beginPath();g.moveTo((A.x0+A.x1)/2,30);g.lineTo((A.x0+A.x1)/2,A.yb);g.stroke();
-  g.fillStyle=pRG(g,(A.x0+A.x1)/2,A.yb,0,300,[[0,'rgba(255,100,40,.2)'],[1,'rgba(255,100,40,0)']]);g.fillRect(A.x0,0,A.w,A.yb);
-  for(const[x,w,s]of[[0,A.x0,1],[A.x1,W-A.x1,-1]]){g.fillStyle=pG(g,x,0,x+w,0,[[0,'#3a404c'],[1,'#1a1d24']].slice(s>0?0:0));g.fillRect(x,0,w,A.yb);
+ back(g,A){const r=prng(71),cx=(A.x0+A.x1)/2;
+  g.fillStyle=pG(g,0,0,0,A.yb,[[0,'#1b1e25'],[1,'#0d0f13']]);g.fillRect(A.x0,0,A.w,A.yb);
+  for(let y=46;y<A.yb;y+=64+Math.floor(r()*30)){g.fillStyle='rgba(0,0,0,.5)';g.fillRect(A.x0,y,A.w,1.4);g.fillStyle='rgba(255,255,255,.05)';g.fillRect(A.x0,y+1.4,A.w,1)}
+  for(const x of[A.x0+7,A.x1-10]){g.fillStyle='rgba(255,255,255,.05)';g.fillRect(x,0,3,A.yb);g.fillStyle='rgba(0,0,0,.4)';g.fillRect(x+3,0,1,A.yb);for(let y=30;y<A.yb;y+=64){g.fillStyle='rgba(255,255,255,.08)';g.fillRect(x-2,y,7,6);g.fillStyle='rgba(0,0,0,.4)';g.fillRect(x-2,y+6,7,1)}}
+  for(let i=0;i<28;i++){const L=i%2?A.x1-34:A.x0+4,y0=r()*A.yb,x0=L+r()*26;
+    for(let q=0;q<4;q++){const w=4+r()*12,h=3+r()*7,x=x0+r()*16,y=y0+r()*20;g.fillStyle='rgba(255,255,255,'+(.04+r()*.05)+')';g.fillRect(x,y,w,h);g.fillStyle='rgba(0,0,0,.35)';g.fillRect(x,y+h,w,1)}
+    if(i%3==0){g.fillStyle='rgba(0,0,0,.4)';for(let v=0;v<4;v++)g.fillRect(x0,y0+24+v*3,12,1.2)}
+    if(i%4==0){g.fillStyle=['rgba(255,170,70,.75)','rgba(255,70,50,.75)','rgba(120,210,255,.7)'][i%3];g.fillRect(x0+r()*14,y0+r()*20,2,2)}}
+  g.lineJoin='miter';
+  for(let i=0;i<16;i++){let x=i<12?(i%2?A.x1-12-r()*34:A.x0+12+r()*34):cx+(r()-.5)*120,y=r()*A.yb;const pts=[[x,y]];
+    for(let s2=0;s2<4;s2++){y+=30+r()*70;pts.push([x,y]);const d=(r()<.5?-1:1)*(8+r()*14);if(x+d<A.x0+5||x+d>A.x1-5)continue;x+=d;y+=Math.abs(d);pts.push([x,y])}
+    g.beginPath();pts.forEach((p,j)=>j?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.strokeStyle='rgba(0,0,0,.5)';g.lineWidth=3;g.stroke();
+    g.save();g.shadowColor='#ff6a28';g.shadowBlur=5;g.strokeStyle='rgba(255,120,50,.65)';g.lineWidth=1;g.stroke();g.fillStyle='#ffb070';const e=pts[pts.length-1];g.fillRect(e[0]-2,e[1]-2,4,4);g.restore()}
+  for(const[x,w,s]of[[0,A.x0,1],[A.x1,W-A.x1,-1]]){g.fillStyle=pG(g,x,0,x+w,0,[[0,'#3a404c'],[1,'#1a1d24']]);g.fillRect(x,0,w,A.yb);
    for(let y=0;y<A.yb;y+=38){g.fillStyle=y%76?'#2a2f39':'#343a46';g.fillRect(x+1,y+1,w-2,36);g.fillStyle='rgba(255,255,255,.1)';g.fillRect(x+1,y+1,w-2,1);g.fillStyle='rgba(0,0,0,.5)';g.fillRect(x+1,y+36,w-2,1)}
    g.fillStyle='#ff6a28';g.shadowColor='#ff6a28';g.shadowBlur=6;g.fillRect(s>0?A.x0-3:A.x1+1,0,2,A.yb);g.shadowBlur=0;
    for(let y=19;y<A.yb;y+=38){g.fillStyle='#0a0c10';g.beginPath();g.arc(x+w/2-3*s,y,1.8,0,7);g.fill();g.fillStyle=y%76==19?'#ffd27a':'#5a6272';g.fillRect(x+w/2-6*s-1,y-1,2,2)}}},
@@ -2585,7 +2599,7 @@ const PANELS=[
   pnKL(lab,x+w/2,y+h/2+4,on?'#fff':'#d0d6e2',null,'bold 14px '+MONO)},
  bar:(g,x,y,w,h,f)=>{g.fillStyle='rgba(255,106,40,.15)';g.fillRect(x,y,w,h);const n=Math.floor(w/5);for(let i=0;i<n*f;i++){g.fillStyle=i/n>.8?'#ff3a2a':'#ffa040';g.fillRect(x+i*5,y,3.4,h)}}},
 // ---------------- 全息未来 ----------------
-{id:'hologram',name:'全息未来',ml:22,mr:22,en:true,
+{id:'hologram',vc:'#02080e',va:0.5,name:'全息未来',ml:22,mr:22,en:true,
  page:'radial-gradient(ellipse at 50% 30%,#0b3a52 0,#041824 60%,#02080e 100%)',
  pal:[['#e6fdff','#6fe8ff'],['#a8bcff','#4a63ff'],['#e4b0ff','#a43cf0']],glow:'80,230,255',sep:'rgba(80,230,255,.16)',nsty:'ice',fsty:'ring',csty:'lcd',
  t:{lab:'#3aa9c0',val:'#8ff6ff',cnt:'#cdf9ff',dim:'#3b8ea4',sf:'system-ui',lf:'bold 9px system-ui',vf:'bold 21px '+MONO,cf:'bold 12px '+MONO,vo:{sh:'#25d9f5',sb:8}},
@@ -2613,7 +2627,7 @@ const PANELS=[
   pnKL(lab,cx,cy,on?'#fff':'#cdf9ff',null,'bold 14px '+MONO)},
  bar:(g,x,y,w,h,f)=>{g.strokeStyle='rgba(80,230,255,.35)';g.lineWidth=1;g.strokeRect(x+.5,y+.5,w-1,h-1);g.fillStyle='#6fe8ff';g.fillRect(x+1,y+1,Math.max(0,(w-2)*f),h-2);g.fillStyle='#fff';g.fillRect(x+w*f-1,y-2,2,h+4)}},
 // ---------------- 摩登极简 ----------------
-{id:'modern',name:'摩登极简',ml:30,mr:30,en:true,
+{id:'modern',vc:'#0c0c0c',va:0.4,name:'摩登极简',ml:30,mr:30,en:true,
  page:'linear-gradient(135deg,#e9e6dc 0,#d6d2c4 100%)',
  pal:[['#fafafa','#cfcfcf'],['#a4a4a4','#5e5e5e'],['#ff8a4a','#ff4a00']],glow:'255,92,26',sep:'rgba(255,255,255,.1)',nsty:'glass',fsty:'ring',csty:'metal',
  t:{lab:'#ff5c1a',val:'#fff',cnt:'#f4f2ea',dim:'#555',sf:'"Helvetica Neue",Arial,sans-serif',lf:'bold 9px "Helvetica Neue",Arial,sans-serif',vf:'bold 21px "Helvetica Neue",Arial,sans-serif',cf:'bold 12px "Helvetica Neue",Arial,sans-serif'},
@@ -2637,15 +2651,15 @@ const PANELS=[
   pnKL(lab,x+w/2,y+h/2-2,on?(k==2?'#111':'#fff'):'#f4f2ea',null,'900 16px "Helvetica Neue",Arial,sans-serif')},
  bar:(g,x,y,w,h,f)=>{g.fillStyle='#bbb';g.fillRect(x,y+2,w,1);g.fillStyle='#ff5c1a';g.fillRect(x,y,Math.max(0,w*f),5);}},
 // ---------------- 涂鸦嘻哈 ----------------
-{id:'graffiti',name:'涂鸦嘻哈',ml:20,mr:20,en:true,
+{id:'graffiti',vc:'#120c1f',va:0.65,name:'涂鸦嘻哈',ml:20,mr:20,en:true,
  page:'repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 3px,transparent 3px 26px),repeating-linear-gradient(90deg,rgba(0,0,0,.25) 0 3px,transparent 3px 56px),linear-gradient(#8a3f2e,#6a2a24)',
  pal:[['#fff27a','#ffcf00'],['#7af2ff','#00b4d8'],['#ff7ac0','#e0147a']],glow:'255,230,0',sep:'rgba(255,255,255,.12)',nsty:'gem',fsty:'burst',csty:'pink',
  t:{lab:'#ffe600',val:'#fff',cnt:'#fff',dim:'#d8b8a8',sf:'system-ui',lf:'bold 9px '+IMP,vf:'italic 22px '+IMP,cf:'italic 13px '+IMP,vo:{st:'#000',sw:4}},
  back(g,A){const r=prng(91),cols=['#ff2d95','#00e5ff','#ffe600','#7cff3a'];
   g.fillStyle=pG(g,0,0,0,A.yb,[[0,'#241638'],[1,'#120c1f']]);g.fillRect(A.x0,0,A.w,A.yb);
-  for(let i=0;i<16;i++){const c=cols[i%4],x=A.x0+r()*A.w,y=r()*A.yb,R=14+r()*30;g.fillStyle=pRG(g,x,y,0,R,[[0,c+'33'],[1,c+'00']]);g.beginPath();g.arc(x,y,R,0,7);g.fill()}
-  for(let i=0;i<60;i++){g.fillStyle=cols[i%4]+'55';g.beginPath();g.arc(A.x0+r()*A.w,r()*A.yb,.8+r()*1.8,0,7);g.fill()}
-  for(let i=0;i<5;i++){const x=A.x0+10+r()*(A.w-20),y=20+r()*(A.yb-200);g.fillStyle=cols[i%4]+'66';g.fillRect(x,y,2.2,20+r()*40);g.beginPath();g.arc(x+1,y+30,2.6,0,7);g.fill()}
+  for(let i=0;i<16;i++){const c=cols[i%4],x=A.x0+r()*A.w,y=r()*A.yb,R=14+r()*30;g.fillStyle=pRG(g,x,y,0,R,[[0,c+'14'],[1,c+'00']]);g.beginPath();g.arc(x,y,R,0,7);g.fill()}
+  for(let i=0;i<60;i++){g.fillStyle=cols[i%4]+'22';g.beginPath();g.arc(A.x0+r()*A.w,r()*A.yb,.8+r()*1.8,0,7);g.fill()}
+  for(let i=0;i<5;i++){const x=A.x0+10+r()*(A.w-20),y=20+r()*(A.yb-200);g.fillStyle=cols[i%4]+'2a';g.fillRect(x,y,2.2,20+r()*40);g.beginPath();g.arc(x+1,y+30,2.6,0,7);g.fill()}
   for(const[x,w,s]of[[0,A.x0,1],[A.x1,W-A.x1,-1]]){g.fillStyle='#8a3f2e';g.fillRect(x,0,w,A.yb);
    for(let y=0,row=0;y<A.yb;y+=13,row++){g.fillStyle='#6a2a24';g.fillRect(x,y,w,1.6);for(let bx=x+(row%2?-9:0);bx<x+w;bx+=18){g.fillStyle='#6a2a24';g.fillRect(bx,y,1.6,13);g.fillStyle='rgba(255,255,255,'+(r()*.07)+')';g.fillRect(bx+2,y+2,14,9)}}
    g.fillStyle='rgba(0,0,0,.35)';g.fillRect(x,0,w,A.yb);
@@ -2683,6 +2697,7 @@ const PNBY={};PANELS.forEach(p=>PNBY[p.id]=p);
   $('skClear').onclick=()=>{for(const k of Object.keys(CIfile)){delete CIfile[k];delete CI[k]}idbPut('skin',{});marks();applySkin()};
   $('skinSel').onchange=()=>{const id=$('skinSel').value;$('skLay').value='';$('skHud').checked=(SK[id]||SK.classic).hud=='panel';applySkin()};
   $('skLay').onchange=applySkin;$('skHud').onchange=applySkin;$('panelSel').onchange=applySkin;
+  $('fldA').value=Math.round(FA*100);$('fldA').oninput=()=>{FA=$('fldA').value/100;try{localStorage.setItem('resonia-fa',FA)}catch(x){}if(!running)draw(song&&ctx?songMs():0)};
   $('noteSty').value=NSU;$('fxSty').value=FSU;
   $('cmbSty').value=CSU;$('noteAnim').checked=NAV;
   const saveNF=()=>{NSU=$('noteSty').value;FSU=$('fxSty').value;CSU=$('cmbSty').value;NAV=$('noteAnim').checked;effStyles();try{localStorage.setItem('resonia-nfx',JSON.stringify({n:NSU,f:FSU,c:CSU,a:NAV}))}catch(x){}if(!running)draw(song&&ctx?songMs():0)};
