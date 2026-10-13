@@ -161,10 +161,12 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div class="sl"><span>按键音量</span><input type="range" id="kv" min="0" max="2.5" step="0.1" value="1.3" data-minor="0.1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
 </section>
 <section class="card" id="cSkin"><h3>皮肤</h3>
-  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="iidx">IIDX 1P</option><option value="custom">自定义…</option></select></label><label class="il">面板<select id="panelSel"><option value="">无</option><option value="ink">水墨</option><option value="bamboo">竹韵</option><option value="liuli">琉璃</option><option value="cyber">赛博霓虹</option><option value="mint">薄荷云朵</option><option value="sakura">樱花星愿</option><option value="imperial">帝国舰桥</option><option value="hologram">全息未来</option><option value="modern">摩登极简</option><option value="graffiti">涂鸦嘻哈</option></select></label><label class="il">轨道背景不透明度<input type="range" id="fldA" min="0" max="100" value="100" style="width:90px"></label><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il">音符<select id="noteSty"><option value="">跟随皮肤</option><option value="glass">水晶</option><option value="pill">胶囊</option><option value="metal">金属</option><option value="bar">光带</option><option value="slash">斜纹</option><option value="neonl">霓虹线框</option><option value="gem">宝石</option><option value="ice">冰晶</option><option value="pillP">紫霞胶囊</option><option value="pillC">蓝能胶囊</option><option value="metalG">绿金属</option><option value="flame">火焰条</option></select></label><label class="il">特效<select id="fxSty"><option value="">跟随皮肤</option><option value="star">星芒</option><option value="ring">光环</option><option value="burst">迸发</option><option value="cross">十字闪</option><option value="wave">冲击波</option><option value="flare">镜头光斑</option><option value="dust">尘环</option><option value="shard">碎片</option><option value="rays">光芒</option><option value="dot">光点</option><option value="beam">光束</option><option value="none">无</option></select></label><label class="il">连击数字<select id="cmbSty"><option value="">跟随皮肤</option><option value="metal">金属立体</option><option value="lcd">青色数码</option><option value="pink">粉色斜体</option><option value="gold">金色</option></select></label><label class="il"><input type="checkbox" id="noteAnim" checked>音符动画</label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
+  <div class="opts"><label class="il">主题<select id="skinSel"><option value="classic">经典</option><option value="meadow">糖果星球</option><option value="neon">霓虹</option><option value="iidx">IIDX 1P</option><option value="custom">自定义…</option></select></label><label class="il">Note区域透明度<input type="range" id="fldA" min="0" max="100" value="100" style="width:90px"></label></div>
+  <div class="opts" style="margin-top:8px"><label class="il">面板<select id="panelSel"><option value="">无</option><option value="ink">水墨</option><option value="bamboo">竹韵</option><option value="liuli">琉璃</option><option value="cyber">赛博霓虹</option><option value="mint">薄荷云朵</option><option value="sakura">樱花星愿</option><option value="imperial">帝国舰桥</option><option value="hologram">全息未来</option><option value="modern">摩登极简</option><option value="graffiti">涂鸦嘻哈</option></select></label><label class="il">音符<select id="noteSty"><option value="">跟随皮肤</option><option value="glass">水晶</option><option value="pill">胶囊</option><option value="metal">金属</option><option value="bar">光带</option><option value="slash">斜纹</option><option value="neonl">霓虹线框</option><option value="gem">宝石</option><option value="ice">冰晶</option><option value="pillP">紫霞胶囊</option><option value="pillC">蓝能胶囊</option><option value="metalG">绿金属</option><option value="flame">火焰条</option></select></label><label class="il">特效<select id="fxSty"><option value="">跟随皮肤</option><option value="star">星芒</option><option value="ring">光环</option><option value="burst">迸发</option><option value="cross">十字闪</option><option value="wave">冲击波</option><option value="flare">镜头光斑</option><option value="dust">尘环</option><option value="shard">碎片</option><option value="rays">光芒</option><option value="dot">光点</option><option value="beam">光束</option><option value="none">无</option></select></label><label class="il">连击<select id="cmbSty"><option value="">跟随皮肤</option><option value="metal">金属立体</option><option value="lcd">青色数码</option><option value="pink">粉色斜体</option><option value="gold">金色</option></select></label></div>
+  <div class="opts" style="margin-top:8px"><label class="il">版式<select id="skLay"><option value="">默认</option><option value="center">居中</option><option value="left">靠左</option></select></label><label class="il"><input type="checkbox" id="noteAnim" checked>音符动画</label><label class="il"><input type="checkbox" id="skHud">信息面板</label><label class="il"><input type="checkbox" id="bga" checked>BGA</label></div>
   <details id="skCustom" hidden><summary>自定义素材（图片只保存在你的浏览器里，不会上传）</summary><div id="skSlots"></div><button id="skClear">清除全部素材</button></details>
 </section>
-<section class="card" id="cPlug"><h3>第三方<span class="gpu" style="color:var(--mu)">格式插件</span></h3><div class="row"><label class="fbtn sm">载入插件…<input type="file" id="plf" accept=".js" multiple></label><span id="plmsg" class="fname" style="color:var(--mu)">未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器</span></div><div id="pll"></div></section>
+<section class="card" id="cPlug"><h3>第三方<span class="gpu" style="color:var(--mu)">格式插件</span></h3><div class="row"><label class="fbtn sm">载入插件<input type="file" id="plf" accept=".js" multiple></label><select id="plsel" hidden style="max-width:60%"></select><button class="fbtn sm" id="plrm" hidden style="border:0;cursor:pointer">移除</button><span id="plmsg" class="fname" style="color:var(--mu)">未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器</span></div></section>
 <section class="card" id="cDbg"><h3>调试<span id="gpu" class="gpu" hidden></span></h3><div class="chk"><label><input type="checkbox" id="dbg">诊断</label><label><input type="checkbox" id="tm">测试模式</label><label>轨道数<select id="lanesel" style="padding:3px 4px"><option value="0">按谱面</option><option value="4">4K</option><option value="5">5K</option><option value="6">6K</option><option value="7">7K</option><option value="8">8K</option><option value="9">9K</option><option value="10">10K</option></select></label></div></section>
 </div>
 <canvas id="cv" width="420" height="640"></canvas>
@@ -176,6 +178,9 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 const LANGS=[['zh','简体中文'],['zh-TW','繁體中文'],['en','English'],['ja','日本語'],['ko','한국어']];
 const LK={zh:'zh','zh-TW':'tw',en:'en',ja:'ja',ko:'ko'};
 const I18N={
+ "Note区域透明度":{"en": "Field opacity", "ja": "ノーツエリアの透明度", "ko": "노트 영역 투명도", "tw": "Note區域透明度"},
+ "连击":{"en": "Combo", "ja": "コンボ", "ko": "콤보", "tw": "連擊"},
+ "载入插件":{"en": "Load plugin", "ja": "プラグインを読み込む", "ko": "플러그인 불러오기", "tw": "載入外掛"},
  "轨道背景不透明度":{"en": "Lane background opacity", "ja": "レーン背景の不透明度", "ko": "레인 배경 불투명도", "tw": "軌道背景不透明度"},
  "面板":{"en": "Panel", "ja": "パネル", "ko": "패널", "tw": "面板"},
  "水墨":{"en": "Ink Wash", "ja": "水墨", "ko": "수묵", "tw": "水墨"},
@@ -1365,11 +1370,12 @@ function plugExts(){const a=new Set();for(const p of plugins)for(const e of p.ex
 function plugRefresh(){
   const base='.vos,.vow,.bms,.bme,.bml,.rsc,.rsm,.zip,.wav,.ogg,.mp3,.flac';
   $('file').accept=base+[...plugExts()].map(e=>','+'.'+e).join('');
-  const box=$('pll');box.innerHTML='';
-  for(const p of plugins){const d=document.createElement('div');d.className='row';d.style.cssText='font-size:12px;color:var(--mu);margin-top:4px';
-    d.textContent=(p.name||p.id)+(p.version?' v'+p.version:'')+' · '+p.exts.map(e=>'.'+e.replace(/^\./,'')).join(' ')+' ';
-    const x=document.createElement('button');x.className='fbtn sm';x.style.cssText='border:0;cursor:pointer';x.textContent=tt('移除');x.onclick=async()=>{await plugForget(p.id);plugins.splice(plugins.indexOf(p),1);plugRefresh()};d.appendChild(x);box.appendChild(d)}
-  $('plmsg').textContent=plugins.length?tt('已载入 {0} 个插件',plugins.length):tt('未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器');
+  const sel=$('plsel'),keep=sel.selectedIndex;sel.innerHTML='';
+  plugins.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(p.name||p.id)+(p.version?' v'+p.version:'')+' · '+p.exts.map(e=>'.'+e.replace(/^\./,'')).join(' ');sel.appendChild(o)});
+  if(plugins.length)sel.selectedIndex=Math.min(Math.max(keep,0),plugins.length-1);
+  sel.hidden=$('plrm').hidden=!plugins.length;
+  $('plrm').onclick=async()=>{const p=plugins[+sel.value];if(!p)return;await plugForget(p.id);plugins.splice(plugins.indexOf(p),1);plugRefresh()};
+  $('plmsg').textContent=plugins.length?'':tt('未载入插件。插件可让游戏读取更多格式（如 OJN/OJM、PAK/PT），文件只保存在本机浏览器');
 }
 const plugSrc={}; // 记住插件源码（IndexedDB 'plugins'），下次打开自动恢复
 async function plugSave(){await idbPut('plugins',Object.keys(plugSrc).map(k=>({name:k,src:plugSrc[k]})))}
@@ -1967,7 +1973,8 @@ function maniac(sg,ks){
   }
 }
 const smooth=x=>{x=x<0?0:x>1?1:x;return x*x*(3-2*x)};
-function applySkin(){skG={};
+function nativeLabels(){const nm=(SK[$('skinSel').value]||SK.classic).name;for(const i of['panelSel','noteSty','fxSty','cmbSty']){const o=$(i).options[0];if(o)o.textContent=nm}}
+function applySkin(){skG={};nativeLabels();
   const id=$('skinSel').value;S={...(SK[id]||SK.classic)};SI=id=='custom'?CI:{};
   PN=PNBY[$('panelSel').value]||null;
   if(PN){S={...S,pal:PN.pal,field:'glass',style:'',look:'',geo:null,kind:null,tt:false,glow:PN.glow,line:undefined};SI={}}
@@ -2695,7 +2702,8 @@ const PNBY={};PANELS.forEach(p=>PNBY[p.id]=p);
     CIfile[k]=f;const im=new Image();im.onload=()=>{applySkin();marks()};im.src=URL.createObjectURL(f);CI[k]=im;marks()};
   const saveSlots=()=>idbPut('skin',{...CIfile});
   $('skClear').onclick=()=>{for(const k of Object.keys(CIfile)){delete CIfile[k];delete CI[k]}idbPut('skin',{});marks();applySkin()};
-  $('skinSel').onchange=()=>{const id=$('skinSel').value;$('skLay').value='';$('skHud').checked=(SK[id]||SK.classic).hud=='panel';applySkin()};
+  $('skinSel').onchange=()=>{const id=$('skinSel').value;$('skLay').value='';$('skHud').checked=(SK[id]||SK.classic).hud=='panel';
+    $('panelSel').value='';$('noteSty').value='';$('fxSty').value='';$('cmbSty').value='';saveNF();applySkin()};
   $('skLay').onchange=applySkin;$('skHud').onchange=applySkin;$('panelSel').onchange=applySkin;
   $('fldA').value=Math.round(FA*100);$('fldA').oninput=()=>{FA=$('fldA').value/100;try{localStorage.setItem('resonia-fa',FA)}catch(x){}if(!running)draw(song&&ctx?songMs():0)};
   $('noteSty').value=NSU;$('fxSty').value=FSU;
