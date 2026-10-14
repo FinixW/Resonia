@@ -2291,7 +2291,7 @@ function draw(now){
   if(II())iiLine();
   if(song){
     const pps=+$('spd').value*(song.scroll||1),jn=now+offs(),vis=JY/pps+200,D4=OPT.d4&&SPD&&SPD.length==LANES?SPD:null,P0=D4?D4.map(q=>spdPhi(q,jn)):null,dd=(l,t)=>D4?spdPhi(D4[l],t)-P0[l]:t-jn;
-    const fi=OPT.fi,fo=OPT.fo;if(fi||fo){c2.save();const y0=fi?JY*.38:0,y1=fo?JY*.62:H;c2.beginPath();c2.rect(0,y0,W,y1-y0);c2.clip()} // 上隐 / 下隐：只露出中间一段
+    const fi=OPT.fi,fo=OPT.fo,fq=JY*.25,fadeA=y=>{let a=1;if(fi)a*=y<=0?0:y>=fq?1:y/fq;if(fo)a*=y>=JY?0:y<=JY-fq?1:(JY-y)/fq;return a}; // 上隐：轨道上 1/4 渐隐；下隐：轨道下 1/4 渐隐
     if(song.bars){
       c2.fillStyle='rgba(255,255,255,.6)';
       for(const bt of song.bars){const d=bt-jn;if(d>vis)break;if(d<-100)continue;c2.fillRect(0,Math.round(JY-d*pps)+6,W,3)} // 小节线紧贴音符底边（音符在小节线上方）
@@ -2303,23 +2303,25 @@ function draw(now){
       if(n.done&&n.hold&&!n.holding&&!n.dead)continue; // 打断/漏掉的长条继续滚动（变暗），不再凭空消失
       const y=Math.round((JY-dd(n.lane,n.t)*pps)*dpr)/dpr;if(D4&&y<-30)continue;let lx=LX[n.lane],ld=LD[n.lane];
       if(n.sl!==undefined){const k=smooth((y/JY-.06)/.19);lx=LX[n.sl]+(LX[n.lane]-LX[n.sl])*k;ld=LD[n.sl]+(LD[n.lane]-LD[n.sl])*k} // 幻象：在上 1/4 处完成变轨
-      const x=lx,lwn=ld;
-      c2.globalAlpha=n.done&&!n.holding?.3:1; // dead 长条：整条变暗
+      const x=lx,lwn=ld,ba=n.done&&!n.holding?.3:1;
+      c2.globalAlpha=ba; // dead 长条：整条变暗
       if(n.hold){
         const yt=Math.round((JY-dd(n.lane,n.end)*pps)*dpr)/dpr,yb=(n.holding?JY:y)+6,h=Math.max(3,yb-yt);
         // 只绘制可见部分：超长的长条不再提交几万像素高的巨大矩形（可能触发 GPU 栅格化异常，表现为黑色横条）
         const ya=Math.max(yt,-12),hb=Math.min(yt+h,H+12)-ya;
         if(hb>0){
-          if(S.pal||NSV)skHold(x,ya,lwn,hb,n.lane,yt,h);
-          else{c2.fillStyle=lcol(n.lane);c2.fillRect(x,ya,lwn,hb);
-            c2.fillStyle='rgba(0,0,0,.2)';c2.fillRect(x,ya,1,hb);c2.fillRect(x+lwn-1,ya,1,hb);if(yt>=-12)c2.fillRect(x,yt,lwn,2)}
+          const body=(a0,b0)=>{if(S.pal||NSV)skHold(x,a0,lwn,b0,n.lane,yt,h);
+            else{c2.fillStyle=lcol(n.lane);c2.fillRect(x,a0,lwn,b0);
+              c2.fillStyle='rgba(0,0,0,.2)';c2.fillRect(x,a0,1,b0);c2.fillRect(x+lwn-1,a0,1,b0);if(yt>=-12&&a0==ya)c2.fillRect(x,yt,lwn,2)}};
+          if(fi||fo){for(let ys=ya;ys<ya+hb;ys+=4){const sh=Math.min(4,ya+hb-ys),a=fadeA(ys+sh/2);if(a<=.01)continue;c2.globalAlpha=ba*a;body(ys,sh)}c2.globalAlpha=ba}
+          else body(ya,hb);
         }
       }
-      if(n.holding){c2.fillStyle='rgba(255,255,255,'+(.35+.2*Math.sin(performance.now()/60))+')';c2.fillRect(LX[n.lane]+2,JY-11,LD[n.lane]-4,20)}
-      if(!n.holding||!n.hold){if(S.pal||NSV)skNote(x,y,lwn,n.lane);else{c2.fillStyle=lcol(n.lane);c2.fillRect(x,y-8,lwn,14);c2.fillStyle='rgba(0,0,0,.25)';c2.fillRect(x,y+3,lwn,3)}}
+      if(n.holding){c2.globalAlpha=ba*((fi||fo)?fadeA(JY):1);c2.fillStyle='rgba(255,255,255,'+(.35+.2*Math.sin(performance.now()/60))+')';c2.fillRect(LX[n.lane]+2,JY-11,LD[n.lane]-4,20);c2.globalAlpha=ba}
+      if(fi||fo)c2.globalAlpha=ba*fadeA(y);
+      if((!n.holding||!n.hold)&&c2.globalAlpha>.01){if(S.pal||NSV)skNote(x,y,lwn,n.lane);else{c2.fillStyle=lcol(n.lane);c2.fillRect(x,y-8,lwn,14);c2.fillStyle='rgba(0,0,0,.25)';c2.fillRect(x,y+3,lwn,3)}}
       c2.globalAlpha=1;
     }
-    if(fi||fo)c2.restore();
   }
   if(PN){c2.drawImage(pnLayer('front',PN.front),0,0,W,H);drawFx();pnKeys()}
   else if(S.pal){c2.fillStyle=S.field=='glass'?'rgba(8,10,26,.92)':'#161a36';c2.fillRect(0,JY+7,W,H-JY);skLine();drawFx();skKeys()}
