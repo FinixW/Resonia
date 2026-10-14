@@ -144,7 +144,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 </section>
 <section class="card" id="cLib" hidden><h3>曲库</h3><div class="row"><span class="lb">曲目</span><select id="lib"></select></div></section>
 <section class="card" id="cKeys"><h3>按键<small class="hint">点击后按新键</small><button id="kreset">恢复默认</button></h3><div id="keys"><span id="kb"></span></div></section>
-<section class="card" id="cOpt"><h3>效果<small class="hint">自选，开始时生效</small></h3><div class="chk"><label><input type="checkbox" id="ofi">上隐</label><label><input type="checkbox" id="ofo">下隐</label><label><input type="checkbox" id="oran">打乱</label><label><input type="checkbox" id="omir">镜像</label><label><input type="checkbox" id="oman" title="音符先在原轨道下落，再快速飞到另一条没有音符遮挡的轨道上">幻象</label></div></section>
+<section class="card" id="cOpt"><h3>效果<small class="hint">自选，开始时生效</small></h3><div class="chk"><label><input type="checkbox" id="ofi">上隐</label><label><input type="checkbox" id="ofo">下隐</label><label><input type="checkbox" id="oran">打乱</label><label><input type="checkbox" id="omir">镜像</label><label><input type="checkbox" id="oman" title="音符先在原轨道下落，再快速飞到另一条没有音符遮挡的轨道上">幻象</label><label><input type="checkbox" id="o4d" title="每条轨道的音符下落速度各自随机变化（判定时间不变）">4D</label></div></section>
 <section class="card" id="cSnd"><h3>声音</h3>
   <div class="sl"><span>游戏音量</span><input type="range" id="mv" min="0" max="1.5" step="0.1" value="1" data-major="0.5" data-fmt="x"><b class="rv"></b></div>
   <div id="sinkBox" class="row" hidden><span class="lb">声卡输出</span><select id="sink"><option value="">系统默认</option></select><button id="sinkNm" class="fbtn sm" style="border:0;cursor:pointer" title="浏览器要先获得一次麦克风授权才会提供设备名称（只用于读取名称，不会录音）">显示设备名</button></div>
@@ -178,6 +178,8 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 const LANGS=[['zh','简体中文'],['zh-TW','繁體中文'],['en','English'],['ja','日本語'],['ko','한국어']];
 const LK={zh:'zh','zh-TW':'tw',en:'en',ja:'ja',ko:'ko'};
 const I18N={
+ "每条轨道的音符下落速度各自随机变化（判定时间不变）":{"en": "Each lane's note fall speed varies randomly on its own (hit timing is unchanged)", "ja": "レーンごとにノーツの落下速度がランダムに変化します（判定タイミングは不変）", "ko": "레인마다 노트 낙하 속도가 무작위로 변합니다 (판정 시점은 그대로)", "tw": "每條軌道的音符下落速度各自隨機變化（判定時間不變）"},
+ "新增效果“4D”（参照 EZ2DJ 的 4D Mix）：每条轨道的音符下落速度各自独立、随时间随机平滑变化，判定时间不变；长条与幻象照常工作。另有 10 套新面板、音符与轨道线对齐、Note 区域透明度滑杆、皮肤栏重新排版等界面改进。":{"en": "Added the “4D” effect (after EZ2DJ’s 4D Mix): each lane’s notes fall at their own speed, which changes smoothly and randomly over time; hit timing is unchanged, and long notes and Phantom still work. Also: 10 new panels, notes aligned to lane lines, a field-opacity slider, a reorganised skin card and other UI refinements.", "ja": "新エフェクト「4D」を追加（EZ2DJ の 4D Mix を参考）：レーンごとにノーツの落下速度が独立し、時間とともにランダムかつ滑らかに変化します。判定タイミングは変わらず、ロングノーツと幻象も従来どおり動作します。ほかに新パネル 10 種、ノーツとレーン線の位置合わせ、ノーツエリア透明度スライダー、スキンカードの再配置などの UI 改善。", "ko": "새 효과 “4D” 추가 (EZ2DJ 4D Mix 참고): 레인마다 노트 낙하 속도가 독립적이며 시간에 따라 무작위로 부드럽게 변합니다. 판정 시점은 그대로이며 롱노트와 환영도 정상 동작합니다. 그 외 새 패널 10종, 노트와 레인선 정렬, 노트 영역 투명도 슬라이더, 스킨 카드 재배치 등 UI 개선.", "tw": "新增效果“4D”（參照 EZ2DJ 的 4D Mix）：每條軌道的音符下落速度各自獨立、隨時間隨機平滑變化，判定時間不變；長條與幻象照常工作。另有 10 套新面板、音符與軌道線對齊、Note 區域透明度滑桿、皮膚欄重新排版等介面改進。"},
  "Note区域透明度":{"en": "Field opacity", "ja": "ノーツエリアの透明度", "ko": "노트 영역 투명도", "tw": "Note區域透明度"},
  "连击":{"en": "Combo", "ja": "コンボ", "ko": "콤보", "tw": "連擊"},
  "载入插件":{"en": "Load plugin", "ja": "プラグインを読み込む", "ko": "플러그인 불러오기", "tw": "載入外掛"},
@@ -872,8 +874,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.32';
+const VERSION='0.9.33';
 const CHANGELOG=[
+  ['0.9.33','2026-10-14','新增效果“4D”（参照 EZ2DJ 的 4D Mix）：每条轨道的音符下落速度各自独立、随时间随机平滑变化，判定时间不变；长条与幻象照常工作。另有 10 套新面板、音符与轨道线对齐、Note 区域透明度滑杆、皮肤栏重新排版等界面改进。'],
   ['0.9.32','2026-10-12','BAD 改为纯时间判定（命中音符但偏差 120~150ms，参照 O2Jam），打错轨道（空按）不再判 BAD，超过 150ms 为 MISS；PERFECT ±40ms、GREAT ±80ms、GOOD ±120ms 保持原样。判定线统一为“两条线之间的区域”（所有皮肤一致），小节线紧贴音符底边（音符在小节线上方），判定文字和连击数按轨道区域居中。'],
   ['0.9.31','2026-10-12','新增多语言：简体中文 / 繁體中文 / English / 日本語 / 한국어（标题旁的下拉框切换，切换后自动刷新页面；首次打开按浏览器语言选择）。界面、提示信息和更新日志均已翻译。'],
   ['0.9.30','2026-10-12','新增“效果”（自选）：上隐、下隐、打乱（Random）、镜像（Mirror）、幻象（Phantom：音符先在原轨道下落，在轨道上 1/4 处飞到另一条没有音符遮挡的轨道，每个音符只变一次）。带转盘的 BMS 谱面，转盘轨道不参与打乱/镜像/幻象。'],
@@ -994,7 +997,15 @@ function renderKeys(){
 document.getElementById('kreset').onclick=()=>{bind=DEFS[LANES].slice();rebind=null;saveBind();renderKeys();draw(0)};
 renderKeys();
 const $=id=>document.getElementById(id);
-const OPT={fi:false,fo:false,ran:false,mir:false,man:false};
+const OPT={fi:false,fo:false,ran:false,mir:false,man:false,d4:false};
+let SPD=null;const SPD_MIN=.6,SPD_MAX=1.6; // 4D：每轨速度曲线（节点处线性插值），Φ 为累计“行进量”
+function spdBuild(sg){
+  SPD=null;if(!OPT.d4||!sg)return;const end=(sg.total||0)+30000;SPD=[];
+  for(let l=0;l<LANES;l++){const T=[0],V=[SPD_MIN*Math.pow(SPD_MAX/SPD_MIN,Math.random())],C=[0];
+    while(T[T.length-1]<end){const k=T.length-1,t1=T[k]+3000+Math.random()*5000,v1=SPD_MIN*Math.pow(SPD_MAX/SPD_MIN,Math.random());C.push(C[k]+(t1-T[k])*(V[k]+v1)/2);T.push(t1);V.push(v1)}
+    SPD.push({T,V,C})}}
+function spdPhi(s,t){const T=s.T;if(t<=0)return s.V[0]*t;let lo=0,hi=T.length-1;if(t>=T[hi])return s.C[hi]+s.V[hi]*(t-T[hi]);
+  while(hi-lo>1){const m=(lo+hi)>>1;if(T[m]<=t)lo=m;else hi=m}const d=t-T[lo],g=(s.V[hi]-s.V[lo])/(T[hi]-T[lo]);return s.C[lo]+s.V[lo]*d+.5*g*d*d}
 try{Object.assign(OPT,JSON.parse(localStorage.getItem('resonia-opt')||'{}'))}catch(x){}
 let song=null,running=false,t0=0,startOff=0,bi=0,combo=0,maxCombo=0,score=0,cnt,keys=Array(7).fill(false),flash=Array(7).fill(0),lastJ='',lastJT=0,ended=false,schedTimer=0;
 let lanesQ=[],lp=[],holdN=[];
@@ -1534,7 +1545,7 @@ const touchish=()=>{let m=false;try{m=matchMedia('(pointer:coarse), (max-width:7
 {let sv=null;try{sv=localStorage.getItem('resonia-fs')}catch(x){}$('fs').checked=sv===null?touchish():sv==='1'}
 $('fs').onchange=()=>{try{localStorage.setItem('resonia-fs',$('fs').checked?'1':'0')}catch(x){}};
 $('go').onclick=start;
-for(const [id,k] of [['ofi','fi'],['ofo','fo'],['oran','ran'],['omir','mir'],['oman','man']]){const el=$(id);el.checked=!!OPT[k];el.onchange=()=>{OPT[k]=el.checked;if(el.checked&&k=='ran'){OPT.mir=false;$('omir').checked=false}if(el.checked&&k=='mir'){OPT.ran=false;$('oran').checked=false}try{localStorage.setItem('resonia-opt',JSON.stringify(OPT))}catch(x){}if(!running&&song){applyLaneMap(song);draw(song&&ctx?songMs():0)}}}
+for(const [id,k] of [['ofi','fi'],['ofo','fo'],['oran','ran'],['omir','mir'],['oman','man'],['o4d','d4']]){const el=$(id);el.checked=!!OPT[k];el.onchange=()=>{OPT[k]=el.checked;if(el.checked&&k=='ran'){OPT.mir=false;$('omir').checked=false}if(el.checked&&k=='mir'){OPT.ran=false;$('oran').checked=false}try{localStorage.setItem('resonia-opt',JSON.stringify(OPT))}catch(x){}if(!running&&song){applyLaneMap(song);draw(song&&ctx?songMs():0)}}}
 // 从 Studio 的“在游戏里试玩”打开：同源窗口之间用 postMessage 传 .rsm
 // Studio 编辑器里的试听（隐藏 iframe）：收谱面、从指定位置自动演奏（用游戏自带的音源，VOS 的 MIDI 也能听）
 if(window.parent!==window&&location.hash=='#preview'){
@@ -1953,6 +1964,7 @@ function applyEffects(sg){
   else if(OPT.mir)ks.forEach((l,i)=>perm[l]=ks[ks.length-1-i]);
   for(const n of sg.notes){n.lane=perm[n.bl===undefined?n.lane:n.bl];n.sl=undefined}
   if(OPT.man&&ks.length>1)maniac(sg,ks);
+  spdBuild(sg);
 }
 // 幻象：每个单点音符最多变轨一次，判定在目标轨道；目标轨道（及飞行经过的轨道）在前后 MW 毫秒内不能有别的音符（长条按整段算）
 const MW=250;
@@ -2278,23 +2290,23 @@ function draw(now){
   for(let l=1;l<LANES;l++){const gx=LX[l]-(LX[l]-LX[l-1]-LD[l-1])/2;c2.beginPath();c2.moveTo(gx,0);c2.lineTo(gx,H);c2.stroke()}
   if(II())iiLine();
   if(song){
-    const pps=+$('spd').value*(song.scroll||1),jn=now+offs(),vis=JY/pps+200;
+    const pps=+$('spd').value*(song.scroll||1),jn=now+offs(),vis=JY/pps+200,D4=OPT.d4&&SPD&&SPD.length==LANES?SPD:null,P0=D4?D4.map(q=>spdPhi(q,jn)):null,dd=(l,t)=>D4?spdPhi(D4[l],t)-P0[l]:t-jn;
     const fi=OPT.fi,fo=OPT.fo;if(fi||fo){c2.save();const y0=fi?JY*.38:0,y1=fo?JY*.62:H;c2.beginPath();c2.rect(0,y0,W,y1-y0);c2.clip()} // 上隐 / 下隐：只露出中间一段
     if(song.bars){
       c2.fillStyle='rgba(255,255,255,.6)';
       for(const bt of song.bars){const d=bt-jn;if(d>vis)break;if(d<-100)continue;c2.fillRect(0,Math.round(JY-d*pps)+6,W,3)} // 小节线紧贴音符底边（音符在小节线上方）
     }
     for(const n of song.notes){
-      if(n.t-jn>vis)break;
-      if(n.end-jn<-200)continue;
+      if(n.t-jn>(D4?vis/SPD_MIN:vis))break;
+      if(n.end-jn<-(D4?330:200))continue;
       if(n.done&&!n.hold)continue;
       if(n.done&&n.hold&&!n.holding&&!n.dead)continue; // 打断/漏掉的长条继续滚动（变暗），不再凭空消失
-      const y=Math.round((JY-(n.t-jn)*pps)*dpr)/dpr;let lx=LX[n.lane],ld=LD[n.lane];
+      const y=Math.round((JY-dd(n.lane,n.t)*pps)*dpr)/dpr;if(D4&&y<-30)continue;let lx=LX[n.lane],ld=LD[n.lane];
       if(n.sl!==undefined){const k=smooth((y/JY-.06)/.19);lx=LX[n.sl]+(LX[n.lane]-LX[n.sl])*k;ld=LD[n.sl]+(LD[n.lane]-LD[n.sl])*k} // 幻象：在上 1/4 处完成变轨
       const x=lx,lwn=ld;
       c2.globalAlpha=n.done&&!n.holding?.3:1; // dead 长条：整条变暗
       if(n.hold){
-        const yt=Math.round((JY-(n.end-jn)*pps)*dpr)/dpr,yb=(n.holding?JY:y)+6,h=Math.max(3,yb-yt);
+        const yt=Math.round((JY-dd(n.lane,n.end)*pps)*dpr)/dpr,yb=(n.holding?JY:y)+6,h=Math.max(3,yb-yt);
         // 只绘制可见部分：超长的长条不再提交几万像素高的巨大矩形（可能触发 GPU 栅格化异常，表现为黑色横条）
         const ya=Math.max(yt,-12),hb=Math.min(yt+h,H+12)-ya;
         if(hb>0){
