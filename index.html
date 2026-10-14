@@ -2291,7 +2291,7 @@ function draw(now){
   if(II())iiLine();
   if(song){
     const pps=+$('spd').value*(song.scroll||1),jn=now+offs(),vis=JY/pps+200,D4=OPT.d4&&SPD&&SPD.length==LANES?SPD:null,P0=D4?D4.map(q=>spdPhi(q,jn)):null,dd=(l,t)=>D4?spdPhi(D4[l],t)-P0[l]:t-jn;
-    const fi=OPT.fi,fo=OPT.fo,fadeA=y=>{let a=1;if(fi)a*=y<=JY*.125?0:y>=JY*.225?1:(y-JY*.125)/(JY*.1);if(fo)a*=y>=JY*.85?0:y<=JY*.75?1:(JY*.85-y)/(JY*.1);return a}; // 上隐：12.5% 处出现、22.5% 处完全可见；下隐：75% 处开始渐隐、85% 处完全消失（渐变区间 = 轨道高度的 10%）
+    const fi=OPT.fi,fo=OPT.fo,fadeA=y=>{let a=1;if(fi)a*=y<=JY*.05?0:y>=JY*.22?1:(y-JY*.05)/(JY*.17);if(fo)a*=y>=JY*.95?0:y<=JY*.78?1:(JY*.95-y)/(JY*.17);return a}; // 上隐：5% 处出现、22% 处完全可见；下隐：78% 处开始渐隐、95% 处完全消失（渐变区间 = 轨道高度的 17%）
     if(song.bars){
       c2.fillStyle='rgba(255,255,255,.6)';
       for(const bt of song.bars){const d=bt-jn;if(d>vis)break;if(d<-100)continue;c2.fillRect(0,Math.round(JY-d*pps)+6,W,3)} // 小节线紧贴音符底边（音符在小节线上方）
