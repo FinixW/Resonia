@@ -138,7 +138,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
   <div class="row top"><label class="fbtn">打开歌曲<input type="file" id="file" multiple accept=".vos,.vow,.bms,.bme,.bml,.rsc,.rsm,.zip,.wav,.ogg,.mp3,.flac"></label><label class="fbtn sm" title="打开整个歌曲文件夹（BMS 等带有音频和 BGA 的歌曲，或一次载入多首）">打开文件夹<input type="file" id="dirf" webkitdirectory multiple></label><span id="fname" class="fname">未打开歌曲</span><select id="cpick" hidden style="max-width:220px"></select><button id="go" disabled>开始</button></div>
   <div id="info"></div>
   <div id="need" class="row" hidden style="font-size:13px"><span id="needt" style="color:var(--mu)"></span><label class="fbtn sm"><span id="needb">选择</span><input type="file" id="needf" multiple></label><button id="needd" class="fbtn sm" style="border:0;cursor:pointer" hidden title="选一次歌曲所在的文件夹，之后选 OJM 就会自动找同名 OJN（仅 Chrome / Edge）">在文件夹中自动查找</button></div>
-  <div class="sl"><span>速度</span><input type="range" id="spd" min="0.25" max="1.2" step="0.05" value="0.55" data-major="0.25" data-fmt="x"><b class="rv"></b></div>
+  <div class="sl"><span>速度</span><input type="range" id="spd" min="0.25" max="5" step="0.05" value="0.55" data-major="0.25" data-fmt="x"><b class="rv"></b></div>
   <div class="sl"><span>延迟</span><input type="range" id="off" min="-400" max="400" step="5" value="0" data-minor="20" data-major="100" data-fmt="ms"><b class="rv" id="offv"></b></div>
   <div class="chk"><label><input type="checkbox" id="skip" checked>跳过前奏</label><label><input type="checkbox" id="fs">开局隐藏设置</label><button id="calb" class="fbtn sm" style="border:0;margin-left:auto" title="跟着节拍点按，自动测出你的设备延迟并设置“延迟”">延迟校准</button></div>
 </section>
