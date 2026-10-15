@@ -180,6 +180,7 @@ const LK={zh:'zh','zh-TW':'tw',en:'en',ja:'ja',ko:'ko'};
 const I18N={
  "每条轨道的音符下落速度各自随机变化（判定时间不变）":{"en": "Each lane's note fall speed varies randomly on its own (hit timing is unchanged)", "ja": "レーンごとにノーツの落下速度がランダムに変化します（判定タイミングは不変）", "ko": "레인마다 노트 낙하 속도가 무작위로 변합니다 (판정 시점은 그대로)", "tw": "每條軌道的音符下落速度各自隨機變化（判定時間不變）"},
  "读取 .rsc / .rsm 时保留转盘轨道（scratch）和谱面滚动速度（scroll），Studio 转换自 IIDX、EZ2DJ 等格式的曲包可以按原样游玩。":{"en": "Reading .rsc / .rsm now keeps the scratch lane (scratch) and the chart scroll speed (scroll), so packs that Studio converted from IIDX, EZ2DJ and similar formats play as intended.", "ja": ".rsc / .rsm の読み込みでスクラッチレーン（scratch）と譜面のスクロール速度（scroll）を保持するようにしました。StudioでIIDXやEZ2DJなどから変換した曲パックがそのまま遊べます。", "ko": ".rsc / .rsm을 읽을 때 스크래치 레인(scratch)과 채보 스크롤 속도(scroll)를 유지합니다. Studio에서 IIDX, EZ2DJ 등에서 변환한 곡 팩을 원래대로 플레이할 수 있습니다.", "tw": "讀取 .rsc / .rsm 時保留轉盤軌道（scratch）和譜面滾動速度（scroll），Studio 轉換自 IIDX、EZ2DJ 等格式的曲包可以按原樣遊玩。"},
+ "新增通用 BGA 模型（RBGA）：插件可以把 BGA 动画（EZ2DJ 的 STR、DJMAX 的 VCQ/VCE 等）交给游戏内置的统一引擎渲染，并且能随 .rsc / .rsm 一起保存和读取（谱面的 scene 字段）。":{"en": "Added a universal BGA model (RBGA): plugins can hand BGA animations (EZ2DJ STR, DJMAX VCQ/VCE, etc.) to the game's built-in unified engine, and they can now be saved to and read back from .rsc / .rsm (the chart's scene field).", "ja": "汎用BGAモデル（RBGA）を追加：プラグインがBGAアニメーション（EZ2DJのSTR、DJMAXのVCQ/VCEなど）をゲーム内蔵の統一エンジンに渡して描画でき、.rsc / .rsm（譜面のsceneフィールド）への保存と読み込みにも対応しました。", "ko": "범용 BGA 모델(RBGA) 추가: 플러그인이 BGA 애니메이션(EZ2DJ의 STR, DJMAX의 VCQ/VCE 등)을 게임 내장 통합 엔진에 넘겨 재생할 수 있으며, .rsc / .rsm(채보의 scene 필드)에 저장하고 다시 읽을 수도 있습니다.", "tw": "新增通用 BGA 模型（RBGA）：外掛可以把 BGA 動畫（EZ2DJ 的 STR、DJMAX 的 VCQ/VCE 等）交給遊戲內建的統一引擎渲染，並且能隨 .rsc / .rsm 一起儲存和讀取（譜面的 scene 欄位）。"},
  "新增效果“4D”（参照 EZ2DJ 的 4D Mix）：每条轨道的音符下落速度各自独立、随时间随机平滑变化，判定时间不变；长条与幻象照常工作。另有 10 套新面板、音符与轨道线对齐、Note 区域透明度滑杆、皮肤栏重新排版等界面改进。":{"en": "Added the “4D” effect (after EZ2DJ’s 4D Mix): each lane’s notes fall at their own speed, which changes smoothly and randomly over time; hit timing is unchanged, and long notes and Phantom still work. Also: 10 new panels, notes aligned to lane lines, a field-opacity slider, a reorganised skin card and other UI refinements.", "ja": "新エフェクト「4D」を追加（EZ2DJ の 4D Mix を参考）：レーンごとにノーツの落下速度が独立し、時間とともにランダムかつ滑らかに変化します。判定タイミングは変わらず、ロングノーツと幻象も従来どおり動作します。ほかに新パネル 10 種、ノーツとレーン線の位置合わせ、ノーツエリア透明度スライダー、スキンカードの再配置などの UI 改善。", "ko": "새 효과 “4D” 추가 (EZ2DJ 4D Mix 참고): 레인마다 노트 낙하 속도가 독립적이며 시간에 따라 무작위로 부드럽게 변합니다. 판정 시점은 그대로이며 롱노트와 환영도 정상 동작합니다. 그 외 새 패널 10종, 노트와 레인선 정렬, 노트 영역 투명도 슬라이더, 스킨 카드 재배치 등 UI 개선.", "tw": "新增效果“4D”（參照 EZ2DJ 的 4D Mix）：每條軌道的音符下落速度各自獨立、隨時間隨機平滑變化，判定時間不變；長條與幻象照常工作。另有 10 套新面板、音符與軌道線對齊、Note 區域透明度滑桿、皮膚欄重新排版等介面改進。"},
  "Note区域透明度":{"en": "Field opacity", "ja": "ノーツエリアの透明度", "ko": "노트 영역 투명도", "tw": "Note區域透明度"},
  "连击":{"en": "Combo", "ja": "コンボ", "ko": "콤보", "tw": "連擊"},
@@ -875,8 +876,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.34';
+const VERSION='0.9.35';
 const CHANGELOG=[
+  ['0.9.35','2026-10-15',"新增通用 BGA 模型（RBGA）：插件可以把 BGA 动画（EZ2DJ 的 STR、DJMAX 的 VCQ/VCE 等）交给游戏内置的统一引擎渲染，并且能随 .rsc / .rsm 一起保存和读取（谱面的 scene 字段）。"],
   ['0.9.34','2026-10-15',"读取 .rsc / .rsm 时保留转盘轨道（scratch）和谱面滚动速度（scroll），Studio 转换自 IIDX、EZ2DJ 等格式的曲包可以按原样游玩。"],
   ['0.9.33','2026-10-14','新增效果“4D”（参照 EZ2DJ 的 4D Mix）：每条轨道的音符下落速度各自独立、随时间随机平滑变化，判定时间不变；长条与幻象照常工作。另有 10 套新面板、音符与轨道线对齐、Note 区域透明度滑杆、皮肤栏重新排版等界面改进。'],
   ['0.9.32','2026-10-12','BAD 改为纯时间判定（命中音符但偏差 120~150ms，参照 O2Jam），打错轨道（空按）不再判 BAD，超过 150ms 为 MISS；PERFECT ±40ms、GREAT ±80ms、GOOD ±120ms 保持原样。判定线统一为“两条线之间的区域”（所有皮肤一致），小节线紧贴音符底边（音符在小节线上方），判定文字和连击数按轨道区域居中。'],
@@ -1351,6 +1353,80 @@ async function openChart(i){
   try{setSong(await it.load(t=>$('info').textContent=t),it.name);$('info').textContent=''}
   catch(err){$('info').textContent=tt('谱面读取失败：{0}',err.message)}
 }
+/*RBGA-BEGIN*/
+// RBGA：鸣域通用 BGA 场景引擎（模型是纯 JSON，贴图是图片素材）。游戏页与 Studio 共用同一份源码。
+// 模型：{rbga:1, w,h, fps, clips:{id:{frames, sprites:[{tex:[贴图id…], life?:[起,止], kf:[关键帧…]}]}},
+//        tracks:[[{f:起始帧, clip:片段id, mode:'once'|'loop'|'stop'}…]…]}   轨道序号越大越靠上
+// 关键帧：{f, v:{x,y,uv:[u0,v0,宽,高],px:[4],py:[4],rot,col:[r,g,b],a,bl,seq}, d?:{同名字段的“每帧增量”}}
+//   某一帧的状态 = 最近一个 f<=当前帧的关键帧：v + d×(当前帧−f)。线性插值也用它表示（d=(下一键−本键)/间隔）。
+//   a：不透明度 0~1；bl：'normal'|'add'|'multiply'|'exclusion'；seq：贴图序列的播放速度（张/帧）。
+const RBGA=(()=>{
+  const BL={normal:'source-over',add:'lighter',multiply:'multiply',exclusion:'exclusion'};
+  const DEF={x:0,y:0,uv:[0,0,1,1],px:[0,0,0,0],py:[0,0,0,0],rot:0,col:[255,255,255],a:1,bl:'normal',seq:0};
+  function make(M,tex){
+    const W=M.w||640,H=M.h||480,fps=M.fps||60,clips=M.clips||{},tracks=M.tracks||[];
+    const tint=document.createElement('canvas'),tc=tint.getContext('2d'),acc=new WeakMap();
+    function sample(sp,lf){
+      const ks=sp.kf;if(!ks.length)return null;
+      let lo=0,hi=ks.length-1,i=-1;while(lo<=hi){const m=(lo+hi)>>1;if(ks[m].f<=lf){i=m;lo=m+1}else hi=m-1}
+      if(i<0)return null;const k=ks[i],v=k.v,d=k.d,t=lf-k.f,o={};
+      const g=(n)=>v[n]!==undefined?v[n]:DEF[n];
+      for(const n of ['x','y','rot','a']){o[n]=g(n)+(d&&d[n]?d[n]*t:0)}
+      for(const n of ['uv','px','py','col']){const b=g(n),r=d&&d[n];o[n]=r?b.map((x,j)=>x+(r[j]||0)*t):b}
+      o.bl=g('bl');o.seq=g('seq');return o;
+    }
+    function imgIndex(sp,lf,once){
+      const n=sp.tex.length;if(n<=1)return 0;
+      let A=acc.get(sp);if(!A){A=[0];acc.set(sp,A)}
+      const L=Math.min(Math.floor(lf),200000);
+      while(A.length<=L){const f=A.length-1,st=sample(sp,f);A.push(A[f]+(st?st.seq:0))}
+      const k=Math.floor(A[Math.max(0,L)]+1e-6);return once?Math.max(0,Math.min(n-1,k)):((k%n)+n)%n;
+    }
+    const seg=(s0,len)=>{const o=[];let t=s0;for(let n=0;t<s0+len-1e-6&&n<70;n++){const k=Math.floor(t+1e-6),e=Math.min(s0+len,k+1);o.push([t,e,k]);t=e}return o};
+    function draw(c,sp,lf,base,once){
+      if(sp.life&&(lf<sp.life[0]||lf>sp.life[1]))return;
+      const st=sample(sp,lf);if(!st)return;
+      const im=tex[sp.tex[imgIndex(sp,lf,once)]];if(!im)return;
+      const al=st.a;if(!(al>0.002))return;
+      const iw=im.width,ih=im.height,[u0,v0,uw,vh]=st.uv;if(!(uw>0&&vh>0)||uw>64||vh>64)return;
+      const sw=uw*iw,sh=vh*ih,r=st.rot*Math.PI/180,cs=Math.cos(r),sn=Math.sin(r);
+      const P=i=>{const px=st.px[i],py=st.py[i];return[st.x+px*cs-py*sn,st.y+px*sn+py*cs]};
+      const p0=P(0),p1=P(1),p3=P(3);
+      if(Math.hypot(p1[0]-p0[0],p1[1]-p0[1])<0.01||Math.hypot(p3[0]-p0[0],p3[1]-p0[1])<0.01)return;
+      const a=(p1[0]-p0[0])/sw,b=(p1[1]-p0[1])/sw,cc=(p3[0]-p0[0])/sh,d=(p3[1]-p0[1])/sh;
+      let src=im;const col=st.col;
+      if(Math.min(col[0],col[1],col[2])<250){
+        tint.width=iw;tint.height=ih;tc.globalCompositeOperation='source-over';tc.clearRect(0,0,iw,ih);
+        tc.drawImage(im,0,0);tc.globalCompositeOperation='multiply';tc.fillStyle='rgb('+(col[0]|0)+','+(col[1]|0)+','+(col[2]|0)+')';tc.fillRect(0,0,iw,ih);
+        tc.globalCompositeOperation='destination-in';tc.drawImage(im,0,0);src=tint;
+      }
+      c.globalAlpha=Math.min(1,al);c.globalCompositeOperation=BL[st.bl]||'source-over';
+      c.setTransform(base.s*a,base.s*b,base.s*cc,base.s*d,base.x+base.s*p0[0],base.y+base.s*p0[1]);
+      for(const [ua,ub,ku] of seg(u0,uw))for(const [va,vb,kv] of seg(v0,vh)){
+        const pw=(ub-ua)*iw,ph=(vb-va)*ih;if(pw<0.01||ph<0.01)continue;
+        c.drawImage(src,(ua-ku)*iw,(va-kv)*ih,pw,ph,(ua-u0)*iw,(va-v0)*ih,pw,ph);
+      }
+    }
+    const reset=c=>{c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over'};
+    return{model:M,tex,
+      render(c,cw,ch,ms){
+        reset(c);c.fillStyle='#000';c.fillRect(0,0,cw,ch);if(ms<0)return;
+        const F=ms*fps/1000,s=Math.min(cw/W,ch/H),base={s,x:(cw-W*s)/2,y:(ch-H*s)/2};
+        c.imageSmoothingEnabled=true;c.save();c.beginPath();c.rect(base.x,base.y,W*s,H*s);c.clip();
+        for(const ents of tracks){
+          let lo=0,hi=ents.length-1,i=-1;while(lo<=hi){const m=(lo+hi)>>1;if(ents[m].f<=F){i=m;lo=m+1}else hi=m-1}
+          if(i<0)continue;const e=ents[i];if(e.mode==='stop'||!e.clip)continue;const cl=clips[e.clip];if(!cl)continue;
+          let lf=F-e.f;if(e.mode==='loop'&&cl.frames>0)lf%=cl.frames;else if(cl.frames>0&&lf>=cl.frames)continue;
+          for(const sp of cl.sprites)draw(c,sp,lf,base,e.mode!=='loop');
+          reset(c);
+        }
+        c.restore();reset(c);
+      }};
+  }
+  const texIds=M=>{const s=new Set();for(const k in M.clips||{})for(const sp of M.clips[k].sprites)for(const t of sp.tex)s.add(t);return[...s]};
+  return{make,texIds};
+})();
+/*RBGA-END*/
 // ---------- 第三方插件（格式导入）----------
 // 插件是一个 .js 文件，在页面里调用 Resonia.register({...})。详见 docs/PLUGIN-API.md
 const plugins=[];
@@ -1375,7 +1451,7 @@ const Resonia=window.Resonia={
       const back=(o.back||[]).slice().sort((a,b)=>a.t-b.t);
       let end=o.lenMs||0;for(const n of notes)end=Math.max(end,n.end+500);
       return{title:o.title||'',artist:o.artist||'',level:o.level||0,chartName:o.chartName||'',lenMs:end+1000,notes,back,ctl:o.ctl||{},mev:o.mev||[],chan:o.chan||{},tracks:o.tracks||0,
-        bpm:o.bpm||120,lanes:o.lanes,scratch:o.scratch,bars:o.bars,bgaScene:o.bgaScene,scroll:+o.scroll>0?+o.scroll:undefined,samples:o.samples,bga:o.bga,bmps:o.bmps||{},res:o.res,kind:o.samples?(o.kind||'PLUGIN'):undefined,note:o.note||''};
+        bpm:o.bpm||120,lanes:o.lanes,scratch:o.scratch,bars:o.bars,bgaScene:o.bgaScene||(o.bgaModel?RBGA.make(o.bgaModel,o.bgaTex||{}):undefined),bgaModel:o.bgaModel,scroll:+o.scroll>0?+o.scroll:undefined,samples:o.samples,bga:o.bga,bmps:o.bmps||{},res:o.res,kind:o.samples?(o.kind||'PLUGIN'):undefined,note:o.note||''};
     }
   }
 };
@@ -1504,6 +1580,7 @@ async function buildRsc(R,ci,man,find,say){
   for(const n of c.notes)if(n.snd&&n.snd.s!==undefined)sid.add(n.snd.s);
   for(const b of c.back||[])if(b.snd&&b.snd.s!==undefined)sid.add(b.snd.s);
   for(const b of c.bga||[])mid.add(b.media);
+  if(c.scene&&typeof RBGA!=='undefined')for(const t of RBGA.texIds(c.scene))mid.add(t);
   const mfile=(arr,id)=>{const x=(arr||[]).find(y=>y.id===id);return x?find(x.file):null};
   const sItems=[...sid].map(id=>({id,e:mfile(man&&man.samples,id)||mfile(man&&man.tracks,id)}));
   const bItems=[...mid].map(id=>({id,e:mfile(man&&man.media,id)}));
@@ -1519,7 +1596,7 @@ async function buildRsc(R,ci,man,find,say){
   let bars;if(c.tempo&&c.tempo.length){bars=[];let n=0;const T=c.tempo;for(let i=0;i<T.length&&bars.length<6000;i++){const bm=60000/T[i].bpm,e=i+1<T.length?T[i+1].t:end+bm*4;for(let t=T[i].t;t<e-1e-3&&bars.length<6000;t+=bm){if(n%4==0)bars.push(t);n++}}}
   const res={samples:{},media:{}};for(const it of sItems)if(it.e&&S.samples[it.id])res.samples[it.id]=it.e;for(const it of bItems)if(it.e&&B.bmps[it.id])res.media[it.id]=it.e;
   return{title:(R.meta&&R.meta.title)||'',artist:(R.meta&&R.meta.artist)||'',level:c.level||0,chartName:c.name||'',lenMs:end+1000,notes,back,
-    ctl:V.ctl||{},mev:V.mev||[],chan:V.chan||{},tracks:V.tracks||0,bpm:c.bpm||120,lanes:c.lanes,scratch:c.scratch||undefined,scroll:+c.scroll>0?+c.scroll:undefined,bars,
+    ctl:V.ctl||{},mev:V.mev||[],chan:V.chan||{},tracks:V.tracks||0,bpm:c.bpm||120,lanes:c.lanes,bgaScene:c.scene&&typeof RBGA!=='undefined'?RBGA.make(c.scene,Object.fromEntries(Object.entries(B.bmps).filter(([k,v])=>v&&v.i).map(([k,v])=>[k,v.i]))):undefined,scratch:c.scratch||undefined,scroll:+c.scroll>0?+c.scroll:undefined,bars,
     samples:hasS?S.samples:undefined,bga:bga.length?bga:undefined,bmps:B.bmps,res,kind:hasS?'RSM':undefined,
     note:(S.miss||S.bad)?tt('（缺少 {0} 个、无法解码 {1} 个音频）',S.miss,S.bad):''};
 }

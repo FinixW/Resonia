@@ -90,3 +90,7 @@ Studio 的“导出 BGA 视频”会把所选第一张谱面的 BGA 逐帧画到
 - 否则用谱面里的静态 BGA 事件（图片 / 视频；0 层铺底，1、2 层叠加，黑色当透明）。
 
 音乐按谱面里所有按键音和伴奏的时间点离线混音。需要较新的 Chrome / Edge。
+
+### 通用 BGA 模型（游戏 v0.9.35 / Studio v0.7）
+
+插件可以在 `makeSong` 里传 `bgaModel` + `bgaTex`，由宿主用统一引擎渲染，并随 `.rsc` / `.rsm` 保存；格式见 [RBGA.md](RBGA.md)。老的 `bgaScene` 继续可用，但不能写入 `.rsc`。

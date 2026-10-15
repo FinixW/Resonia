@@ -195,5 +195,6 @@
   - 谱面 `back[]`：自动播放的伴奏事件 `{t, snd}`（BMS 的 BGM 通道、VOS 的非按键声部）。
   - `ext.vos`：VOS 的 MIDI 控制信息（`ctl`、`mev`、`chan`、`tracks`），用来无损还原 VOS 的发声；音色库不打进包。
 - 谱面 `scratch:true`：第 0 轨是转盘轨道（`lanes` 包含它）；`scroll`：谱面的流速倍率（如 DJMAX 的 MeasureScale、EZ2DJ 的 .ini）。游戏 v0.9.34 起读取。
+- 谱面 `scene`：通用 BGA 场景模型（RBGA，见 RBGA.md），贴图为清单 `media` 里的图片素材。游戏 v0.9.35 起读取。
 - `snd` 取值：采样 `{s:"采样id",vel}`，或 MIDI 音 `{midi:"vos",ch,ins,p,vel,len}`。
 - BGA 事件：`{t, media:"素材id", layer:0|1|2}`，layer 0 为底层，1、2 为叠加层（纯黑当作透明）；叠加层引用未定义素材表示清空，底层引用未定义素材表示保持上一帧（BMS 兼容约定）。
