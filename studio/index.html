@@ -50,10 +50,11 @@ a{color:var(--ac)}
 <section class="card w"><h3>3 · 导出</h3>
  <div class="row"><button class="pri" id="exRsm" disabled>导出 .rsm 曲包（所选谱面 + 音频 + BGA）</button><button id="exRsc" disabled>只导出 .rsc 谱面</button></div>
  <div class="row" id="exPlug"></div>
+ <div class="row"><span>BMS</span><select id="bmsV" title="动画 BGA 的视频格式"><option value="mpg" selected>BGA 视频 .mpg（兼容最广）</option><option value="mp4">BGA 视频 .mp4</option><option value="webm">BGA 视频 .webm</option><option value="none">不导出 BGA 视频</option></select><select id="bmsSz"><option value="640x480" selected>640×480</option><option value="512x512">512×512</option><option value="1280x720">1280×720</option></select><select id="bmsFps"><option selected>30</option><option>60</option></select><button id="exBms" disabled>导出 BMS（.bms/.bme + 音频 + BGA）</button><span class="todo" id="bmsMsg"></span></div>
  <div class="row"><span>BGA 视频</span><select id="vsz"><option value="640x480">640×480</option><option value="1280x720" selected>1280×720</option><option value="1920x1080">1920×1080</option></select><select id="vfps"><option>30</option><option selected>60</option></select><label><input type="checkbox" id="vaud" checked> 带音乐</label><button id="exVid" disabled>导出 BGA 视频（.webm）</button><span class="todo" id="vmsg"></span></div>
  <div class="todo">.rsm 里所有谱面共用同一份音频和 BGA 素材，只存一份；在游戏页载入 .rsm 后可以下拉选择谱面。</div>
 </section>
-<section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器（每张谱面右侧的“编辑”）已可用；<br>· 其他格式 → .rsc / .rsm：载入插件后即可（IIDX、EZ2DJ、OJN/OJM、PAK/PT 等，BGA 动画类场景暂时无法写入）；<br>· 导出成 OJN/OJM、PAK/PT：由插件提供（试验中）；<br>· BGA 导出为视频（.webm）已可用，支持插件的 BGA 动画场景和图片/视频 BGA；插件的 BGA 动画现在转成统一的 RBGA 模型，可写进 .rsc / .rsm；插件可提供“BGA 导出”（RBGA → EZ2DJ .scr/.STR/.abm、DJMAX .vcq/.vce，已验证可读回）；每张谱面右侧的“BGA”是动画制作工具（时间轴 + 关键帧，保存成 RBGA）<br>· 音波采谱 / 自动作谱</div></section>
+<section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器（每张谱面右侧的“编辑”）已可用；<br>· 其他格式 → .rsc / .rsm：载入插件后即可（IIDX、EZ2DJ、OJN/OJM、PAK/PT 等，BGA 动画类场景暂时无法写入）；<br>· 导出成 OJN/OJM、PAK/PT：由插件提供（试验中）；<br>· BGA 导出为视频（.webm）已可用，支持插件的 BGA 动画场景和图片/视频 BGA；插件的 BGA 动画现在转成统一的 RBGA 模型，可写进 .rsc / .rsm；插件可提供“BGA 导出”（RBGA → EZ2DJ .scr/.STR/.abm、DJMAX .vcq/.vce，已验证可读回）；每张谱面右侧的“BGA”是动画制作工具（时间轴 + 关键帧，保存成 RBGA）；“导出 BMS”把所选谱面写成 .bms/.bme/.pms（同一文件夹共用音频），动画 BGA 渲染成 .mpg（默认，兼容面最广）/.mp4/.webm 视频<br>· 音波采谱 / 自动作谱</div></section>
 <div id="bga" hidden>
  <div class="edbar"><b id="bgT"></b>
   <label>画面 <select id="bgSz"><option value="640x480">640×480</option><option value="800x600">800×600</option><option value="960x540">960×540</option><option value="1280x720">1280×720</option></select></label>
@@ -95,7 +96,7 @@ a{color:var(--ac)}
  <div class="todo" style="max-width:760px;text-align:center"><span id="edM"></span><br>点击空白处放置音符，拖动出长条；拖动音符移动，右键或 Delete 删除，Shift 点击多选，Ctrl+C / X / V 复制剪切粘贴，Ctrl+Z / Ctrl+Y 撤销重做；滚轮滚动，Ctrl+滚轮缩放；空格播放，点击左侧标尺跳转播放头。</div>
 </div>
 <script>
-const STUDIO_VERSION='0.9.0';
+const STUDIO_VERSION='0.10.0';
 const $=id=>document.getElementById(id);$('ver').textContent='v'+STUDIO_VERSION;
 const TPB=768;
 const tempoOf=a=>{const o=[];for(const e of a){const t=Math.round(e.ms*100)/100,bp=Math.round(e.bpm*1000)/1000;if(o.length&&o[o.length-1].t===t){o[o.length-1].bpm=bp;continue}if(!o.length||Math.abs(o[o.length-1].bpm-bp)>1e-6)o.push({t,bpm:bp})}return o};
@@ -303,7 +304,7 @@ function parseBms(txt){
   notes.sort((a,b)=>a.t-b.t);back.sort((a,b)=>a.t-b.t);
   const used=new Set([...notes.map(n=>n.snd.s),...back.map(b=>b.id)]);
   const bga=bgaE.map(x=>({t:toMs(x.b),id:x.id,l:x.l})).sort((a,b)=>a.t-b.t);
-  return{H,bmp,bga,title:[H.TITLE,H.SUBTITLE].filter(Boolean).join(' '),artist:H.ARTIST||'',level:H.PLAYLEVEL||'',tempo:tempoOf(T),keys:has67?7:5,lanes:nl,wav,notes,back,used,bpm:bpm0,
+  return{H,bmp,bga,title:[H.TITLE,H.SUBTITLE].filter(Boolean).join(' '),artist:H.ARTIST||'',level:H.PLAYLEVEL||'',tempo:tempoOf(T),keys:has67?7:5,lanes:nl,scratch:hasSc,wav,notes,back,used,bpm:bpm0,
     nlane:new Set(notes.map(n=>n.lane)).size};
 }
 const AUD=/\.(wav|ogg|mp3|flac|m4a|opus|aac)$/i,VIS=/\.(png|jpe?g|bmp|gif|webp|mp4|webm|mpe?g|avi|wmv|m4v)$/i;
@@ -352,7 +353,7 @@ function bmsToItem(P,find,e){
   const cache={},sc=id=>id in cache?cache[id]:(cache[id]=sk(id));
   const snd=id=>{const k=sc(id);return k?{s:k,vel:127}:undefined};
   const sub=(P.H.SUBTITLE||'').trim(),disp=P.title||baseName(e.path);
-  const ch={id:'',name:sub||disp,level:+P.level||0,mode:'keys',keys:P.lanes,lanes:P.lanes,timebase:'ms',bpm:r2(P.bpm),tempo:P.tempo,
+  const ch={id:'',name:sub||disp,level:+P.level||0,mode:'keys',keys:P.lanes,lanes:P.lanes,...(P.scratch?{scratch:true}:{}),timebase:'ms',bpm:r2(P.bpm),tempo:P.tempo,
     notes:P.notes.map(n=>{const o={t:r2(n.t),k:n.hold?'hold':'tap',lane:n.lane};if(n.hold)o.len=r2(n.end-n.t);const s=snd(n.snd.s);if(s)o.snd=s;return o}),
     back:P.back.map(b=>{const o={t:r2(b.t)};const s=snd(b.id);if(s)o.snd=s;return o})};
   if(P.bga.length){const bc={};ch.bga=P.bga.map(x=>({t:r2(x.t),media:x.id in bc?bc[x.id]:(bc[x.id]=bk(x.id)),layer:x.l}))}
@@ -599,7 +600,7 @@ function render(){
     tr.children[1].textContent=it.label;tr.children[2].textContent=it.file||'';tr.children[8].firstChild.onclick=()=>openEd(i);tr.children[8].lastChild.onclick=()=>openBga(i);tr.children[0].firstChild.onchange=e=>{it.on=e.target.checked;btn()};tb.appendChild(tr);
   });btn();
 }
-const btn=()=>{$('exRsm').disabled=$('exRsc').disabled=!items.some(i=>i.on);$('exVid').disabled=!items.some(i=>i.on);if(window.exRefresh)exRefresh()};
+const btn=()=>{$('exRsm').disabled=$('exRsc').disabled=!items.some(i=>i.on);$('exVid').disabled=!items.some(i=>i.on);$('exBms').disabled=!items.some(i=>i.on);if(window.exRefresh)exRefresh()};
 
 // ================= BGA → 视频（WebCodecs：VP9 + Opus，自带 WebM 封装）=================
 function ebId(n){const b=[];while(n>0){b.unshift(n&255);n=Math.floor(n/256)}return Uint8Array.from(b)}
@@ -657,11 +658,9 @@ async function mixAudio(it,durMs,sr,say){
   for(const e of evs){const b=bufs[e.k];if(!b||e.t<0||e.t/1000>=durMs/1000)continue;const s=oc.createBufferSource();s.buffer=b;const g=oc.createGain();g.gain.value=e.v/127*0.6;s.connect(g).connect(oc.destination);s.start(e.t/1000)}
   say('混音中…');return await oc.startRendering();
 }
-$('exVid').onclick=async()=>{
-  const sel=items.filter(i=>i.on);if(!sel.length)return;const it=sel[0],vm=t=>{$('vmsg').textContent=t};
-  try{
-    $('exVid').disabled=true;
-    const [W,H]=$('vsz').value.split('x').map(Number),fps=+$('vfps').value;
+// 把一张谱面的 BGA 渲染成 WebM（VP9，可带 Opus 混音）。BMS 导出也用它，再交给 ffmpeg 转成 mpg/mp4。
+async function renderBgaWebm(it,{W,H,fps,withAudio,vm}){
+  {
     let scene=it.scene,st=null;
     if(!scene&&it.chart.scene){vm('载入 BGA 贴图…');const T={};for(const id of RBGA.texIds(it.chart.scene)){const e=it.res.media[id];if(e)try{T[id]=await createImageBitmap(new Blob([await e.ab()]))}catch(x){}}scene=RBGA.make(it.chart.scene,T)}
     if(!scene){st=await staticScene(it);scene=st}
@@ -685,7 +684,7 @@ $('exVid').onclick=async()=>{
     }
     await venc.flush();venc.close();if(verr)throw verr;
     let audio=null,ach=null;
-    if($('vaud').checked){
+    if(withAudio){
       const sr=48000,buf=await mixAudio(it,durMs,sr,vm);
       if(window.AudioEncoder){
         ach=[];let head=null;
@@ -702,10 +701,153 @@ $('exVid').onclick=async()=>{
       }
     }
     vm('封装中…');
-    const blob=webmMux({w:W,h:H,vchunks:vch,achunks:ach,audio,durMs});
+    return{blob:webmMux({w:W,h:H,vchunks:vch,achunks:ach,audio,durMs}),total,durMs};
+  }
+}
+$('exVid').onclick=async()=>{
+  const sel=items.filter(i=>i.on);if(!sel.length)return;const it=sel[0],vm=t=>{$('vmsg').textContent=t};
+  try{
+    $('exVid').disabled=true;
+    const [W,H]=$('vsz').value.split('x').map(Number),fps=+$('vfps').value;
+    const {blob,total}=await renderBgaWebm(it,{W,H,fps,withAudio:$('vaud').checked,vm});
     const nm=safeName($('mt').value||it.meta.title||it.label)+'_bga.webm';
     download(blob,nm);vm('已导出 '+nm+'（'+Math.round(blob.size/1048576*10)/10+' MB，'+total+' 帧）'+(sel.length>1?'；只导出了所选的第一张谱面':''));
   }catch(err){vm('');say('视频导出失败：'+err.message,1)}
+  finally{btn()}
+};
+// ================= 导出 BMS（+ BGA）=================
+// 谱面 → .bms/.bme/.pms（选中的多张谱面放进同一个文件夹，共用音频）；静态 BGA 原样写成 #BMP + 04/07/0A；
+// 动画场景（RBGA，EZ2DJ/DJMAX 之类）渲染成一段视频挂在 #BMP01（默认 MPEG-1 .mpg：兼容面最广；可选 mp4 / webm）。
+let ffW=null,ffSeq=0;
+function ffRun(files,args,out,onMsg){
+  return new Promise((ok,no)=>{
+    if(!ffW){ffW=new Worker('vendor/ffmpeg/ff-worker.js');ffW.onerror=e=>{const w=ffW;ffW=null;w.terminate();no(new Error('ffmpeg 载入失败：'+(e.message||'网络或浏览器限制')))}}
+    const id=++ffSeq,h=e=>{const d=e.data;if(d.log!==undefined){onMsg&&onMsg(d.log,null);return}if(d.progress!==undefined){onMsg&&onMsg(null,d.progress);return}
+      if(d.id!==id)return;ffW.removeEventListener('message',h);d.ok?ok(d.data):no(new Error(d.err))};
+    ffW.addEventListener('message',h);ffW.postMessage({id,files,args,out},files.map(f=>f.data.buffer));
+  });
+}
+// Shift_JIS 编码表（由浏览器的 TextDecoder 反推）；编不了的字符返回 null
+let sjisMap=null;
+function sjisEncode(str){
+  if(!sjisMap){sjisMap=new Map();const td=new TextDecoder('shift_jis');
+    for(let a=0x81;a<=0xFC;a++){if(a>0x9F&&a<0xE0)continue;for(let b=0x40;b<=0xFC;b++){if(b===0x7F)continue;const ch=td.decode(new Uint8Array([a,b]));if(ch.length===1&&ch!=='�'&&!sjisMap.has(ch))sjisMap.set(ch,[a,b])}}
+    for(let c=0xA1;c<=0xDF;c++)sjisMap.set(td.decode(new Uint8Array([c])),[c])}
+  const out=[];for(const ch of str){const c=ch.codePointAt(0);if(c<0x80){out.push(c);continue}const m=sjisMap.get(ch);if(!m)return null;out.push(...m)}
+  return Uint8Array.from(out);
+}
+const B36='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',b36=n=>B36[Math.floor(n/36)]+B36[n%36];
+function wavBytes(buf){ // AudioBuffer → 16 位 PCM WAV
+  const ch=Math.min(2,buf.numberOfChannels),n=buf.length,sr=buf.sampleRate,o=new DataView(new ArrayBuffer(44+n*ch*2)),w=(p,s)=>{for(let i=0;i<4;i++)o.setUint8(p+i,s.charCodeAt(i))};
+  w(0,'RIFF');o.setUint32(4,36+n*ch*2,true);w(8,'WAVE');w(12,'fmt ');o.setUint32(16,16,true);o.setUint16(20,1,true);o.setUint16(22,ch,true);o.setUint32(24,sr,true);o.setUint32(28,sr*ch*2,true);o.setUint16(32,ch*2,true);o.setUint16(34,16,true);w(36,'data');o.setUint32(40,n*ch*2,true);
+  const d=[];for(let c=0;c<ch;c++)d.push(buf.getChannelData(c));let p=44;for(let i=0;i<n;i++)for(let c=0;c<ch;c++){const v=Math.max(-1,Math.min(1,d[c][i]));o.setInt16(p,v<0?v*32768:v*32767,true);p+=2}
+  return new Uint8Array(o.buffer);
+}
+// 轨道 → BMS 通道（1P 11-15 键、16 转盘、18/19 第 6/7 键；9 键用 PMS 布局；10 轨以上按双人）
+function bmsLaneMap(c){
+  const L=c.lanes||c.keys||(Math.max(0,...c.notes.map(n=>n.lane))+1),sc=!!c.scratch;
+  const P1=['11','12','13','14','15','18','19'],P2=['21','22','23','24','25','28','29'];
+  if(sc){const half=L>8;return{ext:L<=6?'.bms':'.bme',player:half?3:1,ch:lane=>{if(half){const k=Math.floor(L/2);if(lane>=k){const r=lane-k;return r===0?'26':P2[r-1]||null}}if(lane===0)return'16';return P1[lane-1]||null}}}
+  if(L===9)return{ext:'.pms',player:1,ch:lane=>['11','12','13','14','15','22','23','24','25'][lane]||null};
+  if(L>9){const k=Math.ceil(L/2);return{ext:'.bme',player:3,ch:lane=>lane<k?P1[lane]||null:P2[lane-k]||null}}
+  return{ext:L<=5?'.bms':'.bme',player:1,ch:lane=>L===8&&lane===7?'16':P1[lane]||null};
+}
+async function buildBms(sel,{vfmt,W,H,fps,vm}){
+  const title=$('mt').value||sel[0].meta.title||'',artist=$('ma').value||sel[0].meta.artist||'',nm=safeName(title||sel[0].label),dir=nm+'/',files=[],warn=[];
+  const S={},M={};for(const i of sel){Object.assign(S,i.res.samples);Object.assign(M,i.res.media)}
+  const taken=new Set(),uniq=(base,ext)=>{base=(base||'x').replace(/[^\x20-\x7e]+/g,'_').replace(/[\\/:*?"<>|\s]+/g,'_').slice(0,40)||'x';let n=base,i=1;while(taken.has((n+ext).toLowerCase()))n=base+'_'+(++i);taken.add((n+ext).toLowerCase());return n+ext};
+  // ---- 音频：wav/ogg 原样，其他格式解码后写成 WAV
+  const keys=[];const addK=k=>{if(k!==undefined&&k!==null&&!keys.includes(k))keys.push(k)};
+  for(const it of sel){for(const n of it.chart.notes)addK(n.snd&&n.snd.s);for(const b of it.chart.back||[])addK(b.snd&&b.snd.s)}
+  if(keys.length>1294){warn.push("音频超过 BMS 上限，多出的 "+(keys.length-1294)+" 个被省略");keys.length=1294}
+  const wav={},wavLines=[];let n=0;
+  for(const k of keys){
+    vm('打包音频 '+(++n)+' / '+keys.length);
+    const e=S[k];let data=null,fname=null;
+    const base=e?e.path.replace(/\\/g,'/').split('/').pop().replace(/\.[^.]+$/,''):String(k),ext=e?((e.path.match(/\.([^.\/]+)$/)||[])[1]||'').toLowerCase():'';
+    try{
+      if(e&&/^(wav|ogg)$/.test(ext)){data=new Uint8Array(await e.ab());fname=uniq(base,'.'+ext)}
+      else{const it=sel.find(i=>i.bufs&&i.bufs[k]);let ab=it?it.bufs[k]:null;if(!ab&&e)ab=await actx().decodeAudioData((await e.ab()).slice(0));if(ab){data=wavBytes(ab);fname=uniq(base,'.wav')}}
+    }catch(x){}
+    if(!data)continue;
+    const id=b36(wavLines.length+1);wav[k]=id;wavLines.push('#WAV'+id+' '+fname);files.push({path:dir+fname,data,deflate:/\.wav$/.test(fname)});
+  }
+  // ---- BGA 视频（动画场景只渲染一次，所有难度共用）
+  let video=null;const sceneIt=sel.find(i=>i.scene||i.chart.scene);
+  if(sceneIt&&vfmt!=='none'){
+    const {blob}=await renderBgaWebm(sceneIt,{W,H,fps,withAudio:false,vm});
+    let data=new Uint8Array(await blob.arrayBuffer()),ext='webm';
+    if(vfmt!=='webm'){
+      ext=vfmt;vm('载入视频编码器（约 30 MB，只在第一次下载）…');
+      const args=vfmt==='mpg'?['-i','in.webm','-c:v','mpeg1video','-q:v','3','-r',String(fps),'-an','-f','mpeg','out.mpg']
+        :['-i','in.webm','-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p','-an','-movflags','+faststart','out.mp4'];
+      data=await ffRun([{name:'in.webm',data}],args,'out.'+ext,(log,p)=>{if(p!==null&&p!==undefined)vm('转码 '+ext.toUpperCase()+' '+Math.round(Math.max(0,Math.min(1,p))*100)+'%')});
+    }
+    video=uniq(nm.replace(/[^\x20-\x7e]+/g,'')||'bga','_bga.'+ext);files.push({path:dir+video,data,deflate:false});
+  }
+  // ---- 每张谱面一个文件
+  const charts=sel.slice().sort((a,b)=>(+a.chart.level||0)-(+b.chart.level||0));
+  const bmpIdx={},bmpLines=[],bmpOf=async mk=>{if(mk in bmpIdx)return bmpIdx[mk];const e=M[mk];if(!e){bmpIdx[mk]=null;return null}
+    const base=e.path.replace(/\\/g,'/').split('/').pop().replace(/\.[^.]+$/,''),ext=((e.path.match(/\.([^.\/]+)$/)||[])[1]||'png').toLowerCase(),f=uniq(base,'.'+ext);
+    files.push({path:dir+f,data:new Uint8Array(await e.ab()),deflate:/^bmp$/.test(ext)});const id=b36(bmpLines.length+1+(video?1:0));bmpLines.push('#BMP'+id+' '+f);return bmpIdx[mk]=id};
+  const usedNames=new Set();
+  for(let ci=0;ci<charts.length;ci++){
+    const it=charts[ci],c=it.chart,lm=bmsLaneMap(c);
+    const T=(c.tempo&&c.tempo.length?c.tempo:[{t:+c.gridMs||0,bpm:+c.bpm||120}]).map(x=>({t:+x.t,bpm:+x.bpm})).sort((a,b)=>a.t-b.t);
+    const seg=[];let bb=0;for(let i=0;i<T.length;i++){seg.push({t:T[i].t,b:bb,bpm:T[i].bpm});if(i+1<T.length)bb+=(T[i+1].t-T[i].t)*T[i].bpm/60000}
+    const beatOf=t=>{if(t<seg[0].t)return(t-seg[0].t)*seg[0].bpm/60000;let lo=0,hi=seg.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(seg[m].t<=t)lo=m;else hi=m-1}return seg[lo].b+(t-seg[lo].t)*seg[lo].bpm/60000};
+    const ev=[];let minB=beatOf(0);
+    for(const x of c.notes){if(x.k&&x.k!=='tap'&&x.k!=='hold')continue;const b=beatOf(x.t);minB=Math.min(minB,b);ev.push({b,n:x})}
+    for(const x of c.back||[]){const b=beatOf(x.t);minB=Math.min(minB,b);ev.push({b,bg:x})}
+    for(const x of c.bga||[]){const b=beatOf(x.t);minB=Math.min(minB,b)}
+    const shift=minB<0?Math.ceil(-minB/4-1e-9)*4:0; // 有负时间的事件才整体往后挪若干小节
+    const lines={}; // key: 'mmm|cc' → [[pos,val],...] 多行
+    const put=(beat,cc,val,multi)=>{const B=beat+shift,m=Math.floor(B/4+1e-9),pos=(B-m*4)/4,k=String(m).padStart(3,'0')+'|'+cc;(lines[k]||(lines[k]=[])).push({pos:Math.max(0,Math.min(0.999999,pos)),val,multi})};
+    let drop=0,unk=0;
+    for(const e of ev){
+      if(e.bg){const id=wav[e.bg.snd&&e.bg.snd.s];if(id)put(e.b,'01',id,true);continue}
+      const x=e.n,cc=lm.ch(x.lane);if(!cc){unk++;continue}
+      const sid=wav[x.snd&&x.snd.s]; // 没有音频的音符用未定义的编号 ZZ（播放器当作无声音符）
+      if(x.k==='hold'&&x.len>0){const l=String(+cc+40);put(e.b,l,sid||'ZZ');put(beatOf(x.t+x.len),l,sid||'ZZ')}
+      else put(e.b,cc,sid||'ZZ');
+    }
+    if(unk)warn.push((c.name||it.label)+'：'+unk+' 个音符所在轨道 BMS 放不下，已省略');
+    // 变速
+    const bpmDefs=[];
+    for(let i=1;i<seg.length;i++){const v=seg[i].bpm;if(Number.isInteger(v)&&v>=1&&v<=255)put(seg[i].b,'03',v.toString(16).toUpperCase().padStart(2,'0'));else{let k=bpmDefs.indexOf(v);if(k<0){bpmDefs.push(v);k=bpmDefs.length-1}put(seg[i].b,'08',b36(k+1))}}
+    // BGA
+    if(video)put(beatOf(0),'04','01');
+    else for(const g of c.bga||[]){const id=await bmpOf(g.media);if(id)put(beatOf(g.t),g.layer===1?'07':g.layer===2?'0A':'04',id)}
+    // 写数据行：每行选最小的分辨率；同一位置两个值（伴奏）拆成多行
+    const DEN=[1,2,3,4,6,8,12,16,24,32,48,64,96,192,384,768,1536],body=[];
+    for(const k of Object.keys(lines).sort()){
+      const [m,cc]=k.split('|'),arr=lines[k];
+      const rows=[];for(const e of arr){let placed=false;for(const r of rows){if(!r.some(o=>Math.abs(o.pos-e.pos)<1e-6)){r.push(e);placed=true;break}}if(!placed){if(rows.length&&!e.multi){drop++;continue}rows.push([e])}}
+      for(const r of rows){
+        let d=DEN.find(d=>r.every(o=>Math.abs(o.pos*d-Math.round(o.pos*d))<0.02))||1536;
+        const slots=new Array(d).fill('00');for(const o of r){let i=Math.round(o.pos*d);if(i>=d)i=d-1;if(slots[i]!=='00'){drop++;continue}slots[i]=o.val}
+        body.push('#'+m+cc+':'+slots.join(''));
+      }
+    }
+    const diffNo=charts.length<=4?Math.min(5,2+ci):Math.min(5,ci+1),cname=(c.name||it.label||'').replace(/[\r\n]+/g,' ');
+    const head=['','*---------------------- HEADER FIELD','','#PLAYER '+lm.player,'#GENRE ','#TITLE '+title,'#SUBTITLE '+cname,'#ARTIST '+artist,'#BPM '+seg[0].bpm,'#PLAYLEVEL '+(Math.round(+c.level)||1),'#DIFFICULTY '+diffNo,'#RANK 2','#LNTYPE 1','',...wavLines,'',...(video?['#BMP01 '+video]:[]),...bmpLines,...bpmDefs.map((v,i)=>'#BPM'+b36(i+1)+' '+v),'','*---------------------- MAIN DATA FIELD','',...body,''];
+    const txt=head.join('\r\n');let data=sjisEncode(txt);
+    if(!data){data=new TextEncoder().encode(txt);warn.push('标题等文字里有 Shift_JIS 写不了的字符，'+(cname||'谱面')+' 改用 UTF-8 保存（老播放器可能显示乱码）')}
+    let fn=safeName((cname||'chart').replace(/[^\x20-\x7e]+/g,'_'))||'chart';let base=fn,i=1;while(usedNames.has(fn.toLowerCase()))fn=base+'_'+(++i);usedNames.add(fn.toLowerCase());
+    files.push({path:dir+fn+lm.ext,data,deflate:true});
+    if(drop)warn.push((c.name||it.label)+'：'+drop+' 个事件位置重叠或缺音频，已省略');
+  }
+  vm('压缩中…');
+  return{blob:await writeZip(files),name:nm+'.zip',warn};
+}
+$('exBms').onclick=async()=>{
+  const sel=items.filter(i=>i.on);if(!sel.length)return;const vm=t=>{$('bmsMsg').textContent=t};
+  try{
+    $('exBms').disabled=true;
+    const [W,H]=$('bmsSz').value.split('x').map(Number),fps=+$('bmsFps').value;
+    const r=await buildBms(sel,{vfmt:$('bmsV').value,W,H,fps,vm});
+    download(r.blob,r.name);vm('');say('已导出 '+r.name+(r.warn.length?'。注意：'+r.warn.join('；'):''),r.warn.length?0:0);
+  }catch(err){vm('');say('BMS 导出失败：'+err.message,1)}
   finally{btn()}
 };
 // ---- 插件导出（OJN/OJM、PAK/PT 等由插件提供）----
