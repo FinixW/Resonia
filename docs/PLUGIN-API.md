@@ -81,3 +81,12 @@ Resonia.register({ ..., exporters:[{
 ```
 
 `job`：`{ name, meta:{title,artist}, charts:[{chart, name, level}], hasSample(key), sample(key)→Promise<ArrayBuffer>, sampleExt(key), api, say(text) }`。`chart` 是 `.rsc` 的单张谱面（`notes`、`back`、`tempo`、`lanes`、`scratch`、`scroll`……）。返回多个文件时 Studio 打成 zip 下载。
+
+### BGA 导出为视频（Studio v0.6）
+
+Studio 的“导出 BGA 视频”会把所选第一张谱面的 BGA 逐帧画到画布上，用 WebCodecs（VP9 + Opus）编码并封装成 `.webm`（可选 1280×720 / 1920×1080 / 640×480、30 / 60 帧、是否带音乐）。画面来源：
+
+- 插件给出的 `bgaScene.render(ctx, 宽, 高, 毫秒)`（每一帧调用一次；可选 `prep(毫秒)` 返回 Promise，用于视频素材 seek）；
+- 否则用谱面里的静态 BGA 事件（图片 / 视频；0 层铺底，1、2 层叠加，黑色当透明）。
+
+音乐按谱面里所有按键音和伴奏的时间点离线混音。需要较新的 Chrome / Edge。

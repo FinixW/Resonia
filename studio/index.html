@@ -45,9 +45,10 @@ a{color:var(--ac)}
 <section class="card w"><h3>3 · 导出</h3>
  <div class="row"><button class="pri" id="exRsm" disabled>导出 .rsm 曲包（所选谱面 + 音频 + BGA）</button><button id="exRsc" disabled>只导出 .rsc 谱面</button></div>
  <div class="row" id="exPlug"></div>
+ <div class="row"><span>BGA 视频</span><select id="vsz"><option value="640x480">640×480</option><option value="1280x720" selected>1280×720</option><option value="1920x1080">1920×1080</option></select><select id="vfps"><option>30</option><option selected>60</option></select><label><input type="checkbox" id="vaud" checked> 带音乐</label><button id="exVid" disabled>导出 BGA 视频（.webm）</button><span class="todo" id="vmsg"></span></div>
  <div class="todo">.rsm 里所有谱面共用同一份音频和 BGA 素材，只存一份；在游戏页载入 .rsm 后可以下拉选择谱面。</div>
 </section>
-<section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器（每张谱面右侧的“编辑”）已可用；<br>· 其他格式 → .rsc / .rsm：载入插件后即可（IIDX、EZ2DJ、OJN/OJM、PAK/PT 等，BGA 动画类场景暂时无法写入）；<br>· 导出成 OJN/OJM、PAK/PT：由插件提供（试验中）<br>· 音波采谱 / 自动作谱</div></section>
+<section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器（每张谱面右侧的“编辑”）已可用；<br>· 其他格式 → .rsc / .rsm：载入插件后即可（IIDX、EZ2DJ、OJN/OJM、PAK/PT 等，BGA 动画类场景暂时无法写入）；<br>· 导出成 OJN/OJM、PAK/PT：由插件提供（试验中）；<br>· BGA 导出为视频（.webm）已可用，支持插件的 BGA 动画场景和图片/视频 BGA；BGA 统一模型与制作工具计划中<br>· 音波采谱 / 自动作谱</div></section>
 <div id="ed" hidden>
  <div class="edbar"><b id="edT"></b>
   <label>键数 <select id="edK"><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
@@ -70,7 +71,7 @@ a{color:var(--ac)}
  <div class="todo" style="max-width:760px;text-align:center"><span id="edM"></span><br>点击空白处放置音符，拖动出长条；拖动音符移动，右键或 Delete 删除，Shift 点击多选，Ctrl+C / X / V 复制剪切粘贴，Ctrl+Z / Ctrl+Y 撤销重做；滚轮滚动，Ctrl+滚轮缩放；空格播放，点击左侧标尺跳转播放头。</div>
 </div>
 <script>
-const STUDIO_VERSION='0.5.0';
+const STUDIO_VERSION='0.6.0';
 const $=id=>document.getElementById(id);$('ver').textContent='v'+STUDIO_VERSION;
 const TPB=768;
 const tempoOf=a=>{const o=[];for(const e of a){const t=Math.round(e.ms*100)/100,bp=Math.round(e.bpm*1000)/1000;if(o.length&&o[o.length-1].t===t){o[o.length-1].bpm=bp;continue}if(!o.length||Math.abs(o[o.length-1].bpm-bp)>1e-6)o.push({t,bpm:bp})}return o};
@@ -403,10 +404,10 @@ async function bmpBlob(b){
   return null;
 }
 function songToItem(S,grp,plug,label,file){
-  const ks=id=>grp.pre+id,res={samples:{},media:{}};
+  const ks=id=>grp.pre+id,res={samples:{},media:{}},bufs={};
   const used=new Set();
   const snd=sn=>{if(!sn||sn.s===undefined)return undefined;const buf=S.samples&&S.samples[sn.s];if(!buf)return undefined;
-    const k=ks(sn.s);used.add(sn.s);
+    const k=ks(sn.s);used.add(sn.s);bufs[k]=buf;
     if(!grp.ent[k])grp.ent[k]={path:k+'.wav',ab:async()=>wavOf(buf)};
     res.samples[k]=grp.ent[k];return{s:k,vel:sn.vel||127}};
   const notes=S.notes.map(n=>{const o={t:r2(n.t),k:n.hold?'hold':'tap',lane:n.lane};if(n.hold)o.len=r2(n.end-n.t);const s=snd(n.snd);if(s)o.snd=s;return o});
@@ -426,8 +427,8 @@ function songToItem(S,grp,plug,label,file){
         res.media[k]=en}
       out.push({t:r2(x.t),media:bc[x.id],layer:x.l||0})}
     if(out.length)ch.bga=out}
-  if(S.bgaScene)warn.push('BGA 动画场景无法写入 .rsc');
-  return{label,file:file||'',src:S.kind||plug.name||plug.id,chart:ch,res,meta:{title:S.title||'',artist:S.artist||''},ext:{},warn};
+  if(S.bgaScene)warn.push('BGA 动画场景不能写入 .rsc（可用“导出 BGA 视频”）');
+  return{label,file:file||'',src:S.kind||plug.name||plug.id,chart:ch,res,meta:{title:S.title||'',artist:S.artist||''},ext:{},warn,scene:S.bgaScene||null,bmps:S.bmps||{},bufs,lenMs:S.lenMs||0};
 }
 async function runPlugins(ents,find,say2){
   const out=[],errs=[];let gn=0;
@@ -492,7 +493,113 @@ function render(){
     tr.children[1].textContent=it.label;tr.children[2].textContent=it.file||'';tr.children[8].firstChild.onclick=()=>openEd(i);tr.children[0].firstChild.onchange=e=>{it.on=e.target.checked;btn()};tb.appendChild(tr);
   });btn();
 }
-const btn=()=>{$('exRsm').disabled=$('exRsc').disabled=!items.some(i=>i.on);if(window.exRefresh)exRefresh()};
+const btn=()=>{$('exRsm').disabled=$('exRsc').disabled=!items.some(i=>i.on);$('exVid').disabled=!items.some(i=>i.on);if(window.exRefresh)exRefresh()};
+
+// ================= BGA → 视频（WebCodecs：VP9 + Opus，自带 WebM 封装）=================
+function ebId(n){const b=[];while(n>0){b.unshift(n&255);n=Math.floor(n/256)}return Uint8Array.from(b)}
+function ebSize(n){ // 8 字节定长 vint（简单可靠）
+  const o=new Uint8Array(8);o[0]=1;let v=n;for(let i=7;i>=1;i--){o[i]=v%256;v=Math.floor(v/256)}return o}
+function ebEl(id,...kids){let n=0;const ps=[];for(const k of kids){const u=k instanceof Uint8Array?k:new Uint8Array(k);ps.push(u);n+=u.length}
+  const h=ebId(id),sz=ebSize(n),o=new Uint8Array(h.length+8+n);o.set(h);o.set(sz,h.length);let p=h.length+8;for(const u of ps){o.set(u,p);p+=u.length}return o}
+const ebUint=(id,v)=>{const b=[];let x=v;do{b.unshift(x%256);x=Math.floor(x/256)}while(x>0);return ebEl(id,Uint8Array.from(b))};
+const ebStr=(id,t)=>ebEl(id,new TextEncoder().encode(t));
+const ebF64=(id,v)=>{const b=new DataView(new ArrayBuffer(8));b.setFloat64(0,v);return ebEl(id,new Uint8Array(b.buffer))};
+const ebF32=(id,v)=>{const b=new DataView(new ArrayBuffer(4));b.setFloat32(0,v);return ebEl(id,new Uint8Array(b.buffer))};
+function webmMux({w,h,vchunks,achunks,audio,durMs}){
+  const ehdr=ebEl(0x1A45DFA3,ebUint(0x4286,1),ebUint(0x42F7,1),ebUint(0x42F2,4),ebUint(0x42F3,8),ebStr(0x4282,'webm'),ebUint(0x4287,4),ebUint(0x4285,2));
+  const info=ebEl(0x1549A966,ebUint(0x2AD7B1,1000000),ebF64(0x4489,durMs),ebStr(0x4D80,'Resonia Studio'),ebStr(0x5741,'Resonia Studio'));
+  const tr=[ebEl(0xAE,ebUint(0xD7,1),ebUint(0x73C5,1),ebUint(0x83,1),ebStr(0x86,'V_VP9'),ebEl(0xE0,ebUint(0xB0,w),ebUint(0xBA,h)))];
+  if(audio)tr.push(ebEl(0xAE,ebUint(0xD7,2),ebUint(0x73C5,2),ebUint(0x83,2),ebStr(0x86,'A_OPUS'),ebUint(0x56AA,6500000),ebUint(0x56BB,80000000),ebEl(0xE1,ebF32(0xB5,audio.sr),ebUint(0x9F,audio.ch)),ebEl(0x63A2,audio.head)));
+  const tracks=ebEl(0x1654AE6B,...tr);
+  const all=[...vchunks.map(c=>({...c,tn:1})),...(achunks||[]).map(c=>({...c,tn:2,key:true}))].sort((a,b)=>a.t-b.t||a.tn-b.tn);
+  const clusters=[];let cur=null;
+  for(const c of all){
+    if(!cur||c.t-cur.t0>=5000){cur={t0:Math.round(c.t),kids:[]};cur.kids.push(ebUint(0xE7,cur.t0));clusters.push(cur)}
+    const rel=Math.round(c.t)-cur.t0,hd=new Uint8Array(4);hd[0]=0x80|c.tn;hd[1]=(rel>>8)&255;hd[2]=rel&255;hd[3]=c.key?0x80:0;
+    const blk=new Uint8Array(4+c.data.length);blk.set(hd);blk.set(c.data,4);cur.kids.push(ebEl(0xA3,blk));
+  }
+  const cl=clusters.map(c=>ebEl(0x1F43B675,...c.kids));
+  const seg=ebEl(0x18538067,info,tracks,...cl);
+  return new Blob([ehdr,seg],{type:'video/webm'});
+}
+// 静态 BGA（BMS 之类的图片/视频事件）合成：0 层铺底，1、2 层叠加（黑色当透明）
+async function staticScene(it){
+  const ev=(it.chart.bga||[]).slice().sort((a,b)=>a.t-b.t),med={};
+  const load=async k=>{if(k in med)return med[k];let r=null;const b=it.bmps&&it.bmps[k];
+    if(b&&(b.i||b.v))r=b;else{const e=it.res.media[k];if(e){try{const ab=await e.ab(),x=(e.path.match(/\.([^.]+)$/)||[])[1]||'';
+      if(/^(mp4|webm|m4v)$/i.test(x)){const v=document.createElement('video');v.muted=true;v.src=URL.createObjectURL(new Blob([ab]));await new Promise(ok=>{v.onloadeddata=ok;v.onerror=ok;setTimeout(ok,4000)});r={v}}
+      else if(!/^(mpe?g|avi|wmv)$/i.test(x))r={i:await createImageBitmap(new Blob([ab]))}}catch(e){}}}
+    return med[k]=r};
+  for(const k of new Set(ev.map(e=>e.media).filter(Boolean)))await load(k);
+  if(!ev.length)return null;
+  return{async prep(t){ // 视频素材需要先 seek 到这一刻
+    const cur={};for(const e of ev){if(e.t>t)break;cur[e.layer||0]=e}
+    for(const l in cur){const m=med[cur[l].media];if(m&&m.v){const want=Math.max(0,(t-cur[l].t)/1000);if(Math.abs(m.v.currentTime-want)>0.001){await new Promise(ok=>{m.v.onseeked=ok;m.v.currentTime=Math.min(want,m.v.duration||want);setTimeout(ok,300)})}}}},
+   render(c,W,H,t){
+    const cur={};for(const e of ev){if(e.t>t)break;cur[e.layer||0]=e}
+    for(const l of [0,1,2]){const e=cur[l];if(!e)continue;const m=med[e.media];if(!m)continue;const src=m.i||m.v,sw=m.i?m.i.width:m.v.videoWidth,sh=m.i?m.i.height:m.v.videoHeight;if(!sw||!sh)continue;
+      const k=Math.min(W/sw,H/sh),dw=sw*k,dh=sh*k;c.save();if(l>0)c.globalCompositeOperation='lighten';c.drawImage(src,(W-dw)/2,(H-dh)/2,dw,dh);c.restore()}}}
+}
+async function mixAudio(it,durMs,sr,say){
+  const evs=[];for(const n of it.chart.notes)if(n.snd&&n.snd.s!==undefined)evs.push({t:n.t,k:n.snd.s,v:n.snd.vel||127});
+  for(const b of it.chart.back||[])if(b.snd&&b.snd.s!==undefined)evs.push({t:b.t,k:b.snd.s,v:b.snd.vel||127});
+  const keys=[...new Set(evs.map(e=>e.k))],bufs={};let n=0;
+  for(const k of keys){say('解码音频 '+(++n)+' / '+keys.length);
+    if(it.bufs&&it.bufs[k]){bufs[k]=it.bufs[k];continue}
+    const e=it.res.samples[k];if(!e)continue;try{bufs[k]=await actx().decodeAudioData(await e.ab())}catch(x){}}
+  const len=Math.ceil(durMs/1000*sr),oc=new OfflineAudioContext(2,len,sr);
+  for(const e of evs){const b=bufs[e.k];if(!b||e.t<0||e.t/1000>=durMs/1000)continue;const s=oc.createBufferSource();s.buffer=b;const g=oc.createGain();g.gain.value=e.v/127*0.6;s.connect(g).connect(oc.destination);s.start(e.t/1000)}
+  say('混音中…');return await oc.startRendering();
+}
+$('exVid').onclick=async()=>{
+  const sel=items.filter(i=>i.on);if(!sel.length)return;const it=sel[0],vm=t=>{$('vmsg').textContent=t};
+  try{
+    $('exVid').disabled=true;
+    const [W,H]=$('vsz').value.split('x').map(Number),fps=+$('vfps').value;
+    let scene=it.scene,st=null;if(!scene){st=await staticScene(it);scene=st}
+    if(!scene)throw new Error('这张谱面没有 BGA（既没有动画场景，也没有图片/视频事件）');
+    let last=it.lenMs||0;for(const n of it.chart.notes)last=Math.max(last,n.t+(n.len||0));for(const b of it.chart.bga||[])last=Math.max(last,b.t);
+    const durMs=Math.ceil(last+1500);
+    if(!window.VideoEncoder)throw new Error('这个浏览器不支持 WebCodecs（请用较新的 Chrome / Edge）');
+    const cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+    const vch=[];let verr=null;
+    const venc=new VideoEncoder({output:(ch,md)=>{const d=new Uint8Array(ch.byteLength);ch.copyTo(d);vch.push({t:ch.timestamp/1000,key:ch.type==='key',data:d})},error:e=>{verr=e}});
+    venc.configure({codec:'vp09.00.10.08',width:W,height:H,bitrate:W*H*fps/10|0,framerate:fps});
+    const total=Math.ceil(durMs/1000*fps);
+    for(let f=0;f<total;f++){
+      const t=f*1000/fps;if(verr)throw verr;
+      c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';c.fillStyle='#000';c.fillRect(0,0,W,H);
+      if(scene.prep)await scene.prep(t);
+      c.save();try{scene.render(c,W,H,t)}catch(e){}c.restore();
+      const fr=new VideoFrame(cv,{timestamp:Math.round(t*1000)});venc.encode(fr,{keyFrame:f%(fps*2)===0});fr.close();
+      while(venc.encodeQueueSize>8)await new Promise(r=>setTimeout(r,2));
+      if(f%30===0){vm('渲染 '+Math.round(f/total*100)+'%');await new Promise(r=>setTimeout(r,0))}
+    }
+    await venc.flush();venc.close();if(verr)throw verr;
+    let audio=null,ach=null;
+    if($('vaud').checked){
+      const sr=48000,buf=await mixAudio(it,durMs,sr,vm);
+      if(window.AudioEncoder){
+        ach=[];let head=null;
+        const aenc=new AudioEncoder({output:(ch,md)=>{const d=new Uint8Array(ch.byteLength);ch.copyTo(d);ach.push({t:ch.timestamp/1000,data:d});if(md&&md.decoderConfig&&md.decoderConfig.description&&!head)head=new Uint8Array(md.decoderConfig.description.buffer?md.decoderConfig.description:md.decoderConfig.description)},error:e=>{verr=e}});
+        aenc.configure({codec:'opus',sampleRate:sr,numberOfChannels:2,bitrate:160000});
+        const L=buf.getChannelData(0),R=buf.getChannelData(1),CH=960*5;
+        for(let o=0;o<buf.length;o+=CH){const n=Math.min(CH,buf.length-o),d=new Float32Array(n*2);d.set(L.subarray(o,o+n),0);d.set(R.subarray(o,o+n),n);
+          const ad=new AudioData({format:'f32-planar',sampleRate:sr,numberOfFrames:n,numberOfChannels:2,timestamp:Math.round(o/sr*1e6),data:d});aenc.encode(ad);ad.close();
+          while(aenc.encodeQueueSize>16)await new Promise(r=>setTimeout(r,2));
+          if((o/CH)%50===0){vm('编码音频 '+Math.round(o/buf.length*100)+'%');await new Promise(r=>setTimeout(r,0))}}
+        await aenc.flush();aenc.close();if(verr)throw verr;
+        if(!head){head=new Uint8Array(19);head.set([0x4f,0x70,0x75,0x73,0x48,0x65,0x61,0x64,1,2,0x38,0x01]);new DataView(head.buffer).setUint32(12,sr,true)}
+        audio={sr,ch:2,head};
+      }
+    }
+    vm('封装中…');
+    const blob=webmMux({w:W,h:H,vchunks:vch,achunks:ach,audio,durMs});
+    const nm=safeName($('mt').value||it.meta.title||it.label)+'_bga.webm';
+    download(blob,nm);vm('已导出 '+nm+'（'+Math.round(blob.size/1048576*10)/10+' MB，'+total+' 帧）'+(sel.length>1?'；只导出了所选的第一张谱面':''));
+  }catch(err){vm('');say('视频导出失败：'+err.message,1)}
+  finally{btn()}
+};
 // ---- 插件导出（OJN/OJM、PAK/PT 等由插件提供）----
 window.exRefresh=function(){
   const box=$('exPlug');if(!box)return;box.innerHTML='';
