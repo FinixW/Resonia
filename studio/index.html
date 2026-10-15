@@ -28,6 +28,11 @@ a{color:var(--ac)}
 .edbar input[type=number],.edbar select{background:#0e1230;border:1px solid #2a3170;border-radius:6px;color:var(--fg);padding:4px 6px}
 #ed .edpan{width:min(760px,100%);display:flex;flex-direction:column;gap:8px}#ed .card{background:var(--card)}
 #edC{background:#0a0d1c;border-radius:8px;max-width:100%;cursor:crosshair}
+#bga{position:fixed;inset:0;background:#080a16;z-index:60;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px;overflow:auto}
+#bga[hidden]{display:none}#bga .card{background:var(--card);padding:10px}.bgrow{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+#bgC{background:#000;border-radius:6px;max-width:100%;cursor:move}.bgside{width:340px;display:flex;flex-direction:column;gap:8px}
+#bgTl{background:#0a0d1c;border-radius:8px;max-width:100%}.bgl{display:flex;gap:4px;align-items:center;padding:3px;border-radius:6px;font-size:12px}.bgl.on{background:#1b2150}.bgl select,.bgl input,.bgk input,.bgk select{background:#0e1230;border:1px solid #2a3170;border-radius:5px;color:var(--fg);padding:2px 4px;font-size:12px}
+.bgk{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:4px 6px;font-size:12px;align-items:center;color:var(--mu)}.bgk input[type=number]{width:100%;min-width:0}
 </style></head><body>
 <div class="w"><h1>鸣域 <span>Studio</span><em id="ver"></em></h1><div class="sub">谱面转换与编辑工具 · 文件只在你的浏览器里处理，不会上传</div></div>
 <section class="card w"><h3>1 · 导入</h3>
@@ -48,7 +53,26 @@ a{color:var(--ac)}
  <div class="row"><span>BGA 视频</span><select id="vsz"><option value="640x480">640×480</option><option value="1280x720" selected>1280×720</option><option value="1920x1080">1920×1080</option></select><select id="vfps"><option>30</option><option selected>60</option></select><label><input type="checkbox" id="vaud" checked> 带音乐</label><button id="exVid" disabled>导出 BGA 视频（.webm）</button><span class="todo" id="vmsg"></span></div>
  <div class="todo">.rsm 里所有谱面共用同一份音频和 BGA 素材，只存一份；在游戏页载入 .rsm 后可以下拉选择谱面。</div>
 </section>
-<section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器（每张谱面右侧的“编辑”）已可用；<br>· 其他格式 → .rsc / .rsm：载入插件后即可（IIDX、EZ2DJ、OJN/OJM、PAK/PT 等，BGA 动画类场景暂时无法写入）；<br>· 导出成 OJN/OJM、PAK/PT：由插件提供（试验中）；<br>· BGA 导出为视频（.webm）已可用，支持插件的 BGA 动画场景和图片/视频 BGA；插件的 BGA 动画现在转成统一的 RBGA 模型，可写进 .rsc / .rsm；插件可提供“BGA 导出”（RBGA → EZ2DJ .scr/.STR/.abm、DJMAX .vcq/.vce，已验证可读回）；BGA 制作工具计划中<br>· 音波采谱 / 自动作谱</div></section>
+<section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器（每张谱面右侧的“编辑”）已可用；<br>· 其他格式 → .rsc / .rsm：载入插件后即可（IIDX、EZ2DJ、OJN/OJM、PAK/PT 等，BGA 动画类场景暂时无法写入）；<br>· 导出成 OJN/OJM、PAK/PT：由插件提供（试验中）；<br>· BGA 导出为视频（.webm）已可用，支持插件的 BGA 动画场景和图片/视频 BGA；插件的 BGA 动画现在转成统一的 RBGA 模型，可写进 .rsc / .rsm；插件可提供“BGA 导出”（RBGA → EZ2DJ .scr/.STR/.abm、DJMAX .vcq/.vce，已验证可读回）；每张谱面右侧的“BGA”是动画制作工具（时间轴 + 关键帧，保存成 RBGA）<br>· 音波采谱 / 自动作谱</div></section>
+<div id="bga" hidden>
+ <div class="edbar"><b id="bgT"></b>
+  <label>画面 <select id="bgSz"><option value="640x480">640×480</option><option value="800x600">800×600</option><option value="960x540">960×540</option><option value="1280x720">1280×720</option></select></label>
+  <label>时长(秒) <input id="bgDur" type="number" min="1" max="1200" step="1" style="width:70px"></label>
+  <label>吸附 <select id="bgSn"><option value="1">1 帧</option><option value="3">3 帧</option><option value="6" selected>0.1 秒</option><option value="30">0.5 秒</option><option value="60">1 秒</option></select></label>
+  <label>缩放 <input id="bgZ" type="range" min="2" max="40" value="10"></label>
+  <label><input type="checkbox" id="bgAu" checked> 带音乐</label></div>
+ <div class="edbar"><button id="bgP">▶ 播放</button><button id="bgH">⏮ 回到开头</button><button id="bgOk">保存并关闭</button><button id="bgNo">放弃修改</button><button id="bgVid">导出视频…</button><span id="bgM"></span></div>
+ <div class="bgrow">
+  <div><canvas id="bgC" width="640" height="480"></canvas><div class="todo">在画面上拖动 = 移动所选图层（在播放头处自动打关键帧）</div></div>
+  <div class="bgside">
+   <div class="card"><h3>图层（下面的在底层）</h3><div id="bgLs"></div>
+    <div class="row"><select id="bgAdd"></select><button id="bgAddB">添加图层</button><label class="btn">导入图片…<input type="file" id="bgImp" multiple accept="image/*" hidden></label></div></div>
+   <div class="card"><h3>关键帧</h3><div id="bgK" class="bgk"></div></div>
+  </div>
+ </div>
+ <canvas id="bgTl" height="200"></canvas>
+ <div class="todo" style="max-width:900px;text-align:center">时间轴：点击标尺或空白处移动播放头；双击某一层 = 在该处加关键帧；拖动菱形改时间；Delete 删除所选关键帧。关键帧之间默认线性渐变，“保持”则到下一个关键帧才突变。保存后写进谱面的 BGA 动画场景（RBGA），可导出 .rsm / 视频 / 各游戏格式。</div>
+</div>
 <div id="ed" hidden>
  <div class="edbar"><b id="edT"></b>
   <label>键数 <select id="edK"><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
@@ -71,7 +95,7 @@ a{color:var(--ac)}
  <div class="todo" style="max-width:760px;text-align:center"><span id="edM"></span><br>点击空白处放置音符，拖动出长条；拖动音符移动，右键或 Delete 删除，Shift 点击多选，Ctrl+C / X / V 复制剪切粘贴，Ctrl+Z / Ctrl+Y 撤销重做；滚轮滚动，Ctrl+滚轮缩放；空格播放，点击左侧标尺跳转播放头。</div>
 </div>
 <script>
-const STUDIO_VERSION='0.8.0';
+const STUDIO_VERSION='0.9.0';
 const $=id=>document.getElementById(id);$('ver').textContent='v'+STUDIO_VERSION;
 const TPB=768;
 const tempoOf=a=>{const o=[];for(const e of a){const t=Math.round(e.ms*100)/100,bp=Math.round(e.bpm*1000)/1000;if(o.length&&o[o.length-1].t===t){o[o.length-1].bpm=bp;continue}if(!o.length||Math.abs(o[o.length-1].bpm-bp)>1e-6)o.push({t,bpm:bp})}return o};
@@ -571,8 +595,8 @@ function render(){
   if(!items.length){tb.innerHTML='<tr><td colspan="9" style="color:var(--mu)">还没有导入</td></tr>';$('exRsm').disabled=$('exRsc').disabled=true;if(window.exRefresh)exRefresh();return}
   items.forEach((it,i)=>{
     const tr=document.createElement('tr'),c=it.chart,lanes=new Set(c.notes.map(n=>n.lane)).size;
-    tr.innerHTML=`<td><input type="checkbox" ${it.on?'checked':''}></td><td></td><td style="color:var(--mu)"></td><td class="n">${c.level||'-'}</td><td class="n">${lanes}</td><td class="n">${c.notes.length}</td><td class="n">${(c.back||[]).length}</td><td>${it.src}</td><td><button>编辑</button></td>`;
-    tr.children[1].textContent=it.label;tr.children[2].textContent=it.file||'';tr.children[8].firstChild.onclick=()=>openEd(i);tr.children[0].firstChild.onchange=e=>{it.on=e.target.checked;btn()};tb.appendChild(tr);
+    tr.innerHTML=`<td><input type="checkbox" ${it.on?'checked':''}></td><td></td><td style="color:var(--mu)"></td><td class="n">${c.level||'-'}</td><td class="n">${lanes}</td><td class="n">${c.notes.length}</td><td class="n">${(c.back||[]).length}</td><td>${it.src}</td><td><button>编辑</button> <button>BGA</button></td>`;
+    tr.children[1].textContent=it.label;tr.children[2].textContent=it.file||'';tr.children[8].firstChild.onclick=()=>openEd(i);tr.children[8].lastChild.onclick=()=>openBga(i);tr.children[0].firstChild.onchange=e=>{it.on=e.target.checked;btn()};tb.appendChild(tr);
   });btn();
 }
 const btn=()=>{$('exRsm').disabled=$('exRsc').disabled=!items.some(i=>i.on);$('exVid').disabled=!items.some(i=>i.on);if(window.exRefresh)exRefresh()};
@@ -1037,4 +1061,198 @@ $('edG').onclick=async()=>{
   addEventListener('message',onMsg);setTimeout(()=>removeEventListener('message',onMsg),120000);
   try{pack=await buildRsm([it]);say('已准备试玩');send()}catch(x){say('试玩失败：'+x.message,1)}
 };
+// ================= BGA 制作工具（时间轴编辑器，写 RBGA）=================
+let G=null,bgRaf=0;
+const BGF=['x','y','w','h','rot','a','u','v','tu','tv'],BGN={x:'X',y:'Y',w:'宽',h:'高',rot:'旋转°',a:'透明度',u:'U 偏移',v:'V 偏移',tu:'U 宽',tv:'V 高'};
+function bgCompile(A,W,H){
+  const r=x=>+(+x).toPrecision(8),sprites=[];
+  for(const L of A.layers){
+    const ks=L.keys.slice().sort((a,b)=>a.f-b.f),kf=[];
+    ks.forEach((k,i)=>{
+      const val=q=>({x:q.x,y:q.y,uv:[q.u,q.v,q.tu,q.tv],px:[-q.w/2,q.w/2,-q.w/2,q.w/2],py:[-q.h/2,-q.h/2,q.h/2,q.h/2],rot:q.rot,a:q.a});
+      const v=Object.assign(val(k),{col:[255,255,255],bl:k.bl||'normal',seq:0}),o={f:k.f,v},n=ks[i+1];
+      if(n&&k.ease!=='hold'&&n.f>k.f){const dt=n.f-k.f,a=val(k),b=val(n),d={};let any=0;
+        for(const f of ['x','y','rot','a']){const z=(b[f]-a[f])/dt;if(z){d[f]=r(z);any=1}}
+        for(const f of ['uv','px','py']){const z=b[f].map((t,j)=>(t-a[f][j])/dt);if(z.some(t=>t)){d[f]=z.map(r);any=1}}
+        if(any)o.d=d}
+      kf.push(o)});
+    if(kf.length)sprites.push({tex:[L.tex],kf});
+  }
+  return{rbga:1,w:W,h:H,fps:60,clips:{main:{frames:A.dur,sprites}},tracks:[[{f:0,clip:'main',mode:'once'}]],author:A};
+}
+function bgEval(L,f){
+  const ks=L.keys.slice().sort((a,b)=>a.f-b.f);if(!ks.length)return null;
+  let i=-1;for(let j=0;j<ks.length;j++)if(ks[j].f<=f)i=j;
+  if(i<0)return Object.assign({},ks[0]);
+  const a=ks[i],b=ks[i+1],o=Object.assign({},a);
+  if(b&&a.ease!=='hold'&&b.f>a.f){const t=(f-a.f)/(b.f-a.f);for(const n of BGF)o[n]=a[n]+(b[n]-a[n])*t}
+  return o;
+}
+const bgSorted=L=>L.keys.sort((a,b)=>a.f-b.f);
+async function bgTex(id){
+  if(G.T[id]||G.T[id]===null)return;G.T[id]=null;
+  const e=G.it.res.media[id];if(!e)return;try{G.T[id]=await createImageBitmap(new Blob([await e.ab()]))}catch(x){}
+}
+function bgRebuild(){
+  G.model=bgCompile(G.A,G.W,G.H);G.scene=RBGA.make(G.model,G.T);
+}
+function openBga(i){
+  const it=items[i];if(it.chart.scene&&!it.chart.scene.author&&!confirm('这张谱面已有从游戏导入的 BGA 动画场景（不能在这里编辑）。继续制作会替换它，确定吗？'))return;
+  const ex=it.chart.scene&&it.chart.scene.author?JSON.parse(JSON.stringify(it.chart.scene)):null;
+  const W=ex?ex.w:640,H=ex?ex.h:480,last=Math.max(0,...it.chart.notes.map(n=>n.t+(n.len||0)),it.lenMs||0);
+  G={it,W,H,A:ex?ex.author:{v:1,dur:Math.max(60,Math.ceil((last+1500)*0.06)),layers:[]},T:{},sel:null,ph:0,play:null,drag:null,zoom:10,buf:null,backup:ex?JSON.stringify(ex):''};
+  G.old=it.chart.scene?JSON.stringify(it.chart.scene):'';
+  $('bga').hidden=false;document.body.style.overflow='hidden';
+  $('bgT').textContent='BGA 制作 · '+(it.meta.title||it.label)+' · '+(it.chart.name||'');
+  $('bgSz').value=W+'x'+H;$('bgDur').value=Math.round(G.A.dur/60);$('bgZ').value=G.zoom;
+  Promise.all(G.A.layers.map(l=>bgTex(l.tex))).then(()=>{bgRebuild()});
+  bgRebuild();bgUI();cancelAnimationFrame(bgRaf);const loop=()=>{if(!G)return;bgDraw();bgRaf=requestAnimationFrame(loop)};loop();
+}
+function bgMediaList(){const sel=$('bgAdd');sel.innerHTML='';for(const k of Object.keys(G.it.res.media)){if(!/\.(png|jpe?g|gif|bmp|webp)$/i.test(G.it.res.media[k].path||k)&&!/\.(png|jpe?g|gif|bmp|webp)$/i.test(k))continue;const o=document.createElement('option');o.value=o.textContent=k;sel.appendChild(o)}}
+function bgUI(){
+  bgMediaList();const box=$('bgLs');box.innerHTML='';
+  G.A.layers.forEach((L,li)=>{
+    const d=document.createElement('div');d.className='bgl'+(G.sel&&G.sel.li===li?' on':'');
+    d.innerHTML='<input class="nm" style="flex:1;min-width:0"><button title="上移">↑</button><button title="下移">↓</button><button title="复制">⧉</button><button title="删除">✕</button>';
+    const [nm,up,dn,cp,del]=d.children;nm.value=L.name;nm.oninput=()=>L.name=nm.value;
+    d.onclick=e=>{if(e.target.tagName==='BUTTON')return;G.sel={li,ki:G.sel&&G.sel.li===li?G.sel.ki:-1};bgUI()};
+    up.onclick=()=>{if(li>0){[G.A.layers[li-1],G.A.layers[li]]=[G.A.layers[li],G.A.layers[li-1]];G.sel={li:li-1,ki:-1};bgRebuild();bgUI()}};
+    dn.onclick=()=>{if(li<G.A.layers.length-1){[G.A.layers[li+1],G.A.layers[li]]=[G.A.layers[li],G.A.layers[li+1]];G.sel={li:li+1,ki:-1};bgRebuild();bgUI()}};
+    cp.onclick=()=>{G.A.layers.splice(li+1,0,JSON.parse(JSON.stringify(L)));G.sel={li:li+1,ki:-1};bgRebuild();bgUI()};
+    del.onclick=()=>{G.A.layers.splice(li,1);G.sel=null;bgRebuild();bgUI()};
+    box.appendChild(d)});
+  bgKeyUI();
+}
+function bgKeyUI(){
+  const box=$('bgK');box.innerHTML='';const s=G.sel;
+  if(!s||!G.A.layers[s.li]){box.innerHTML='<span style="grid-column:1/-1">选一个图层，再点时间轴上的菱形</span>';return}
+  const L=G.A.layers[s.li],k=L.keys[s.ki];
+  if(!k){box.innerHTML='<span style="grid-column:1/-1">在时间轴上双击这一层，或在画面上拖动来添加关键帧</span>';return}
+  const mk=(n,lab,step)=>{const l=document.createElement('span');l.textContent=lab;const i=document.createElement('input');i.type='number';i.step=step||1;i.value=+(+k[n]).toFixed(3);
+    i.onchange=()=>{k[n]=+i.value||0;bgRebuild()};box.append(l,i);return i};
+  mk('f','帧');const sp=document.createElement('span');sp.textContent='('+(k.f/60).toFixed(2)+' 秒)';sp.style.gridColumn='3/5';box.appendChild(sp);
+  document.querySelector('#bgK input').onchange=function(){k.f=Math.max(0,Math.min(G.A.dur,Math.round(+this.value)));bgSorted(L);s.ki=L.keys.indexOf(k);bgRebuild();bgKeyUI()};
+  for(const n of BGF)mk(n,BGN[n],n==='a'||n.length===2&&n[0]==='t'||n==='u'||n==='v'?0.05:1);
+  const l1=document.createElement('span');l1.textContent='混合';const b=document.createElement('select');
+  for(const [v,t] of [['normal','普通'],['add','发光(叠加)'],['multiply','正片叠底'],['exclusion','排除']]){const o=document.createElement('option');o.value=v;o.textContent=t;b.appendChild(o)}
+  b.value=k.bl||'normal';b.onchange=()=>{k.bl=b.value;bgRebuild()};
+  const l2=document.createElement('span');l2.textContent='到下一帧';const e=document.createElement('select');
+  for(const [v,t] of [['lin','线性渐变'],['hold','保持']]){const o=document.createElement('option');o.value=v;o.textContent=t;e.appendChild(o)}
+  e.value=k.ease||'lin';e.onchange=()=>{k.ease=e.value;bgRebuild()};
+  box.append(l1,b,l2,e);
+  const del=document.createElement('button');del.textContent='删除这个关键帧';del.style.gridColumn='1/-1';del.onclick=()=>bgDelKey();box.appendChild(del);
+}
+function bgDelKey(){const s=G.sel;if(!s)return;const L=G.A.layers[s.li];if(!L||!L.keys[s.ki])return;L.keys.splice(s.ki,1);s.ki=-1;bgRebuild();bgUI()}
+async function bgAddLayer(id){
+  await bgTex(id);const im=G.T[id];if(!im){say('这张图读不出来',1);return}
+  const k={f:Math.round(G.ph),x:G.W/2,y:G.H/2,w:im.width,h:im.height,rot:0,a:1,bl:'normal',u:0,v:0,tu:1,tv:1,ease:'lin'};
+  if(k.w>G.W||k.h>G.H){const s=Math.min(G.W/k.w,G.H/k.h);k.w=Math.round(k.w*s);k.h=Math.round(k.h*s)}
+  G.A.layers.push({name:id.replace(/\.[^.]+$/,''),tex:id,keys:[k]});G.sel={li:G.A.layers.length-1,ki:0};bgRebuild();bgUI();
+}
+$('bgAddB').onclick=()=>{const v=$('bgAdd').value;if(!v){say('先“导入图片…”',1);return}bgAddLayer(v)};
+$('bgImp').onchange=async e=>{
+  const ids=[];
+  for(const f of e.target.files){let k=f.name.replace(/[\\/:*?"<>|]+/g,'_'),n=1;while(G.it.res.media[k])k=(n++)+'_'+f.name;G.it.res.media[k]={path:f.name,ab:()=>f.arrayBuffer()};ids.push(k)}
+  e.target.value='';bgMediaList();for(const k of ids)await bgAddLayer(k);if(ids.length)$('bgAdd').value=ids[ids.length-1]
+};
+$('bgSz').onchange=()=>{const [w,h]=$('bgSz').value.split('x').map(Number);const sx=w/G.W,sy=h/G.H;
+  for(const L of G.A.layers)for(const k of L.keys){k.x*=sx;k.y*=sy;k.w*=sx;k.h*=sy}G.W=w;G.H=h;bgRebuild()};
+$('bgDur').onchange=()=>{G.A.dur=Math.max(60,Math.round(+$('bgDur').value*60));if(G.ph>G.A.dur)G.ph=G.A.dur;bgRebuild()};
+$('bgZ').oninput=()=>G.zoom=+$('bgZ').value;
+// ---- 绘制 ----
+const BGL=130,BGR=26,BGRH=26;
+function bgDraw(){
+  const cv=$('bgC'),W=G.W,H=G.H;if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H}
+  if(G.play){const el=(performance.now()-G.play.w0)/1000;G.ph=G.play.f0+el*60;if(G.ph>=G.A.dur){bgStop();G.ph=G.A.dur}}
+  const c=cv.getContext('2d');
+  G.scene.render(c,W,H,G.ph*1000/60);
+  const s=G.sel,L=s&&G.A.layers[s.li];
+  if(L&&!G.play){const k=bgEval(L,G.ph);if(k){c.save();c.translate(k.x,k.y);c.rotate(k.rot*Math.PI/180);c.strokeStyle='#ffd24a';c.lineWidth=2;c.setLineDash([6,4]);c.strokeRect(-k.w/2,-k.h/2,k.w,k.h);c.restore()}}
+  bgTl();
+}
+function bgTl(){
+  const cv=$('bgTl'),n=G.A.layers.length,w=Math.min(innerWidth-30,1400),h=BGR+Math.max(3,n)*BGRH+8;
+  if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;cv.style.width=w+'px'}
+  const c=cv.getContext('2d'),ppf=G.zoom/10*(w-BGL-20)/Math.max(60,G.A.dur)*1;G.ppf=ppf;
+  c.fillStyle='#0a0d1c';c.fillRect(0,0,w,h);c.font='11px sans-serif';c.textBaseline='middle';
+  const stp=ppf*60<40?5:ppf*60<90?2:1;
+  for(let t=0;t<=G.A.dur/60;t+=stp){const x=BGL+t*60*ppf;c.fillStyle='#2a3170';c.fillRect(x,BGR-6,1,h);c.fillStyle='#8a93c4';c.fillText(t+'s',x+3,BGR/2)}
+  G.A.layers.forEach((L,li)=>{
+    const y=BGR+li*BGRH;c.fillStyle=G.sel&&G.sel.li===li?'#1b2150':(li%2?'#0d1128':'#0a0d1c');c.fillRect(0,y,w,BGRH);
+    c.fillStyle='#c9d0ff';c.fillText(L.name.slice(0,16),6,y+BGRH/2);
+    const ks=bgSorted(L);if(ks.length>1){c.fillStyle='#3a4390';c.fillRect(BGL+ks[0].f*ppf,y+BGRH/2-1,(ks[ks.length-1].f-ks[0].f)*ppf,2)}
+    ks.forEach((k,ki)=>{const x=BGL+k.f*ppf,on=G.sel&&G.sel.li===li&&G.sel.ki===ki;c.fillStyle=on?'#ffd24a':k.ease==='hold'?'#6fd3ff':'#9db0ff';c.beginPath();c.moveTo(x,y+4);c.lineTo(x+6,y+BGRH/2);c.lineTo(x,y+BGRH-4);c.lineTo(x-6,y+BGRH/2);c.fill()})});
+  const px=BGL+G.ph*ppf;c.fillStyle='#ff5a7a';c.fillRect(px-1,0,2,h);
+}
+// ---- 时间轴交互 ----
+function bgPos(e,cv){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height]}
+const bgSnap=f=>{const s=+$('bgSn').value;return Math.max(0,Math.min(G.A.dur,Math.round(f/s)*s))};
+$('bgTl').onmousedown=e=>{
+  const [x,y]=bgPos(e,$('bgTl'));const f=(x-BGL)/G.ppf;
+  if(y<BGR||x<BGL){if(y<BGR){G.ph=bgSnap(f);G.drag={t:'ph'};return}const li=Math.floor((y-BGR)/BGRH);if(G.A.layers[li]){G.sel={li,ki:-1};bgUI()}return}
+  const li=Math.floor((y-BGR)/BGRH),L=G.A.layers[li];if(!L){return}
+  const ks=bgSorted(L);let hit=-1;ks.forEach((k,i)=>{if(Math.abs(BGL+k.f*G.ppf-x)<8)hit=i});
+  G.sel={li,ki:hit};if(hit>=0){G.drag={t:'key',k:ks[hit]}}else{G.ph=bgSnap(f);G.drag={t:'ph'}}
+  bgUI();
+};
+$('bgTl').ondblclick=e=>{
+  const [x,y]=bgPos(e,$('bgTl')),li=Math.floor((y-BGR)/BGRH),L=G.A.layers[li];if(!L||y<BGR)return;
+  const f=bgSnap((x-BGL)/G.ppf);if(L.keys.some(k=>k.f===f))return;
+  const base=bgEval(L,f);L.keys.push(Object.assign({},base,{f,ease:'lin'}));bgSorted(L);G.sel={li,ki:L.keys.findIndex(k=>k.f===f)};G.ph=f;bgRebuild();bgUI();
+};
+addEventListener('mousemove',e=>{
+  if(!G||!G.drag)return;
+  if(G.drag.t==='ph'||G.drag.t==='key'){const [x]=bgPos(e,$('bgTl')),f=bgSnap((x-BGL)/G.ppf);
+    if(G.drag.t==='ph'){G.ph=f}else{const L=G.A.layers[G.sel.li];if(!L.keys.some(k=>k!==G.drag.k&&k.f===f)){G.drag.k.f=f;bgSorted(L);G.sel.ki=L.keys.indexOf(G.drag.k);G.ph=f;bgRebuild()}}}
+  else if(G.drag.t==='sp'){const cv=$('bgC'),r=cv.getBoundingClientRect(),dx=(e.clientX-G.drag.x0)*cv.width/r.width,dy=(e.clientY-G.drag.y0)*cv.height/r.height;
+    const k=G.drag.k;k.x=G.drag.kx+dx;k.y=G.drag.ky+dy;bgRebuild()}
+});
+addEventListener('mouseup',()=>{if(G&&G.drag){const wasKey=G.drag.t!=='ph';G.drag=null;if(wasKey)bgKeyUI()}});
+$('bgC').onmousedown=e=>{
+  const s=G.sel,L=s&&G.A.layers[s.li];if(!L||G.play)return;
+  const f=Math.round(G.ph);let k=L.keys.find(q=>q.f===f);
+  if(!k){const base=bgEval(L,f);if(!base)return;k=Object.assign({},base,{f,ease:base.ease||'lin'});L.keys.push(k);bgSorted(L);}
+  s.ki=L.keys.indexOf(k);G.drag={t:'sp',k,x0:e.clientX,y0:e.clientY,kx:k.x,ky:k.y};bgRebuild();bgUI();
+};
+$('bgC').onwheel=e=>{
+  const s=G.sel,L=s&&G.A.layers[s.li];if(!L||G.play)return;e.preventDefault();
+  const f=Math.round(G.ph);let k=L.keys.find(q=>q.f===f);if(!k){const base=bgEval(L,f);if(!base)return;k=Object.assign({},base,{f,ease:base.ease||'lin'});L.keys.push(k);bgSorted(L)}
+  const z=e.deltaY<0?1.05:1/1.05;k.w*=z;k.h*=z;s.ki=L.keys.indexOf(k);bgRebuild();bgKeyUI();
+};
+addEventListener('keydown',e=>{if(!G||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.key==='Delete'||e.key==='Backspace'){bgDelKey();e.preventDefault()}
+  else if(e.key===' '){G.play?bgStop():bgPlay();e.preventDefault()}});
+// ---- 播放（可带音乐）----
+async function bgAudioBuf(){
+  if(G.buf)return G.buf;const it=G.it,ctx=edCtx||(edCtx=new(window.AudioContext||window.webkitAudioContext)()),buf={};
+  const ids=new Set();for(const o of it.chart.notes)if(o.snd&&o.snd.s!==undefined)ids.add(o.snd.s);for(const o of it.chart.back||[])if(o.snd&&o.snd.s!==undefined)ids.add(o.snd.s);
+  for(const id of ids){const en=it.res.samples[id];if(!en)continue;try{buf[id]=await ctx.decodeAudioData((await en.ab()).slice(0))}catch(x){}}
+  return G.buf=buf;
+}
+async function bgPlay(){
+  if(G.play)return;let src=[];
+  if($('bgAu').checked&&!G.it.chart.notes.some(o=>o.snd&&o.snd.midi)){
+    $('bgM').textContent='准备音频…';const buf=await bgAudioBuf();if(!G)return;const ctx=edCtx;await ctx.resume();
+    const t0=G.ph*1000/60,now=ctx.currentTime+.06;
+    const sched=(id,t,g)=>{const b=buf[id];if(!b)return;const dt=(t-t0)/1000;if(dt+b.duration<0)return;const s=ctx.createBufferSource();s.buffer=b;const gn=ctx.createGain();gn.gain.value=g;s.connect(gn).connect(ctx.destination);if(dt>=0)s.start(now+dt);else s.start(now,-dt);src.push(s)};
+    for(const o of G.it.chart.back||[])if(o.snd&&o.snd.s!==undefined)sched(o.snd.s,o.t,.7);
+    for(const o of G.it.chart.notes)if(o.snd&&o.snd.s!==undefined)sched(o.snd.s,o.t,.9);
+    $('bgM').textContent='';
+  }
+  G.play={f0:G.ph,w0:performance.now()+60,src};$('bgP').textContent='⏸ 暂停';
+}
+function bgStop(){if(!G||!G.play)return;for(const s of G.play.src)try{s.stop()}catch(x){}G.play=null;$('bgP').textContent='▶ 播放'}
+$('bgP').onclick=()=>G&&(G.play?bgStop():bgPlay());
+$('bgH').onclick=()=>{bgStop();G.ph=0};
+function bgClose(save){
+  bgStop();const it=G.it;
+  if(save){
+    const m=G.model;if(m.clips.main.sprites.length){it.chart.scene=m;it.scene=RBGA.make(m,G.T)}
+    else{delete it.chart.scene;it.scene=null}
+  }
+  cancelAnimationFrame(bgRaf);G=null;$('bga').hidden=true;document.body.style.overflow='';render();
+}
+$('bgOk').onclick=()=>{if(G){const empty=!G.model.clips.main.sprites.length;bgClose(true);say(empty?'没有图层，已清除 BGA 动画场景':'已保存 BGA 动画场景（可导出 .rsm / 视频 / 各游戏格式）')}};
+$('bgNo').onclick=()=>{if(G&&(JSON.stringify(G.A)===(G.backup?JSON.stringify(JSON.parse(G.backup).author):'{"v":1,"dur":'+G.A.dur+',"layers":[]}')||confirm('放弃这次的修改？')))bgClose(false)};
+$('bgVid').onclick=()=>{if(!G)return;const it=G.it;bgClose(true);items.forEach(x=>x.on=x===it);render();$('exVid').click()};
 </script></body></html>
