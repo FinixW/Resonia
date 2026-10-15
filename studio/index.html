@@ -44,6 +44,7 @@ a{color:var(--ac)}
 </section>
 <section class="card w"><h3>3 · 导出</h3>
  <div class="row"><button class="pri" id="exRsm" disabled>导出 .rsm 曲包（所选谱面 + 音频 + BGA）</button><button id="exRsc" disabled>只导出 .rsc 谱面</button></div>
+ <div class="row" id="exPlug"></div>
  <div class="todo">.rsm 里所有谱面共用同一份音频和 BGA 素材，只存一份；在游戏页载入 .rsm 后可以下拉选择谱面。</div>
 </section>
 <section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器（每张谱面右侧的“编辑”）已可用；<br>· 其他格式 → .rsc / .rsm：载入插件后即可（IIDX、EZ2DJ、OJN/OJM、PAK/PT 等，BGA 动画类场景暂时无法写入）；<br>· 导出成 OJN/OJM、PAK/PT：由插件提供（试验中）<br>· 音波采谱 / 自动作谱</div></section>
@@ -484,14 +485,41 @@ async function importAll(list){
 }
 function render(){
   const tb=$('tb');tb.innerHTML='';
-  if(!items.length){tb.innerHTML='<tr><td colspan="9" style="color:var(--mu)">还没有导入</td></tr>';$('exRsm').disabled=$('exRsc').disabled=true;return}
+  if(!items.length){tb.innerHTML='<tr><td colspan="9" style="color:var(--mu)">还没有导入</td></tr>';$('exRsm').disabled=$('exRsc').disabled=true;if(window.exRefresh)exRefresh();return}
   items.forEach((it,i)=>{
     const tr=document.createElement('tr'),c=it.chart,lanes=new Set(c.notes.map(n=>n.lane)).size;
     tr.innerHTML=`<td><input type="checkbox" ${it.on?'checked':''}></td><td></td><td style="color:var(--mu)"></td><td class="n">${c.level||'-'}</td><td class="n">${lanes}</td><td class="n">${c.notes.length}</td><td class="n">${(c.back||[]).length}</td><td>${it.src}</td><td><button>编辑</button></td>`;
     tr.children[1].textContent=it.label;tr.children[2].textContent=it.file||'';tr.children[8].firstChild.onclick=()=>openEd(i);tr.children[0].firstChild.onchange=e=>{it.on=e.target.checked;btn()};tb.appendChild(tr);
   });btn();
 }
-const btn=()=>{$('exRsm').disabled=$('exRsc').disabled=!items.some(i=>i.on)};
+const btn=()=>{$('exRsm').disabled=$('exRsc').disabled=!items.some(i=>i.on);if(window.exRefresh)exRefresh()};
+// ---- 插件导出（OJN/OJM、PAK/PT 等由插件提供）----
+window.exRefresh=function(){
+  const box=$('exPlug');if(!box)return;box.innerHTML='';
+  for(const p of plugins)for(const x of p.exporters||[]){
+    const b=document.createElement('button');b.textContent='导出 '+x.label;b.title=x.hint||'';b.disabled=!items.some(i=>i.on);b.className='exbtn';
+    b.onclick=async()=>{
+      const sel=items.filter(i=>i.on);if(!sel.length)return;
+      if(x.max&&sel.length>x.max){say('这种格式最多 '+x.max+' 张谱面，请少勾选一些',1);return}
+      try{
+        const S={};for(const i of sel)Object.assign(S,i.res.samples);
+        const job={name:safeName($('mt').value||sel[0].meta.title),meta:{title:$('mt').value||sel[0].meta.title||'',artist:$('ma').value||sel[0].meta.artist||''},
+          charts:sel.map((i,k)=>({chart:{...i.chart,id:'c'+(k+1)},name:i.label,level:i.chart.level})),
+          hasSample:k=>!!S[k],sampleExt:k=>{const m=/\.([^.\/]+)$/.exec(S[k]&&S[k].path||'');return m?m[1].toLowerCase():'wav'},sample:async k=>{const e=S[k];if(!e)throw new Error('缺少音频 '+k);return await e.ab()},
+          api:Resonia.api,say:t=>say(t)};
+        say('正在导出为 '+x.label+' …');
+        const files=await x.export(job);
+        if(!files||!files.length)throw new Error('没有生成文件');
+        const blob=f=>f.blob||new Blob([f.data]);
+        if(files.length==1)download(blob(files[0]),files[0].name);
+        else{const z=await writeZip(await Promise.all(files.map(async f=>({path:f.name,data:new Uint8Array(await blob(f).arrayBuffer()),deflate:false}))));download(z,job.name+'.zip')}
+        say('已导出 '+files.map(f=>f.name).join(' + ')+(files.length>1?'（打包成 '+job.name+'.zip）':''));
+      }catch(err){say('导出失败：'+err.message,1)}
+    };
+    box.appendChild(b);
+  }
+};
+
 $('all').onclick=()=>{items.forEach(i=>i.on=true);render()};$('none').onclick=()=>{items.forEach(i=>i.on=false);render()};
 function makeRsc(sel){
   const nm=safeName($('mt').value||sel[0].meta.title);

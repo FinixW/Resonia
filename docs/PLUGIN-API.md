@@ -60,3 +60,24 @@ makeSong({
   选了 `a` 却没有 `b[0]` 时，用 `ab` 在文件夹里找出全部属于它的文件；选了 `b[0]` 却没有 `a` 时，用 `ba` 算出 `a` 的文件名再找。
 
 插件抛出的错误如果带 `notice = true`，游戏只显示消息本身，不加“导入失败”。
+
+## 在 Studio 里使用（v0.5 起）
+
+Studio 与游戏页共用同一份插件（IndexedDB `resonia` / `plugins`），也可在 Studio 的“第三方插件”里直接载入。Studio 提供同样的 `Resonia.register` 与 `Resonia.api`（`makeSong` 返回规范化后的歌曲对象；`buildRsc` 不可用，`loadBgaAssets` 只是占位），`Resonia.host === 'studio'`。导入后插件的谱面会被转成 Studio 的谱面（`.rsc`）：
+
+- 采样（`AudioBuffer`）转成 16 位 WAV 放进曲包；静态 BGA（`bmps` 里的图片/视频）一并放进曲包；
+- `bgaScene`（逐帧绘制的动画场景）无法写入 `.rsc`，会被丢弃并在导入后提示；
+- 节奏表由 `bars` 反推（每小节 4 拍）；`scratch` / `scroll` / `lanes` 原样保留。
+
+### 导出器 `exporters`
+
+插件可以额外提供导出能力，Studio 会在“导出”栏为每个导出器加一个按钮：
+
+```js
+Resonia.register({ ..., exporters:[{
+  id:'x', label:'显示名', hint:'提示', max:3,          // max：最多可选的谱面数
+  async export(job){ return [{name:'a.ojn', data:Uint8Array}, ...] }
+}] });
+```
+
+`job`：`{ name, meta:{title,artist}, charts:[{chart, name, level}], hasSample(key), sample(key)→Promise<ArrayBuffer>, sampleExt(key), api, say(text) }`。`chart` 是 `.rsc` 的单张谱面（`notes`、`back`、`tempo`、`lanes`、`scratch`、`scroll`……）。返回多个文件时 Studio 打成 zip 下载。
