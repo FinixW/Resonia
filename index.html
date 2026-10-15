@@ -179,6 +179,7 @@ const LANGS=[['zh','简体中文'],['zh-TW','繁體中文'],['en','English'],['j
 const LK={zh:'zh','zh-TW':'tw',en:'en',ja:'ja',ko:'ko'};
 const I18N={
  "每条轨道的音符下落速度各自随机变化（判定时间不变）":{"en": "Each lane's note fall speed varies randomly on its own (hit timing is unchanged)", "ja": "レーンごとにノーツの落下速度がランダムに変化します（判定タイミングは不変）", "ko": "레인마다 노트 낙하 속도가 무작위로 변합니다 (판정 시점은 그대로)", "tw": "每條軌道的音符下落速度各自隨機變化（判定時間不變）"},
+ "读取 .rsc / .rsm 时保留转盘轨道（scratch）和谱面滚动速度（scroll），Studio 转换自 IIDX、EZ2DJ 等格式的曲包可以按原样游玩。":{"en": "Reading .rsc / .rsm now keeps the scratch lane (scratch) and the chart scroll speed (scroll), so packs that Studio converted from IIDX, EZ2DJ and similar formats play as intended.", "ja": ".rsc / .rsm の読み込みでスクラッチレーン（scratch）と譜面のスクロール速度（scroll）を保持するようにしました。StudioでIIDXやEZ2DJなどから変換した曲パックがそのまま遊べます。", "ko": ".rsc / .rsm을 읽을 때 스크래치 레인(scratch)과 채보 스크롤 속도(scroll)를 유지합니다. Studio에서 IIDX, EZ2DJ 등에서 변환한 곡 팩을 원래대로 플레이할 수 있습니다.", "tw": "讀取 .rsc / .rsm 時保留轉盤軌道（scratch）和譜面滾動速度（scroll），Studio 轉換自 IIDX、EZ2DJ 等格式的曲包可以按原樣遊玩。"},
  "新增效果“4D”（参照 EZ2DJ 的 4D Mix）：每条轨道的音符下落速度各自独立、随时间随机平滑变化，判定时间不变；长条与幻象照常工作。另有 10 套新面板、音符与轨道线对齐、Note 区域透明度滑杆、皮肤栏重新排版等界面改进。":{"en": "Added the “4D” effect (after EZ2DJ’s 4D Mix): each lane’s notes fall at their own speed, which changes smoothly and randomly over time; hit timing is unchanged, and long notes and Phantom still work. Also: 10 new panels, notes aligned to lane lines, a field-opacity slider, a reorganised skin card and other UI refinements.", "ja": "新エフェクト「4D」を追加（EZ2DJ の 4D Mix を参考）：レーンごとにノーツの落下速度が独立し、時間とともにランダムかつ滑らかに変化します。判定タイミングは変わらず、ロングノーツと幻象も従来どおり動作します。ほかに新パネル 10 種、ノーツとレーン線の位置合わせ、ノーツエリア透明度スライダー、スキンカードの再配置などの UI 改善。", "ko": "새 효과 “4D” 추가 (EZ2DJ 4D Mix 참고): 레인마다 노트 낙하 속도가 독립적이며 시간에 따라 무작위로 부드럽게 변합니다. 판정 시점은 그대로이며 롱노트와 환영도 정상 동작합니다. 그 외 새 패널 10종, 노트와 레인선 정렬, 노트 영역 투명도 슬라이더, 스킨 카드 재배치 등 UI 개선.", "tw": "新增效果“4D”（參照 EZ2DJ 的 4D Mix）：每條軌道的音符下落速度各自獨立、隨時間隨機平滑變化，判定時間不變；長條與幻象照常工作。另有 10 套新面板、音符與軌道線對齊、Note 區域透明度滑桿、皮膚欄重新排版等介面改進。"},
  "Note区域透明度":{"en": "Field opacity", "ja": "ノーツエリアの透明度", "ko": "노트 영역 투명도", "tw": "Note區域透明度"},
  "连击":{"en": "Combo", "ja": "コンボ", "ko": "콤보", "tw": "連擊"},
@@ -874,8 +875,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.33';
+const VERSION='0.9.34';
 const CHANGELOG=[
+  ['0.9.34','2026-10-15',"读取 .rsc / .rsm 时保留转盘轨道（scratch）和谱面滚动速度（scroll），Studio 转换自 IIDX、EZ2DJ 等格式的曲包可以按原样游玩。"],
   ['0.9.33','2026-10-14','新增效果“4D”（参照 EZ2DJ 的 4D Mix）：每条轨道的音符下落速度各自独立、随时间随机平滑变化，判定时间不变；长条与幻象照常工作。另有 10 套新面板、音符与轨道线对齐、Note 区域透明度滑杆、皮肤栏重新排版等界面改进。'],
   ['0.9.32','2026-10-12','BAD 改为纯时间判定（命中音符但偏差 120~150ms，参照 O2Jam），打错轨道（空按）不再判 BAD，超过 150ms 为 MISS；PERFECT ±40ms、GREAT ±80ms、GOOD ±120ms 保持原样。判定线统一为“两条线之间的区域”（所有皮肤一致），小节线紧贴音符底边（音符在小节线上方），判定文字和连击数按轨道区域居中。'],
   ['0.9.31','2026-10-12','新增多语言：简体中文 / 繁體中文 / English / 日本語 / 한국어（标题旁的下拉框切换，切换后自动刷新页面；首次打开按浏览器语言选择）。界面、提示信息和更新日志均已翻译。'],
@@ -1517,7 +1519,7 @@ async function buildRsc(R,ci,man,find,say){
   let bars;if(c.tempo&&c.tempo.length){bars=[];let n=0;const T=c.tempo;for(let i=0;i<T.length&&bars.length<6000;i++){const bm=60000/T[i].bpm,e=i+1<T.length?T[i+1].t:end+bm*4;for(let t=T[i].t;t<e-1e-3&&bars.length<6000;t+=bm){if(n%4==0)bars.push(t);n++}}}
   const res={samples:{},media:{}};for(const it of sItems)if(it.e&&S.samples[it.id])res.samples[it.id]=it.e;for(const it of bItems)if(it.e&&B.bmps[it.id])res.media[it.id]=it.e;
   return{title:(R.meta&&R.meta.title)||'',artist:(R.meta&&R.meta.artist)||'',level:c.level||0,chartName:c.name||'',lenMs:end+1000,notes,back,
-    ctl:V.ctl||{},mev:V.mev||[],chan:V.chan||{},tracks:V.tracks||0,bpm:c.bpm||120,lanes:c.lanes,bars,
+    ctl:V.ctl||{},mev:V.mev||[],chan:V.chan||{},tracks:V.tracks||0,bpm:c.bpm||120,lanes:c.lanes,scratch:c.scratch||undefined,scroll:+c.scroll>0?+c.scroll:undefined,bars,
     samples:hasS?S.samples:undefined,bga:bga.length?bga:undefined,bmps:B.bmps,res,kind:hasS?'RSM':undefined,
     note:(S.miss||S.bad)?tt('（缺少 {0} 个、无法解码 {1} 个音频）',S.miss,S.bad):''};
 }
