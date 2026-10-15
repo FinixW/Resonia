@@ -82,6 +82,8 @@ Resonia.register({ ..., exporters:[{
 
 `job`：`{ name, meta:{title,artist}, charts:[{chart, name, level}], hasSample(key), sample(key)→Promise<ArrayBuffer>, sampleExt(key), api, say(text) }`。`chart` 是 `.rsc` 的单张谱面（`notes`、`back`、`tempo`、`lanes`、`scratch`、`scroll`……）。返回多个文件时 Studio 打成 zip 下载。
 
+导出器加 `bga:true` 即为“BGA 导出”：按钮显示为“导出 BGA → …”，`job` 里额外有 `model`（所选第一张谱面的 RBGA 模型）、`texPng(id)→Promise<ArrayBuffer>`（贴图原始字节）、`texImage(id)→Promise<ImageBitmap>`、`lenMs`。没有 RBGA 场景时 Studio 会报错。
+
 ### BGA 导出为视频（Studio v0.6）
 
 Studio 的“导出 BGA 视频”会把所选第一张谱面的 BGA 逐帧画到画布上，用 WebCodecs（VP9 + Opus）编码并封装成 `.webm`（可选 1280×720 / 1920×1080 / 640×480、30 / 60 帧、是否带音乐）。画面来源：

@@ -48,7 +48,7 @@ a{color:var(--ac)}
  <div class="row"><span>BGA 视频</span><select id="vsz"><option value="640x480">640×480</option><option value="1280x720" selected>1280×720</option><option value="1920x1080">1920×1080</option></select><select id="vfps"><option>30</option><option selected>60</option></select><label><input type="checkbox" id="vaud" checked> 带音乐</label><button id="exVid" disabled>导出 BGA 视频（.webm）</button><span class="todo" id="vmsg"></span></div>
  <div class="todo">.rsm 里所有谱面共用同一份音频和 BGA 素材，只存一份；在游戏页载入 .rsm 后可以下拉选择谱面。</div>
 </section>
-<section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器（每张谱面右侧的“编辑”）已可用；<br>· 其他格式 → .rsc / .rsm：载入插件后即可（IIDX、EZ2DJ、OJN/OJM、PAK/PT 等，BGA 动画类场景暂时无法写入）；<br>· 导出成 OJN/OJM、PAK/PT：由插件提供（试验中）；<br>· BGA 导出为视频（.webm）已可用，支持插件的 BGA 动画场景和图片/视频 BGA；插件的 BGA 动画现在转成统一的 RBGA 模型，可写进 .rsc / .rsm；BGA 制作工具和反向转换计划中<br>· 音波采谱 / 自动作谱</div></section>
+<section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器（每张谱面右侧的“编辑”）已可用；<br>· 其他格式 → .rsc / .rsm：载入插件后即可（IIDX、EZ2DJ、OJN/OJM、PAK/PT 等，BGA 动画类场景暂时无法写入）；<br>· 导出成 OJN/OJM、PAK/PT：由插件提供（试验中）；<br>· BGA 导出为视频（.webm）已可用，支持插件的 BGA 动画场景和图片/视频 BGA；插件的 BGA 动画现在转成统一的 RBGA 模型，可写进 .rsc / .rsm；插件可提供“BGA 导出”（RBGA → EZ2DJ .scr/.STR/.abm、DJMAX .vcq/.vce，已验证可读回）；BGA 制作工具计划中<br>· 音波采谱 / 自动作谱</div></section>
 <div id="ed" hidden>
  <div class="edbar"><b id="edT"></b>
   <label>键数 <select id="edK"><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
@@ -71,7 +71,7 @@ a{color:var(--ac)}
  <div class="todo" style="max-width:760px;text-align:center"><span id="edM"></span><br>点击空白处放置音符，拖动出长条；拖动音符移动，右键或 Delete 删除，Shift 点击多选，Ctrl+C / X / V 复制剪切粘贴，Ctrl+Z / Ctrl+Y 撤销重做；滚轮滚动，Ctrl+滚轮缩放；空格播放，点击左侧标尺跳转播放头。</div>
 </div>
 <script>
-const STUDIO_VERSION='0.7.0';
+const STUDIO_VERSION='0.8.0';
 const $=id=>document.getElementById(id);$('ver').textContent='v'+STUDIO_VERSION;
 const TPB=768;
 const tempoOf=a=>{const o=[];for(const e of a){const t=Math.round(e.ms*100)/100,bp=Math.round(e.bpm*1000)/1000;if(o.length&&o[o.length-1].t===t){o[o.length-1].bpm=bp;continue}if(!o.length||Math.abs(o[o.length-1].bpm-bp)>1e-6)o.push({t,bpm:bp})}return o};
@@ -688,13 +688,18 @@ $('exVid').onclick=async()=>{
 window.exRefresh=function(){
   const box=$('exPlug');if(!box)return;box.innerHTML='';
   for(const p of plugins)for(const x of p.exporters||[]){
-    const b=document.createElement('button');b.textContent='导出 '+x.label;b.title=x.hint||'';b.disabled=!items.some(i=>i.on);b.className='exbtn';
+    const b=document.createElement('button');b.textContent=(x.bga?'导出 BGA → ':'导出 ')+x.label;b.title=x.hint||'';b.disabled=!items.some(i=>i.on);b.className='exbtn';
     b.onclick=async()=>{
       const sel=items.filter(i=>i.on);if(!sel.length)return;
       if(x.max&&sel.length>x.max){say('这种格式最多 '+x.max+' 张谱面，请少勾选一些',1);return}
       try{
         const S={};for(const i of sel)Object.assign(S,i.res.samples);
-        const job={name:safeName($('mt').value||sel[0].meta.title),meta:{title:$('mt').value||sel[0].meta.title||'',artist:$('ma').value||sel[0].meta.artist||''},
+        const it0=sel[0],model=it0.chart.scene||(it0.scene&&it0.scene.model)||null;
+        if(x.bga&&!model)throw new Error('所选的第一张谱面没有 BGA 动画场景（RBGA）');
+        const job={model,lenMs:Math.max(it0.lenMs||0,...it0.chart.notes.map(n=>n.t+(n.len||0)))+1500,
+          texPng:async id=>{const e=it0.res.media[id];if(!e)return null;return await e.ab()},
+          texImage:async id=>{const e=it0.res.media[id];if(!e)return null;try{return await createImageBitmap(new Blob([await e.ab()]))}catch(x){return null}},
+          name:safeName($('mt').value||sel[0].meta.title),meta:{title:$('mt').value||sel[0].meta.title||'',artist:$('ma').value||sel[0].meta.artist||''},
           charts:sel.map((i,k)=>({chart:{...i.chart,id:'c'+(k+1)},name:i.label,level:i.chart.level})),
           hasSample:k=>!!S[k],sampleExt:k=>{const m=/\.([^.\/]+)$/.exec(S[k]&&S[k].path||'');return m?m[1].toLowerCase():'wav'},sample:async k=>{const e=S[k];if(!e)throw new Error('缺少音频 '+k);return await e.ab()},
           api:Resonia.api,say:t=>say(t)};
