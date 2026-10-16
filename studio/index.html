@@ -96,7 +96,7 @@ a{color:var(--ac)}
  <div class="todo" style="max-width:760px;text-align:center"><span id="edM"></span><br>点击空白处放置音符，拖动出长条；拖动音符移动，右键或 Delete 删除，Shift 点击多选，Ctrl+C / X / V 复制剪切粘贴，Ctrl+Z / Ctrl+Y 撤销重做；滚轮滚动，Ctrl+滚轮缩放；空格播放，点击左侧标尺跳转播放头。</div>
 </div>
 <script>
-const STUDIO_VERSION='0.10.0';
+const STUDIO_VERSION='0.10.1';
 const $=id=>document.getElementById(id);$('ver').textContent='v'+STUDIO_VERSION;
 const TPB=768;
 const tempoOf=a=>{const o=[];for(const e of a){const t=Math.round(e.ms*100)/100,bp=Math.round(e.bpm*1000)/1000;if(o.length&&o[o.length-1].t===t){o[o.length-1].bpm=bp;continue}if(!o.length||Math.abs(o[o.length-1].bpm-bp)>1e-6)o.push({t,bpm:bp})}return o};
@@ -423,9 +423,9 @@ const RBGA=(()=>{
     }
     const reset=c=>{c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over'};
     return{model:M,tex,
-      render(c,cw,ch,ms){
+      render(c,cw,ch,ms,cover){ // cover=true：铺满画布（裁掉超出部分），默认等比放进画布
         reset(c);c.fillStyle='#000';c.fillRect(0,0,cw,ch);if(ms<0)return;
-        const F=ms*fps/1000,s=Math.min(cw/W,ch/H),base={s,x:(cw-W*s)/2,y:(ch-H*s)/2};
+        const F=ms*fps/1000,s=cover?Math.max(cw/W,ch/H):Math.min(cw/W,ch/H),base={s,x:(cw-W*s)/2,y:(ch-H*s)/2};
         c.imageSmoothingEnabled=true;c.save();c.beginPath();c.rect(base.x,base.y,W*s,H*s);c.clip();
         for(const ents of tracks){
           let lo=0,hi=ents.length-1,i=-1;while(lo<=hi){const m=(lo+hi)>>1;if(ents[m].f<=F){i=m;lo=m+1}else hi=m-1}

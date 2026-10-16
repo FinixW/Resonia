@@ -10,6 +10,7 @@
 html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
 [hidden]{display:none!important}
 body.bga-on{background:transparent!important}
+body.bga-on #cv{background:transparent}
 body{display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px}
 #bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:center;background:var(--panel);padding:10px 14px;border-radius:12px;max-width:420px;width:100%;font-size:14px}
 #bar label{display:flex;align-items:center;gap:6px;color:var(--mut)}
@@ -178,6 +179,7 @@ small{color:var(--mut);max-width:420px;text-align:center;line-height:1.5}
 const LANGS=[['zh','简体中文'],['zh-TW','繁體中文'],['en','English'],['ja','日本語'],['ko','한국어']];
 const LK={zh:'zh','zh-TW':'tw',en:'en',ja:'ja',ko:'ko'};
 const I18N={
+ "修正“Note区域透明度”在有 BGA 时不生效：轨道区域本身带了不透明底色，现在调低透明度就能透出后面的 BGA；BGA 动画场景（EZ2DJ、DJMAX 等）改为铺满整个屏幕（超出部分裁掉），轨道背后不再是黑边。":{"en": "Fixed “Field opacity” having no effect when a BGA is shown: the field had its own opaque background, so lowering the opacity now lets the BGA show through. Animated BGA scenes (EZ2DJ, DJMAX, …) now fill the whole screen (cropping the overflow) instead of leaving black bars behind the field.", "ja": "BGA 表示中に「ノーツエリアの透明度」が効かない問題を修正：エリア自体に不透明な背景があったため、透明度を下げても BGA が見えませんでした。BGA アニメーション（EZ2DJ、DJMAX など）は画面全体を覆うように表示し（はみ出し部分は切り取り）、レーンの後ろが黒帯にならないようにしました。", "ko": "BGA가 있을 때 '노트 영역 투명도'가 적용되지 않던 문제 수정: 영역 자체에 불투명한 배경이 있어 투명도를 낮춰도 BGA가 보이지 않았습니다. BGA 애니메이션(EZ2DJ, DJMAX 등)은 화면 전체를 채우도록(넘치는 부분은 잘라냄) 바꿔 레인 뒤에 검은 여백이 생기지 않습니다.", "tw": "修正「Note區域透明度」在有 BGA 時不生效：軌道區域本身帶了不透明底色，現在調低透明度就能透出後面的 BGA；BGA 動畫場景（EZ2DJ、DJMAX 等）改為鋪滿整個螢幕（超出部分裁掉），軌道背後不再是黑邊。"},
  "每条轨道的音符下落速度各自随机变化（判定时间不变）":{"en": "Each lane's note fall speed varies randomly on its own (hit timing is unchanged)", "ja": "レーンごとにノーツの落下速度がランダムに変化します（判定タイミングは不変）", "ko": "레인마다 노트 낙하 속도가 무작위로 변합니다 (판정 시점은 그대로)", "tw": "每條軌道的音符下落速度各自隨機變化（判定時間不變）"},
  "读取 .rsc / .rsm 时保留转盘轨道（scratch）和谱面滚动速度（scroll），Studio 转换自 IIDX、EZ2DJ 等格式的曲包可以按原样游玩。":{"en": "Reading .rsc / .rsm now keeps the scratch lane (scratch) and the chart scroll speed (scroll), so packs that Studio converted from IIDX, EZ2DJ and similar formats play as intended.", "ja": ".rsc / .rsm の読み込みでスクラッチレーン（scratch）と譜面のスクロール速度（scroll）を保持するようにしました。StudioでIIDXやEZ2DJなどから変換した曲パックがそのまま遊べます。", "ko": ".rsc / .rsm을 읽을 때 스크래치 레인(scratch)과 채보 스크롤 속도(scroll)를 유지합니다. Studio에서 IIDX, EZ2DJ 등에서 변환한 곡 팩을 원래대로 플레이할 수 있습니다.", "tw": "讀取 .rsc / .rsm 時保留轉盤軌道（scratch）和譜面滾動速度（scroll），Studio 轉換自 IIDX、EZ2DJ 等格式的曲包可以按原樣遊玩。"},
  "新增通用 BGA 模型（RBGA）：插件可以把 BGA 动画（EZ2DJ 的 STR、DJMAX 的 VCQ/VCE 等）交给游戏内置的统一引擎渲染，并且能随 .rsc / .rsm 一起保存和读取（谱面的 scene 字段）。":{"en": "Added a universal BGA model (RBGA): plugins can hand BGA animations (EZ2DJ STR, DJMAX VCQ/VCE, etc.) to the game's built-in unified engine, and they can now be saved to and read back from .rsc / .rsm (the chart's scene field).", "ja": "汎用BGAモデル（RBGA）を追加：プラグインがBGAアニメーション（EZ2DJのSTR、DJMAXのVCQ/VCEなど）をゲーム内蔵の統一エンジンに渡して描画でき、.rsc / .rsm（譜面のsceneフィールド）への保存と読み込みにも対応しました。", "ko": "범용 BGA 모델(RBGA) 추가: 플러그인이 BGA 애니메이션(EZ2DJ의 STR, DJMAX의 VCQ/VCE 등)을 게임 내장 통합 엔진에 넘겨 재생할 수 있으며, .rsc / .rsm(채보의 scene 필드)에 저장하고 다시 읽을 수도 있습니다.", "tw": "新增通用 BGA 模型（RBGA）：外掛可以把 BGA 動畫（EZ2DJ 的 STR、DJMAX 的 VCQ/VCE 等）交給遊戲內建的統一引擎渲染，並且能隨 .rsc / .rsm 一起儲存和讀取（譜面的 scene 欄位）。"},
@@ -876,8 +878,9 @@ function drum(e,when,g,vel,C,T,pn,done){
 }
 
 // ---------- Version (bump VERSION and add a CHANGELOG entry on every iteration) ----------
-const VERSION='0.9.35';
+const VERSION='0.9.36';
 const CHANGELOG=[
+  ['0.9.36','2026-10-16',"修正“Note区域透明度”在有 BGA 时不生效：轨道区域本身带了不透明底色，现在调低透明度就能透出后面的 BGA；BGA 动画场景（EZ2DJ、DJMAX 等）改为铺满整个屏幕（超出部分裁掉），轨道背后不再是黑边。"],
   ['0.9.35','2026-10-15',"新增通用 BGA 模型（RBGA）：插件可以把 BGA 动画（EZ2DJ 的 STR、DJMAX 的 VCQ/VCE 等）交给游戏内置的统一引擎渲染，并且能随 .rsc / .rsm 一起保存和读取（谱面的 scene 字段）。"],
   ['0.9.34','2026-10-15',"读取 .rsc / .rsm 时保留转盘轨道（scratch）和谱面滚动速度（scroll），Studio 转换自 IIDX、EZ2DJ 等格式的曲包可以按原样游玩。"],
   ['0.9.33','2026-10-14','新增效果“4D”（参照 EZ2DJ 的 4D Mix）：每条轨道的音符下落速度各自独立、随时间随机平滑变化，判定时间不变；长条与幻象照常工作。另有 10 套新面板、音符与轨道线对齐、Note 区域透明度滑杆、皮肤栏重新排版等界面改进。'],
@@ -1409,9 +1412,9 @@ const RBGA=(()=>{
     }
     const reset=c=>{c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over'};
     return{model:M,tex,
-      render(c,cw,ch,ms){
+      render(c,cw,ch,ms,cover){ // cover=true：铺满画布（裁掉超出部分），默认等比放进画布
         reset(c);c.fillStyle='#000';c.fillRect(0,0,cw,ch);if(ms<0)return;
-        const F=ms*fps/1000,s=Math.min(cw/W,ch/H),base={s,x:(cw-W*s)/2,y:(ch-H*s)/2};
+        const F=ms*fps/1000,s=cover?Math.max(cw/W,ch/H):Math.min(cw/W,ch/H),base={s,x:(cw-W*s)/2,y:(ch-H*s)/2};
         c.imageSmoothingEnabled=true;c.save();c.beginPath();c.rect(base.x,base.y,W*s,H*s);c.clip();
         for(const ents of tracks){
           let lo=0,hi=ents.length-1,i=-1;while(lo<=hi){const m=(lo+hi)>>1;if(ents[m].f<=F){i=m;lo=m+1}else hi=m-1}
@@ -2327,7 +2330,7 @@ function keyBlack(im){ // BMS 叠加层约定：纯黑 = 透明
 function drawBga(now){
   const dp=Math.min(devicePixelRatio||1,1.5),cw=Math.round(innerWidth*dp),chh=Math.round(innerHeight*dp);
   if(bgac.width!==cw||bgac.height!==chh){bgac.width=cw;bgac.height=chh}
-  if(song.bgaScene){try{song.bgaScene.render(bgx,cw,chh,now)}catch(x){return false}return true}
+  if(song.bgaScene){try{song.bgaScene.render(bgx,cw,chh,now,true)}catch(x){return false}return true}
   const L=song.bga,cur=[null,null,null];
   let lo=0,hi=L.length-1,k=-1;while(lo<=hi){const m=(lo+hi)>>1;if(L[m].t<=now){k=m;lo=m+1}else hi=m-1}
   for(let i=k;i>=0&&k-i<2000;i--){const e=L[i];if(cur[e.l])continue;if(e.l==0&&!song.bmps[e.id])continue;cur[e.l]=e;if(cur[0]&&cur[1]&&cur[2])break} // 底层遇到未定义素材=保持上一帧；叠加层遇到未定义素材=清空

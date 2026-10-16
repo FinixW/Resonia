@@ -53,9 +53,9 @@ const RBGA=(()=>{
     }
     const reset=c=>{c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over'};
     return{model:M,tex,
-      render(c,cw,ch,ms){
+      render(c,cw,ch,ms,cover){ // cover=true：铺满画布（裁掉超出部分），默认等比放进画布
         reset(c);c.fillStyle='#000';c.fillRect(0,0,cw,ch);if(ms<0)return;
-        const F=ms*fps/1000,s=Math.min(cw/W,ch/H),base={s,x:(cw-W*s)/2,y:(ch-H*s)/2};
+        const F=ms*fps/1000,s=cover?Math.max(cw/W,ch/H):Math.min(cw/W,ch/H),base={s,x:(cw-W*s)/2,y:(ch-H*s)/2};
         c.imageSmoothingEnabled=true;c.save();c.beginPath();c.rect(base.x,base.y,W*s,H*s);c.clip();
         for(const ents of tracks){
           let lo=0,hi=ents.length-1,i=-1;while(lo<=hi){const m=(lo+hi)>>1;if(ents[m].f<=F){i=m;lo=m+1}else hi=m-1}
