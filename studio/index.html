@@ -96,7 +96,7 @@ a{color:var(--ac)}
  <div class="todo" style="max-width:760px;text-align:center"><span id="edM"></span><br>点击空白处放置音符，拖动出长条；拖动音符移动，右键或 Delete 删除，Shift 点击多选，Ctrl+C / X / V 复制剪切粘贴，Ctrl+Z / Ctrl+Y 撤销重做；滚轮滚动，Ctrl+滚轮缩放；空格播放，点击左侧标尺跳转播放头。</div>
 </div>
 <script>
-const STUDIO_VERSION='0.10.1';
+const STUDIO_VERSION='0.10.2';
 const $=id=>document.getElementById(id);$('ver').textContent='v'+STUDIO_VERSION;
 const TPB=768;
 const tempoOf=a=>{const o=[];for(const e of a){const t=Math.round(e.ms*100)/100,bp=Math.round(e.bpm*1000)/1000;if(o.length&&o[o.length-1].t===t){o[o.length-1].bpm=bp;continue}if(!o.length||Math.abs(o[o.length-1].bpm-bp)>1e-6)o.push({t,bpm:bp})}return o};
@@ -635,17 +635,20 @@ async function staticScene(it){
   const load=async k=>{if(k in med)return med[k];let r=null;const b=it.bmps&&it.bmps[k];
     if(b&&(b.i||b.v))r=b;else{const e=it.res.media[k];if(e){try{const ab=await e.ab(),x=(e.path.match(/\.([^.]+)$/)||[])[1]||'';
       if(/^(mp4|webm|m4v)$/i.test(x)){const v=document.createElement('video');v.muted=true;v.src=URL.createObjectURL(new Blob([ab]));await new Promise(ok=>{v.onloadeddata=ok;v.onerror=ok;setTimeout(ok,4000)});r={v}}
-      else if(!/^(mpe?g|avi|wmv)$/i.test(x))r={i:await createImageBitmap(new Blob([ab]))}}catch(e){}}}
+      else if(/^(mpe?g|avi|wmv|asf)$/i.test(x)){ // 浏览器放不了的老视频格式：先用 ffmpeg 转成 WebM（VP8，宽度最多 640）再载入
+        try{const wb=await ffRun([{name:'in.'+x,data:new Uint8Array(ab.slice(0))}],['-i','in.'+x,'-vf',"scale='min(640,iw)':-2",'-c:v','libvpx','-deadline','realtime','-cpu-used','8','-b:v','3M','-an','out.webm'],'out.webm',(l,p)=>{if(p!=null)say('转换视频 '+k+' '+Math.round(Math.max(0,Math.min(1,p))*100)+'%')});
+          const v=document.createElement('video');v.muted=true;v.src=URL.createObjectURL(new Blob([wb],{type:'video/webm'}));await new Promise(ok=>{v.onloadeddata=ok;v.onerror=ok;setTimeout(ok,8000)});if(v.videoWidth)r={v}}catch(e){}}
+      else r={i:await createImageBitmap(new Blob([ab]))}}catch(e){}}}
     return med[k]=r};
   for(const k of new Set(ev.map(e=>e.media).filter(Boolean)))await load(k);
   if(!ev.length)return null;
   return{async prep(t){ // 视频素材需要先 seek 到这一刻
     const cur={};for(const e of ev){if(e.t>t)break;cur[e.layer||0]=e}
     for(const l in cur){const m=med[cur[l].media];if(m&&m.v){const want=Math.max(0,(t-cur[l].t)/1000);if(Math.abs(m.v.currentTime-want)>0.001){await new Promise(ok=>{m.v.onseeked=ok;m.v.currentTime=Math.min(want,m.v.duration||want);setTimeout(ok,300)})}}}},
-   render(c,W,H,t){
+   render(c,W,H,t,cover){
     const cur={};for(const e of ev){if(e.t>t)break;cur[e.layer||0]=e}
     for(const l of [0,1,2]){const e=cur[l];if(!e)continue;const m=med[e.media];if(!m)continue;const src=m.i||m.v,sw=m.i?m.i.width:m.v.videoWidth,sh=m.i?m.i.height:m.v.videoHeight;if(!sw||!sh)continue;
-      const k=Math.min(W/sw,H/sh),dw=sw*k,dh=sh*k;c.save();if(l>0)c.globalCompositeOperation='lighten';c.drawImage(src,(W-dw)/2,(H-dh)/2,dw,dh);c.restore()}}}
+      const k=cover?Math.max(W/sw,H/sh):Math.min(W/sw,H/sh),dw=sw*k,dh=sh*k;c.save();if(l>0)c.globalCompositeOperation='lighten';c.drawImage(src,(W-dw)/2,(H-dh)/2,dw,dh);c.restore()}}}
 }
 async function mixAudio(it,durMs,sr,say){
   const evs=[];for(const n of it.chart.notes)if(n.snd&&n.snd.s!==undefined)evs.push({t:n.t,k:n.snd.s,v:n.snd.vel||127});
@@ -861,14 +864,23 @@ window.exRefresh=function(){
       try{
         const S={};for(const i of sel)Object.assign(S,i.res.samples);
         const it0=sel[0],model=it0.chart.scene||(it0.scene&&it0.scene.model)||null;
-        if(x.bga&&!model)throw new Error('所选的第一张谱面没有 BGA 动画场景（RBGA）');
+        const hasStatic=!model&&!!(it0.chart.bga&&it0.chart.bga.length);
+        if(x.bga&&!model&&!hasStatic)throw new Error('所选的第一张谱面没有 BGA（既没有动画场景，也没有图片/视频事件）');
         const job={model,lenMs:Math.max(it0.lenMs||0,...it0.chart.notes.map(n=>n.t+(n.len||0)))+1500,
           texPng:async id=>{const e=it0.res.media[id];if(!e)return null;return await e.ab()},
           texImage:async id=>{const e=it0.res.media[id];if(!e)return null;try{return await createImageBitmap(new Blob([await e.ab()]))}catch(x){return null}},
           name:safeName($('mt').value||sel[0].meta.title),meta:{title:$('mt').value||sel[0].meta.title||'',artist:$('ma').value||sel[0].meta.artist||''},
           charts:sel.map((i,k)=>({chart:{...i.chart,id:'c'+(k+1)},name:i.label,level:i.chart.level})),
           hasSample:k=>!!S[k],sampleExt:k=>{const m=/\.([^.\/]+)$/.exec(S[k]&&S[k].path||'');return m?m[1].toLowerCase():'wav'},sample:async k=>{const e=S[k];if(!e)throw new Error('缺少音频 '+k);return await e.ab()},
-          api:Resonia.api,say:t=>say(t)};
+          api:Resonia.api,say:t=>say(t),
+          // 图片/视频 BGA（BMS 之类）：按给定尺寸和帧率逐帧渲染（等比铺满、居中裁切），每帧回调 each(帧号, canvas, 毫秒)
+          bgaFrames:hasStatic?async(W,H,fps,each)=>{
+            const st=await staticScene(it0);if(!st)return 0;
+            let last=it0.lenMs||0;for(const n of it0.chart.notes)last=Math.max(last,n.t+(n.len||0));for(const b of it0.chart.bga||[])last=Math.max(last,b.t);
+            const total=Math.ceil((last+1500)/1000*fps),cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d',{willReadFrequently:true});
+            for(let f=0;f<total;f++){const t=f*1000/fps;c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';c.fillStyle='#000';c.fillRect(0,0,W,H);
+              await st.prep(t);c.save();try{st.render(c,W,H,t,true)}catch(e){}c.restore();await each(f,cv,t,total)}
+            return total}:null};
         say('正在导出为 '+x.label+' …');
         const files=await x.export(job);
         if(!files||!files.length)throw new Error('没有生成文件');
@@ -1211,7 +1223,7 @@ function bgCompile(A,W,H){
   for(const L of A.layers){
     const ks=L.keys.slice().sort((a,b)=>a.f-b.f),kf=[];
     ks.forEach((k,i)=>{
-      const val=q=>({x:q.x,y:q.y,uv:[q.u,q.v,q.tu,q.tv],px:[-q.w/2,q.w/2,-q.w/2,q.w/2],py:[-q.h/2,-q.h/2,q.h/2,q.h/2],rot:q.rot,a:q.a});
+      const val=q=>({x:q.x,y:q.y,uv:[q.u,q.v,q.tu,q.tv],px:[-q.w/2,q.w/2,q.w/2,-q.w/2],py:[-q.h/2,-q.h/2,q.h/2,q.h/2],rot:q.rot,a:q.a});
       const v=Object.assign(val(k),{col:[255,255,255],bl:k.bl||'normal',seq:0}),o={f:k.f,v},n=ks[i+1];
       if(n&&k.ease!=='hold'&&n.f>k.f){const dt=n.f-k.f,a=val(k),b=val(n),d={};let any=0;
         for(const f of ['x','y','rot','a']){const z=(b[f]-a[f])/dt;if(z){d[f]=r(z);any=1}}
