@@ -791,6 +791,8 @@ async function buildRemake(it,{W,H,style,vm}){
   files.push({path:'shots.json',data:te.encode(JSON.stringify(sj,null,1))});
   files.push({path:'prompts.txt',data:te.encode(rows.map(r=>r.id+' | '+(r.prompt||'')).join('\n')+'\n')});
   files.push({path:'assemble.py',data:te.encode(REMAKE_ASSEMBLE)});
+  for(const [src,dst] of [['comfy_batch.py','comfy_batch.py'],['COMFYUI_SETUP.md','COMFYUI_SETUP.md'],['resonia_remake_flf2v.json','comfy/resonia_remake_flf2v.json'],['resonia_remake_control.json','comfy/resonia_remake_control.json']]){
+    try{const r=await fetch('vendor/comfy/'+src);if(r.ok)files.push({path:dst,data:new Uint8Array(await r.arrayBuffer())})}catch(e){}}
   files.push({path:'README.md',data:te.encode(remakeReadme(sj))});
   vm('打包中…');
   return{zip:await writeZip(files.map(f=>({...f,deflate:/\.(json|txt|py|md)$/.test(f.path)}))),shots:rows.length,name:safeName(title||'bga')+'_bga_remake.zip'};
@@ -836,8 +838,16 @@ function remakeReadme(S){
 - \`shots.json\`：镜头表（开始 / 结束毫秒、第几小节第几拍、按 16fps 需要的帧数、提示词）
 - \`prompts.txt\`：每行一个镜头的提示词（\`shot_001 | ...\`），可直接喂给批量节点
 - \`assemble.py\`：把做好的镜头按时间点拼回一条视频
+- \`comfy_batch.py\`：一键把所有镜头交给本机 ComfyUI 生成
+- \`comfy/\`：两个 ComfyUI 工作流（首尾帧 / 保留原动作），拖进 ComfyUI 就能用
+- \`COMFYUI_SETUP.md\`：模型下载、设置、耗时
 
-## 推荐流程（ComfyUI + RTX 4090）
+## 最快的用法（一键）
+ComfyUI 的模型和设置见 **COMFYUI_SETUP.md**。装好后，ComfyUI 开着，在这个文件夹运行：
+\`python comfy_batch.py\` → 全部镜头自动生成到 \`out/\` → \`python assemble.py --size 1920x1080 --fps 60\` → Studio 导入 \`bga_remake.mp4\`。
+手动调单个镜头：把 \`comfy/\` 里的工作流 JSON 拖进 ComfyUI。
+
+## 详细流程（ComfyUI + RTX 4090）
 1. **写提示词**：把整个包（或 frames 文件夹）发给 Claude，让它按画面填好 shots.json / prompts.txt；也可以自己写。建议用英文（Wan 和 Flux 都认），整体风格写在 shots.json 的 \`style\` 里，每段提示词前都加上它；同一个角色每次都用同一句描述。
 2. **重画关键帧**（可选）：用 Flux / Qwen-Image-Edit 等按提示词重画每个镜头的首帧和尾帧，同一个角色保持同一套描述；有条件就用原版角色图训练一个 LoRA。
 3. **生成视频**，三选一：
