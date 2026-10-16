@@ -52,7 +52,8 @@ a{color:var(--ac)}
  <div class="row" id="exPlug"></div>
  <div class="row"><span>BMS</span><select id="bmsV" title="动画 BGA 的视频格式"><option value="mpg" selected>BGA 视频 .mpg（兼容最广）</option><option value="mp4">BGA 视频 .mp4</option><option value="webm">BGA 视频 .webm</option><option value="none">不导出 BGA 视频</option></select><select id="bmsSz"><option value="640x480" selected>640×480</option><option value="512x512">512×512</option><option value="1280x720">1280×720</option></select><select id="bmsFps"><option selected>30</option><option>60</option></select><button id="exBms" disabled>导出 BMS（.bms/.bme + 音频 + BGA）</button><span class="todo" id="bmsMsg"></span></div>
  <div class="row"><span>BGA 视频</span><select id="vsz"><option value="640x480">640×480</option><option value="1280x720" selected>1280×720</option><option value="1920x1080">1920×1080</option></select><select id="vfps"><option>30</option><option selected>60</option></select><label><input type="checkbox" id="vaud" checked> 带音乐</label><button id="exVid" disabled>导出 BGA 视频（.webm）</button><span class="todo" id="vmsg"></span></div>
- <div class="todo">.rsm 里所有谱面共用同一份音频和 BGA 素材，只存一份；在游戏页载入 .rsm 后可以下拉选择谱面。</div>
+ <div class="row"><span>BGA 重制</span><select id="rmSz" title="导出镜头的尺寸"><option value="960x720" selected>960×720（4:3）</option><option value="1280x720">1280×720（16:9）</option><option value="832x480">832×480（16:9，省显存）</option></select><input type="text" id="rmStyle" placeholder="整体风格（可选），例如：清新夏日动画风，高细节" style="min-width:16em;flex:1"><button id="exRm" disabled>导出重制素材包（按镜头切分）</button><button id="imRm" disabled>导入重制好的 BGA 视频</button><input type="file" id="imRmF" accept="video/*,.mp4,.webm,.mov,.mkv" hidden><span class="todo" id="rmMsg"></span></div>
+ <div class="todo">.rsm 里所有谱面共用同一份音频和 BGA 素材，只存一份；在游戏页载入 .rsm 后可以下拉选择谱面。<br>BGA 重制：素材包里是按镜头切好的原版片段、每个镜头的首尾帧、镜头表（时间点 / 小节）和提示词模板，拿去 ComfyUI（Wan 2.2 等）重画；做好后用包里的 assemble.py 拼成一条视频，再点“导入重制好的 BGA 视频”替换原来的 BGA，导出 .rsm 即可。</div>
 </section>
 <section class="card w"><h3>开发中</h3><div class="todo">· 谱面编辑器（每张谱面右侧的“编辑”）已可用；<br>· 其他格式 → .rsc / .rsm：载入插件后即可（IIDX、EZ2DJ、OJN/OJM、PAK/PT 等，BGA 动画类场景暂时无法写入）；<br>· 导出成 OJN/OJM、PAK/PT：由插件提供（试验中）；<br>· BGA 导出为视频（.webm）已可用，支持插件的 BGA 动画场景和图片/视频 BGA；插件的 BGA 动画现在转成统一的 RBGA 模型，可写进 .rsc / .rsm；插件可提供“BGA 导出”（RBGA → EZ2DJ .scr/.STR/.abm、DJMAX .vcq/.vce，已验证可读回）；每张谱面右侧的“BGA”是动画制作工具（时间轴 + 关键帧，保存成 RBGA）；“导出 BMS”把所选谱面写成 .bms/.bme/.pms（同一文件夹共用音频），动画 BGA 渲染成 .mpg（默认，兼容面最广）/.mp4/.webm 视频<br>· 音波采谱 / 自动作谱</div></section>
 <div id="bga" hidden>
@@ -96,7 +97,7 @@ a{color:var(--ac)}
  <div class="todo" style="max-width:760px;text-align:center"><span id="edM"></span><br>点击空白处放置音符，拖动出长条；拖动音符移动，右键或 Delete 删除，Shift 点击多选，Ctrl+C / X / V 复制剪切粘贴，Ctrl+Z / Ctrl+Y 撤销重做；滚轮滚动，Ctrl+滚轮缩放；空格播放，点击左侧标尺跳转播放头。</div>
 </div>
 <script>
-const STUDIO_VERSION='0.10.2';
+const STUDIO_VERSION='0.11.0';
 const $=id=>document.getElementById(id);$('ver').textContent='v'+STUDIO_VERSION;
 const TPB=768;
 const tempoOf=a=>{const o=[];for(const e of a){const t=Math.round(e.ms*100)/100,bp=Math.round(e.bpm*1000)/1000;if(o.length&&o[o.length-1].t===t){o[o.length-1].bpm=bp;continue}if(!o.length||Math.abs(o[o.length-1].bpm-bp)>1e-6)o.push({t,bpm:bp})}return o};
@@ -600,7 +601,7 @@ function render(){
     tr.children[1].textContent=it.label;tr.children[2].textContent=it.file||'';tr.children[8].firstChild.onclick=()=>openEd(i);tr.children[8].lastChild.onclick=()=>openBga(i);tr.children[0].firstChild.onchange=e=>{it.on=e.target.checked;btn()};tb.appendChild(tr);
   });btn();
 }
-const btn=()=>{$('exRsm').disabled=$('exRsc').disabled=!items.some(i=>i.on);$('exVid').disabled=!items.some(i=>i.on);$('exBms').disabled=!items.some(i=>i.on);if(window.exRefresh)exRefresh()};
+const btn=()=>{$('exRsm').disabled=$('exRsc').disabled=!items.some(i=>i.on);$('exRm').disabled=$('imRm').disabled=!items.some(i=>i.on);$('exVid').disabled=!items.some(i=>i.on);$('exBms').disabled=!items.some(i=>i.on);if(window.exRefresh)exRefresh()};
 
 // ================= BGA → 视频（WebCodecs：VP9 + Opus，自带 WebM 封装）=================
 function ebId(n){const b=[];while(n>0){b.unshift(n&255);n=Math.floor(n/256)}return Uint8Array.from(b)}
@@ -719,6 +720,157 @@ $('exVid').onclick=async()=>{
   finally{btn()}
 };
 // ================= 导出 BMS（+ BGA）=================
+// ================= BGA 重制素材包：按镜头切分，给 ComfyUI（Wan 2.2 等）重画；做好后再导入 =================
+async function bgaSceneOf(it,vm){
+  let scene=it.scene;
+  if(!scene&&it.chart.scene){vm('载入 BGA 贴图…');const T={};for(const id of RBGA.texIds(it.chart.scene)){const e=it.res.media[id];if(e)try{T[id]=await createImageBitmap(new Blob([await e.ab()]))}catch(x){}}scene=RBGA.make(it.chart.scene,T)}
+  if(!scene)scene=await staticScene(it);
+  if(!scene)throw new Error('这张谱面没有 BGA（既没有动画场景，也没有图片/视频事件）');
+  let last=it.lenMs||0;for(const n of it.chart.notes)last=Math.max(last,n.t+(n.len||0));for(const b of it.chart.bga||[])last=Math.max(last,b.t);
+  return{scene,durMs:Math.ceil(last+1500)};
+}
+async function drawAt(c,scene,W,H,t){c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';c.fillStyle='#000';c.fillRect(0,0,W,H);
+  if(scene.prep)await scene.prep(t);c.save();try{scene.render(c,W,H,t,true)}catch(e){}c.restore()}
+// 小节/拍子换算（取谱面的变速表）
+function beatMap(c){
+  const T=(c.tempo&&c.tempo.length?c.tempo:[{t:+c.gridMs||0,bpm:+c.bpm||120}]).map(x=>({t:+x.t,bpm:+x.bpm})).sort((a,b)=>a.t-b.t);
+  const seg=[];let bb=0;for(let i=0;i<T.length;i++){seg.push({t:T[i].t,b:bb,bpm:T[i].bpm});if(i+1<T.length)bb+=(T[i+1].t-T[i].t)*T[i].bpm/60000}
+  const beatOf=t=>{let k=0;for(let i=0;i<seg.length;i++)if(seg[i].t<=t)k=i;return seg[k].b+(t-seg[k].t)*seg[k].bpm/60000};
+  const timeOf=b=>{let k=0;for(let i=0;i<seg.length;i++)if(seg[i].b<=b)k=i;return seg[k].t+(b-seg[k].b)*60000/seg[k].bpm};
+  return{beatOf,timeOf,bpm0:T[0].bpm,grid0:T[0].t};
+}
+async function buildRemake(it,{W,H,style,vm}){
+  const {scene,durMs}=await bgaSceneOf(it,vm),BM=beatMap(it.chart),FPS=30,MAXS=5000,MINS=500;
+  // 1. 低分辨率逐帧比较找镜头切换
+  const sw=96,sh=72,sc=document.createElement('canvas');sc.width=sw;sc.height=sh;const sg=sc.getContext('2d',{willReadFrequently:true});
+  const N=Math.ceil(durMs/1000*FPS),diff=new Float32Array(N);let prev=null;
+  for(let f=0;f<N;f++){const t=f*1000/FPS;await drawAt(sg,scene,sw,sh,t);const px=sg.getImageData(0,0,sw,sh).data,L=new Float32Array(sw*sh);let sum=0;
+    for(let i=0,j=0;i<px.length;i+=4,j++){L[j]=px[i]*.3+px[i+1]*.59+px[i+2]*.11;sum+=L[j]}
+    if(prev){let d=0;for(let j=0;j<L.length;j++)d+=Math.abs(L[j]-prev[j]);diff[f]=d/L.length}prev=L;
+    if(f%60===0){vm('分析镜头 '+Math.round(f/N*100)+'%');await new Promise(r=>setTimeout(r,0))}}
+  // 候选切点：画面突变 + 动画场景里每个片段的起点（DJMAX/EZ2DJ 的转场多是淡入淡出、滑入，单靠画面差找不全）+ 图片/视频 BGA 底层换素材
+  const cand=[];
+  for(let f=2;f<N;f++){let a=0,n=0;for(let k=Math.max(1,f-8);k<f;k++){a+=diff[k];n++}a=n?a/n:0;if(diff[f]>22&&diff[f]>a*3+4)cand.push(f*1000/FPS)}
+  const M=it.chart.scene||(it.scene&&it.scene.model)||null;
+  if(M&&M.tracks){const mf=M.fps||60;for(const tr of M.tracks)for(const e of tr||[])if(e&&e.clip&&e.mode!=='stop')cand.push(e.f*1000/mf)}
+  for(const e of it.chart.bga||[])if(!(e.layer>0))cand.push(e.t);
+  const snap=t=>{const b=BM.beatOf(t),bs=Math.round(b*4)/4,ts=BM.timeOf(bs);return Math.abs(ts-t)<=50?ts:t};
+  let T=[0];for(const t of cand.map(snap).filter(t=>t>0&&t<durMs-MINS).sort((a,b)=>a-b)){if(t-T[T.length-1]>=MINS)T.push(Math.round(t))}
+  // 2. 太长的镜头按小节拆开（Wan 一段约 5 秒）
+  T.push(durMs);const shots=[];
+  for(let i=0;i+1<T.length;i++){let a=T[i];const b=T[i+1];
+    while(b-a>MAXS){const ba=BM.beatOf(a);let cut=null;for(let bar=Math.floor(ba/4)+1;;bar++){const t=BM.timeOf(bar*4);if(t-a>MAXS)break;if(t-a>=MINS*2&&b-t>=MINS)cut=t}
+      if(cut===null)cut=a+Math.min(MAXS,Math.round((b-a)/Math.ceil((b-a)/MAXS)));cut=Math.round(cut);shots.push([a,cut]);a=cut}
+    shots.push([a,b])}
+  // 3. 逐镜头渲染：整段只编码一次，每个镜头开头强制关键帧，再按镜头切成独立的 WebM；同时取首尾帧
+  if(!window.VideoEncoder)throw new Error('这个浏览器不支持 WebCodecs（请用较新的 Chrome / Edge）');
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+  const vch=[];let verr=null;const enc=new VideoEncoder({output:ch=>{const d=new Uint8Array(ch.byteLength);ch.copyTo(d);vch.push({t:ch.timestamp/1000,key:ch.type==='key',data:d})},error:e=>{verr=e}});
+  enc.configure({codec:'vp09.00.10.08',width:W,height:H,bitrate:Math.round(W*H*FPS/6),framerate:FPS});
+  const png=async()=>new Uint8Array(await (await new Promise(r=>cv.toBlob(r,'image/jpeg',0.95))).arrayBuffer());
+  const files=[],pad=n=>String(n).padStart(3,'0'),rows=[];
+  for(let si=0;si<shots.length;si++){const [a,b]=shots[si],f0=Math.round(a*FPS/1000),f1=Math.max(f0+1,Math.round(b*FPS/1000)),id='shot_'+pad(si+1);
+    for(let f=f0;f<f1;f++){const t=f*1000/FPS;if(verr)throw verr;await drawAt(c,scene,W,H,t);
+      if(f===f0)files.push({path:'frames/'+id+'_first.jpg',data:await png()});
+      if(f===f1-1)files.push({path:'frames/'+id+'_last.jpg',data:await png()});
+      const fr=new VideoFrame(cv,{timestamp:Math.round(t*1000)});enc.encode(fr,{keyFrame:f===f0});fr.close();
+      while(enc.encodeQueueSize>8)await new Promise(r=>setTimeout(r,2));
+      if(f%30===0){vm('渲染镜头 '+(si+1)+' / '+shots.length+'（'+Math.round(f/N*100)+'%）');await new Promise(r=>setTimeout(r,0))}}
+    const dur=b-a,ba=BM.beatOf(a),n16=Math.max(5,Math.min(81,Math.round(dur/1000*16/4)*4+1));
+    rows.push({_t0:f0*1000/FPS,_t1:f1*1000/FPS,id,start:a,end:b,dur,bar:Math.floor(Math.round(ba*100)/100/4)+1,beat:Math.round((Math.round(ba*100)/100-4*Math.floor(Math.round(ba*100)/100/4))*100)/100+1,frames16:n16,
+      video:'shots/'+id+'.webm',first:'frames/'+id+'_first.jpg',last:'frames/'+id+'_last.jpg',prompt:'',negative:''});
+  }
+  await enc.flush();enc.close();if(verr)throw verr;
+  for(const r of rows){const ch=vch.filter(x=>x.t>=r._t0-0.5&&x.t<r._t1-0.5).map(x=>({...x,t:x.t-r._t0}));
+    files.push({path:r.video,data:new Uint8Array(await webmMux({w:W,h:H,vchunks:ch,durMs:r.dur}).arrayBuffer())});delete r._t0;delete r._t1}
+  const title=$('mt').value||it.meta.title||it.label||'';
+  const sj={resonia:'bga-remake',version:1,title,artist:$('ma').value||it.meta.artist||'',bpm:BM.bpm0,durMs,size:[W,H],fps:FPS,
+    style:style||'',negative:'low quality, blurry, noise, flicker, deformed hands, extra fingers, text, watermark, subtitles, static image',
+    note:'start/end 是毫秒，从歌曲 0 点算起；frames16 = 按 Wan 2.2 的 16fps 生成这段需要的帧数（4n+1，最多 81）',shots:rows};
+  const te=new TextEncoder();
+  files.push({path:'shots.json',data:te.encode(JSON.stringify(sj,null,1))});
+  files.push({path:'prompts.txt',data:te.encode(rows.map(r=>r.id+' | '+(r.prompt||'')).join('\n')+'\n')});
+  files.push({path:'assemble.py',data:te.encode(REMAKE_ASSEMBLE)});
+  files.push({path:'README.md',data:te.encode(remakeReadme(sj))});
+  vm('打包中…');
+  return{zip:await writeZip(files.map(f=>({...f,deflate:/\.(json|txt|py|md)$/.test(f.path)}))),shots:rows.length,name:safeName(title||'bga')+'_bga_remake.zip'};
+}
+const REMAKE_ASSEMBLE=String.raw`#!/usr/bin/env python3
+# 把重制好的镜头按 shots.json 的时间点拼成一条 BGA 视频（需要本机装好 ffmpeg）。
+# 用法：python assemble.py [--size 1920x1080] [--fps 60] [--src out]
+#   重制好的镜头放在 out/ 下，文件名和镜头编号一样（shot_001.mp4 / .webm / .mov / .mkv 都行）；
+#   缺的镜头自动用 shots/ 里的原版片段顶上。每个镜头会被裁剪 / 补帧到镜头表规定的长度，保证和谱面对齐。
+import json, os, subprocess, sys, argparse, shutil
+ap = argparse.ArgumentParser()
+ap.add_argument('--size', default='1920x1080'); ap.add_argument('--fps', type=int, default=60)
+ap.add_argument('--src', default='out'); ap.add_argument('--crf', type=int, default=16)
+a = ap.parse_args(); W, H = map(int, a.size.lower().split('x'))
+here = os.path.dirname(os.path.abspath(__file__)); os.chdir(here)
+S = json.load(open('shots.json', encoding='utf-8')); tmp = '_assemble_tmp'; os.makedirs(tmp, exist_ok=True)
+lst = []
+for s in S['shots']:
+    src = next((os.path.join(a.src, s['id'] + e) for e in ('.mp4', '.webm', '.mov', '.mkv') if os.path.exists(os.path.join(a.src, s['id'] + e))), None)
+    used = src or s['video']; dur = s['dur'] / 1000.0
+    nf = round(s['end'] * a.fps / 1000) - round(s['start'] * a.fps / 1000)  # 按累计帧号算，整条视频不漂移
+    out = os.path.join(tmp, s['id'] + '.mp4')
+    vf = f"fps={a.fps},scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos,crop={W}:{H},setsar=1,tpad=stop_mode=clone:stop_duration={dur + 1:.3f}"
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', used, '-vf', vf, '-frames:v', str(nf), '-an', '-c:v', 'libx264', '-preset', 'slow', '-crf', str(a.crf), '-pix_fmt', 'yuv420p', out], check=True)
+    print(s['id'], '←', used if src else used + '（原版）')
+    lst.append(out)
+with open(os.path.join(tmp, 'list.txt'), 'w', encoding='utf-8') as f:
+    for p in lst: f.write("file '" + os.path.abspath(p).replace("'", "'\\''") + "'\n")
+name = 'bga_remake.mp4'
+subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', os.path.join(tmp, 'list.txt'), '-c', 'copy', '-movflags', '+faststart', name], check=True)
+shutil.rmtree(tmp, ignore_errors=True)
+print('完成：', name, '（在 Studio 里点“导入重制好的 BGA 视频”选它）')
+`;
+function remakeReadme(S){
+  const fmt=ms=>{const s=ms/1000;return Math.floor(s/60)+':'+(s%60).toFixed(2).padStart(5,'0')};
+  return `# ${S.title||'BGA'} · BGA 重制素材包
+
+由 Resonia Studio 生成。共 ${S.shots.length} 个镜头，总长 ${fmt(S.durMs)}，BPM ${S.bpm}。
+
+## 包里有什么
+- \`shots/shot_XXX.webm\`：按镜头切好的原版片段（${S.size[0]}×${S.size[1]}，${S.fps}fps），可作为视频转视频的输入 / 控制视频来源
+- \`frames/shot_XXX_first.jpg\`、\`_last.jpg\`：每个镜头的首帧和尾帧，用于重画关键帧 + 首尾帧生成
+- \`shots.json\`：镜头表（开始 / 结束毫秒、第几小节第几拍、按 16fps 需要的帧数、提示词）
+- \`prompts.txt\`：每行一个镜头的提示词（\`shot_001 | ...\`），可直接喂给批量节点
+- \`assemble.py\`：把做好的镜头按时间点拼回一条视频
+
+## 推荐流程（ComfyUI + RTX 4090）
+1. **写提示词**：把整个包（或 frames 文件夹）发给 Claude，让它按画面填好 shots.json / prompts.txt；也可以自己写。建议用英文（Wan 和 Flux 都认），整体风格写在 shots.json 的 \`style\` 里，每段提示词前都加上它；同一个角色每次都用同一句描述。
+2. **重画关键帧**（可选）：用 Flux / Qwen-Image-Edit 等按提示词重画每个镜头的首帧和尾帧，同一个角色保持同一套描述；有条件就用原版角色图训练一个 LoRA。
+3. **生成视频**，三选一：
+   - 保留原动作：Wan 2.2 VACE / Fun Control，控制视频用 \`shots/\` 里的片段（提取深度 / 线稿 / 姿势），参考图用重画的首帧
+   - 首尾帧补动画：Wan 2.2 首尾帧（FLF2V），首尾用重画后的两帧
+   - 纯扩展：Wan 2.2 图生视频，从首帧往后生成
+   - 帧数用镜头表里的 \`frames16\`（16fps，4n+1）；长于 5 秒的镜头已经按小节拆开
+   - 4:3 想变成宽屏 16:9：用 VACE 的扩图（outpaint）
+4. **放大和补帧**：SeedVR2 放大到 1080p 以上；RIFE / GIMM-VFI 补到 60fps
+5. **拼回去**：生成好的镜头放进 \`out/\`，文件名和镜头编号一致（\`shot_001.mp4\`），运行
+   \`python assemble.py --size 1920x1080 --fps 60\`，得到 \`bga_remake.mp4\`。没做的镜头自动用原版顶上，每段会裁剪或补帧到镜头表的长度，保证卡点。
+6. **回到 Studio**：载入原谱面，勾选后点“导入重制好的 BGA 视频”选 \`bga_remake.mp4\`，再导出 .rsm。
+
+## 镜头表
+| 镜头 | 开始 | 长度 | 小节.拍 | 16fps 帧数 |
+|---|---|---|---|---|
+${S.shots.map(r=>`| ${r.id} | ${fmt(r.start)} | ${(r.dur/1000).toFixed(2)}s | ${r.bar}.${r.beat} | ${r.frames16} |`).join('\n')}
+`;
+}
+$('exRm').onclick=async()=>{
+  const sel=items.filter(i=>i.on);if(!sel.length)return;const it=sel[0],vm=t=>{$('rmMsg').textContent=t};
+  try{$('exRm').disabled=true;const [W,H]=$('rmSz').value.split('x').map(Number);
+    const r=await buildRemake(it,{W,H,style:$('rmStyle').value.trim(),vm});download(r.zip,r.name);
+    vm('已导出 '+r.name+'（'+r.shots+' 个镜头）'+(sel.length>1?'；只用了所选的第一张谱面':''));
+  }catch(err){vm('');say('导出重制素材包失败：'+err.message,1)}finally{btn()}
+};
+$('imRm').onclick=()=>$('imRmF').click();
+$('imRmF').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;const sel=items.filter(i=>i.on);if(!sel.length)return;
+  const ab=await f.arrayBuffer(),ext=((f.name.match(/\.([^.]+)$/)||[])[1]||'mp4').toLowerCase(),key='bga_remake.'+ext;
+  for(const it of sel){const M=it.chart.scene||(it.scene&&it.scene.model);if(M)for(const id of RBGA.texIds(M))delete it.res.media[id];for(const g of it.chart.bga||[])if(g.media&&g.media!==key)delete it.res.media[g.media];it.res.media[key]={path:key,ab:async()=>ab};it.chart.bga=[{t:0,media:key,layer:0}];delete it.chart.scene;it.scene=null;if(it.bmps)delete it.bmps[key]}
+  $('rmMsg').textContent='';say('已把 '+f.name+' 设为 '+sel.length+' 张谱面的 BGA（从 0 秒开始播放，原来的 BGA 已替换）。现在导出 .rsm 即可。');render();
+};
 // 谱面 → .bms/.bme/.pms（选中的多张谱面放进同一个文件夹，共用音频）；静态 BGA 原样写成 #BMP + 04/07/0A；
 // 动画场景（RBGA，EZ2DJ/DJMAX 之类）渲染成一段视频挂在 #BMP01（默认 MPEG-1 .mpg：兼容面最广；可选 mp4 / webm）。
 let ffW=null,ffSeq=0;
